@@ -25,8 +25,34 @@ namespace BloodDonationSystem.DataAccess
             modelBuilder.Entity<HealthRecord>()
                 .ToTable("HealthRecords");
 
+            modelBuilder.Entity<BlogPost>()
+                .HasKey(b => b.blog_id);
+
+            modelBuilder.Entity<BloodInventory>()
+                .HasKey(b => b.unit_id);
+
+            modelBuilder.Entity<BloodRequest>()
+              .HasKey(b => b.request_id);
+
+            modelBuilder.Entity<Donation>()
+                .HasKey(d => d.donation_id);
+
+            modelBuilder.Entity<DonationHistory>()
+                .HasKey(dh => dh.donation_id);
+
+            modelBuilder.Entity<HealthRecord>()
+                .HasKey(h => h.record_id);
+
+            modelBuilder.Entity<Location>()
+               .HasKey(l => l.location_id);
+
+            modelBuilder.Entity<Notification>()
+                .HasKey(n => n.notification_id);
+
             modelBuilder.Entity<User>()
                 .HasKey(u => u.user_id);
+
+
 
             modelBuilder.Entity<Donation>()
                 .HasOne(d => d.BloodInventory)
