@@ -14,7 +14,6 @@ namespace BloodDonationSystem.DataAccess
         // Thêm các DbSet khác tại đây
         public DbSet<BloodInventory> Blood_Inventory { get; set; }
         public DbSet<BlogPost> Blog_Post { get; set; }
-        public DbSet<BloodPost> Blood_Post { get; set; }
         public DbSet<BloodRequest> Blood_Requests { get; set; }
         public DbSet<Donation> Donations { get; set; }
         public DbSet<Location> Locations { get; set; }
