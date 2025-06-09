@@ -17,13 +17,13 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x' # Hoặc version bạn đang dùng
+          dotnet-version: '8.0.x'
 
       - name: Restore packages
-        run: dotnet restore
+        run: dotnet restore BloodDonationSystem.sln
 
       - name: Build solution
-        run: dotnet build --no-restore
+        run: dotnet build BloodDonationSystem.sln --no-restore
 
-      - name: Run tests (optional)
-        run: dotnet test --no-build || echo "No tests found"
+      - name: Run tests
+        run: dotnet test BloodDonationSystem.sln --no-build || echo "No tests found"
