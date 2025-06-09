@@ -6,6 +6,6 @@
     "\\DataAccess\\Entities",
     "\\Presentation"
   ],
-  "SelectedNode": "\\DataAccess\\AppDbContext.cs",
+  "SelectedNode": "\\DataAccess\\Entities\\User.cs",
   "PreviewInSolutionExplorer": false
 }
