@@ -21,7 +21,6 @@ namespace BloodDonationSystem
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -30,7 +29,6 @@ namespace BloodDonationSystem
             builder.Services.AddScoped<JwtService>();
             builder.Services.AddScoped<IHealthRecordRepository, HealthRecordRepository>();
 
-            // Ensure the correct namespace is included for UseSqlServer
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -61,18 +59,16 @@ namespace BloodDonationSystem
 
             builder.Services.AddSingleton<FirebaseAdminService>();
             builder.Services.AddSingleton<EmailService>();
-            builder.Services.AddSingleton < FirebaseNotificationService >();
+            builder.Services.AddSingleton<FirebaseNotificationService>();
 
             builder.Services.AddSession();
             builder.Services.AddDistributedMemoryCache();
 
             builder.Services.AddAuthorization(options =>
             {
-                // Policy cho Admin
                 options.AddPolicy("AdminOnly", policy =>
                     policy.RequireRole("Admin"));
 
-                // Policy cho Admin hoặc Manager
                 options.AddPolicy("AdminOrStaff", policy =>
                     policy.RequireRole("Admin", "Staff"));
             });
@@ -86,41 +82,25 @@ namespace BloodDonationSystem
             {
                 Credential = GoogleCredential.FromFile("Configs/serviceAccountKey.json")
             });
-            builder.Services.AddControllers();
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
 
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowFrontend",
                     policy =>
                     {
-                        policy.WithOrigins("http://127.0.0.1:5500") // Hoặc domain frontend thật
+                        policy.WithOrigins("http://127.0.0.1:5500")
                               .AllowAnyHeader()
                               .AllowAnyMethod();
                     });
             });
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowReactApp", policy =>
-                {
-                    policy.WithOrigins("http://localhost:8080") 
-                          .AllowAnyHeader()
-                          .AllowAnyMethod();
-                });
-            });
 
-            
 
             var app = builder.Build();
-
-            app.UseCors("AllowReactApp");
 
             app.UseSession();
 
             app.UseCookiePolicy();
 
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();

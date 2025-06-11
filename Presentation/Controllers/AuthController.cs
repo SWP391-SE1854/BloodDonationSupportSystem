@@ -2,6 +2,7 @@
 using BloodDonationSystem.DataAccess.Entities;
 using FirebaseAdmin.Auth;
 using BloodDonationSystem.DataAccess.Repositories.UserRepo;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BloodDonationSystem.Presentation.Controllers;
 
@@ -69,45 +70,63 @@ public class AuthController : ControllerBase
         return Ok("Đăng ký thành công!");
     }
 
+    
     [HttpPost("firebase-login")]
     public async Task<IActionResult> FirebaseLogin()
     {
-        var authHeader = Request.Headers["Authorization"].ToString();
-        if (!authHeader.StartsWith("Bearer ")) return Unauthorized();
-
-        var idToken = authHeader.Substring("Bearer ".Length);
-        FirebaseToken decodedToken;
         try
         {
-            decodedToken = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken);
-        }
-        catch
-        {
-            return Unauthorized("Firebase Token không hợp lệ");
-        }
+            var authHeader = Request.Headers["Authorization"].ToString();
+            if (!authHeader.StartsWith("Bearer ")) return Unauthorized();
 
-        var email = decodedToken.Claims["email"]?.ToString();
-        if (string.IsNullOrEmpty(email))
-        {
-            return BadRequest("Email không được tìm thấy trong Firebase Token");
-        }
-        var name = decodedToken.Claims["name"]?.ToString() ?? "";
-
-        var user = await _userRepo.GetUserByEmailAsync(email);
-        if (user == null)
-        {
-            user = new User
+            var idToken = authHeader.Substring("Bearer ".Length);
+            FirebaseToken decodedToken;
+            try
             {
-                email = email,
-                name = name,
-                phone = "",
-                role = "Member"
-            };
-            await _userRepo.AddUserAsync(user);
-        }
+                decodedToken = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken);
+            }
+            catch
+            {
+                return Unauthorized("Firebase Token không hợp lệ");
+            }
 
-        var jwt = _jwtService.GenerateToken(user);
-        return Ok(new { token = jwt });
+            var email = decodedToken.Claims["email"]?.ToString();
+            if (string.IsNullOrEmpty(email))
+            {
+                return BadRequest("Email không được tìm thấy trong Firebase Token");
+            }
+            var name = decodedToken.Claims.ContainsKey("name")
+                        ? decodedToken.Claims["name"]?.ToString()
+    :                   email!.Split('@')[0]; // fallback
+
+            if (string.IsNullOrEmpty(name))
+                name = email!.Split('@')[0]; // fallback lần nữa
+
+
+            var user = await _userRepo.GetUserByEmailAsync(email);
+            if (user == null)
+            {
+                user = new User
+                {
+                    email = email,
+                    name = name,
+                    phone = "",
+                    role = "Member"
+                };
+                await _userRepo.AddUserAsync(user);
+            }
+
+            var jwt = _jwtService.GenerateToken(user);
+            return Ok(new { token = jwt });
+        }
+        catch (KeyNotFoundException)
+        {
+            return BadRequest(new { error = "Key not found in request" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi xác thực Firebase", error = ex.Message });
+        }
     }
 
 }
