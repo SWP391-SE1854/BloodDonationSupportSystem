@@ -1,141 +1,124 @@
-import axios, { AxiosError } from 'axios';
-import { API_BASE_URL, API_ENDPOINTS } from './api.config';
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface RegisterRequest {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  phoneNumber: string;
-  district: string;
-  bloodType: string;
-  role: string;
-}
-
-export interface AuthResponse {
-  id: string;
-  email: string;
-  role: string;
-  token: string;
-}
+import { auth } from '@/config/firebase';
+import { signInWithEmailAndPassword, signOut as firebaseSignOut } from 'firebase/auth';
+import axios from 'axios';
+import { AxiosError } from 'axios';
+import { API_BASE_URL } from '@/config/api';
+import { ENDPOINTS } from './api.config';
+import { LoginRequest, RegisterRequest, AuthResponse } from '@/types/api';
 
 export class AuthError extends Error {
-  constructor(public code: string, message: string) {
+  constructor(message: string) {
     super(message);
     this.name = 'AuthError';
   }
 }
 
-export const authService = {
-  async login(credentials: LoginRequest): Promise<AuthResponse> {
+class AuthService {
+  async login(email: string, password: string): Promise<AuthResponse> {
     try {
-      const response = await api.post(API_ENDPOINTS.LOGIN, credentials);
-      
-      // Validate response data
-      if (!response.data || !response.data.token) {
-        throw new AuthError('INVALID_RESPONSE', 'Invalid response from server');
+      const response = await fetch(`${API_BASE_URL}/auth/firebase-login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Login failed');
       }
 
-      localStorage.setItem('token', response.data.token);
-      api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
-      return response.data;
+      const data = await response.json();
+      return data;
     } catch (error) {
-      if (error instanceof AxiosError) {
-        if (error.response?.status === 401) {
-          throw new AuthError('INVALID_CREDENTIALS', 'Invalid email or password');
-        }
-        if (error.response?.data?.message) {
-          throw new AuthError('SERVER_ERROR', error.response.data.message);
-        }
-      }
-      throw new AuthError('NETWORK_ERROR', 'Failed to connect to server');
+      console.error('Login error:', error);
+      throw error;
     }
-  },
+  }
 
-  async register(data: RegisterRequest): Promise<AuthResponse> {
+  async register(userData: RegisterRequest): Promise<AuthResponse> {
     try {
-      const response = await api.post(API_ENDPOINTS.REGISTER, data);
-      
-      // Validate response data
-      if (!response.data || !response.data.token) {
-        throw new AuthError('INVALID_RESPONSE', 'Invalid response from server');
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Registration failed');
       }
 
-      localStorage.setItem('token', response.data.token);
-      api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
-      return response.data;
+      const data = await response.json();
+      return data;
     } catch (error) {
-      if (error instanceof AxiosError) {
-        if (error.response?.status === 409) {
-          throw new AuthError('EMAIL_EXISTS', 'Email already exists');
-        }
-        if (error.response?.data?.message) {
-          throw new AuthError('SERVER_ERROR', error.response.data.message);
-        }
-      }
-      throw new AuthError('NETWORK_ERROR', 'Failed to connect to server');
+      console.error('Registration error:', error);
+      throw error;
     }
-  },
+  }
 
-  async refreshToken(): Promise<AuthResponse> {
+  async loginWithFirebase(firebaseToken: string): Promise<AuthResponse> {
     try {
-      const response = await api.post(API_ENDPOINTS.REFRESH_TOKEN);
-      
-      if (!response.data || !response.data.token) {
-        throw new AuthError('INVALID_RESPONSE', 'Invalid response from server');
+      const response = await fetch(`${API_BASE_URL}/auth/firebase-login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ firebaseToken }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Firebase login failed');
       }
 
-      localStorage.setItem('token', response.data.token);
-      api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
-      return response.data;
+      const data = await response.json();
+      return data;
     } catch (error) {
-      if (error instanceof AxiosError && error.response?.status === 401) {
-        throw new AuthError('TOKEN_EXPIRED', 'Session expired, please login again');
+      console.error('Firebase login error:', error);
+      throw error;
+    }
+  }
+
+  async refreshToken(refreshToken: string): Promise<AuthResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Token refresh failed');
       }
-      throw new AuthError('NETWORK_ERROR', 'Failed to refresh token');
-    }
-  },
 
-  async revokeToken(): Promise<void> {
-    try {
-      await api.post(API_ENDPOINTS.REVOKE_TOKEN);
-      localStorage.removeItem('token');
-      delete api.defaults.headers.common['Authorization'];
+      const data = await response.json();
+      return data;
     } catch (error) {
-      console.error('Failed to revoke token:', error);
-      // Still remove token from local storage even if server call fails
-      localStorage.removeItem('token');
-      delete api.defaults.headers.common['Authorization'];
+      console.error('Token refresh error:', error);
+      throw error;
     }
-  },
+  }
 
-  getToken(): string | null {
-    return localStorage.getItem('token');
-  },
-
-  isAuthenticated(): boolean {
-    const token = this.getToken();
-    if (!token) return false;
-    
-    // Basic JWT expiration check
+  async logout(): Promise<void> {
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.exp * 1000 > Date.now();
-    } catch {
-      return false;
+      const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Logout failed');
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw error;
     }
-  },
-}; 
+  }
+}
+
+export const authService = new AuthService(); 

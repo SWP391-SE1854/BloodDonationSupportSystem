@@ -1,54 +1,51 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { userService, User } from '@/services/user.service';
 import { useToast } from '@/hooks/use-toast';
-import { loginSchema, registerSchema } from '@/lib/validations';
-import axiosInstance from '@/lib/axios';
-import { API_ENDPOINTS } from '@/services/api.config';
+import { auth } from '@/config/firebase';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import api from '@/services/api.service';
+import { jwtDecode } from 'jwt-decode';
+import { AxiosError } from 'axios';
+import { API_ENDPOINTS } from "@/services/api.config";
 
-interface LoginRequest {
+interface JwtPayload {
+  role: string;
+  sub: string;
   email: string;
-  password: string;
+  exp: number;
+  iat: number;
 }
 
-interface RegisterRequest {
+interface User {
+  email: string | null;
+  displayName: string | null;
+  uid: string;
+  firstName?: string;
+  lastName?: string;
+  role?: string;
+  photoURL?: string | null;
+}
+
+interface RegisterData {
   firstName: string;
   lastName: string;
   email: string;
-  password: string;
-  confirmPassword: string;
-  phoneNumber: string;
-  district: string;
-  city: string;
-  address: string;
+  phone: string;
   bloodType: string;
-  role: string;
-}
-
-interface ApiError {
-  message: string;
-  status: number;
-}
-
-interface AuthResponse {
+  address: string;
+  city: string;
+  district: string;
+  password: string;
+  dateOfBirth: string;
   token: string;
-  user: User;
-}
-
-interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-  error?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (data: LoginRequest) => Promise<void>;
-  register: (data: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
+  register: (data: RegisterData) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -59,114 +56,184 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const getRoleFromToken = () => {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    try {
+      const decoded = jwtDecode<JwtPayload>(token);
+      return decoded.role;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Failed to decode token:', error.message);
+      }
+      return null;
+    }
+  };
+
   useEffect(() => {
-    checkAuth();
+    let mounted = true;
+    
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!mounted) return;
+      
+      if (firebaseUser) {
+        try {
+          // Get the stored token
+          const token = localStorage.getItem('token');
+          if (!token) {
+            // If no token, we need to register/login first
+            setUser({
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName,
+              uid: firebaseUser.uid
+            });
+            setIsLoading(false);
+            return;
+          }
+
+          // Get role from token
+          const role = getRoleFromToken();
+          if (!role) {
+            // If no role in token, we need to login first
+            setUser({
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName,
+              uid: firebaseUser.uid
+            });
+            setIsLoading(false);
+            return;
+          }
+          
+          // Only fetch user profile if we have both a Firebase user and a valid token with role
+          const response = await api.get(API_ENDPOINTS.USER.PROFILE);
+          const userData = response.data;
+          
+          setUser({
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName,
+            uid: firebaseUser.uid,
+            firstName: userData.name?.split(' ')[0] || '',
+            lastName: userData.name?.split(' ')[1] || '',
+            role: role || userData.role
+          });
+
+          // If admin, navigate to admin dashboard
+          if (role === 'Admin' && window.location.pathname !== '/admin') {
+            navigate('/admin');
+          }
+        } catch (error: unknown) {
+          console.error('Failed to fetch user data:', error);
+          // If we get a 401 or 404, clear the token and let the user login again
+          if (error instanceof AxiosError && (error.response?.status === 401 || error.response?.status === 404)) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('firebaseToken');
+          }
+          setUser({
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName,
+            uid: firebaseUser.uid
+          });
+        }
+      } else {
+        setUser(null);
+        localStorage.removeItem('token');
+        localStorage.removeItem('firebaseToken');
+      }
+      setIsLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
   }, []);
 
-  const checkAuth = async () => {
+  const register = async (data: RegisterData) => {
     try {
-      const token = localStorage.getItem('token');
-      if (token) {
-        const userData = await userService.getCurrentUser();
-        setUser(userData);
+      // Format the data to match backend RegisterRequest model
+      const registerData = {
+        Name: `${data.firstName} ${data.lastName}`,
+        Email: data.email,
+        Password: data.password, // Add password field
+        Phone: data.phone,
+        Dob: new Date(data.dateOfBirth), // Convert string to Date
+        City: data.city,
+        District: data.district,
+        Address: data.address
+      };
+      
+      console.log('Sending registration data:', registerData);
+      
+      // Register with backend using the correct endpoint
+      const response = await api.post(API_ENDPOINTS.AUTH.REGISTER, registerData);
+      
+      console.log('Registration response:', response);
+      
+      if (response.status === 201 || response.status === 200) { // Accept both 201 and 200 as success
+        toast({
+          title: "Success",
+          description: "Registration successful! Please login to continue.",
+        });
+
+        // Always navigate to login after successful registration
+        navigate('/login');
+      } else {
+        throw new Error("Registration failed");
       }
     } catch (error) {
-      console.error('Auth check failed:', error);
-      await logout();
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const login = async (credentials: LoginRequest) => {
-    try {
-      // Validate input data
-      await loginSchema.parseAsync(credentials);
-
-      const response = await axiosInstance.post<ApiResponse<AuthResponse>>(API_ENDPOINTS.LOGIN, credentials);
-      const { token, user: userData } = response.data.data;
-
-      if (!token || !userData) {
-        throw new Error('Invalid response from server');
+      console.error('Registration failed:', error);
+      if (error instanceof AxiosError) {
+        console.error('Registration error details:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
+        
+        // Show more specific error message from backend if available
+        const errorMessage = error.response?.data?.message || error.message;
+        toast({
+          title: "Registration Failed",
+          description: errorMessage,
+          variant: "destructive"
+        });
       }
-
-      localStorage.setItem('token', token);
-      axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setUser(userData);
-
-      toast({
-        title: "Success",
-        description: "Logged in successfully",
-      });
-      navigate('/');
-    } catch (error) {
-      const axiosError = error as Error & { response?: { data: ApiError } };
-      toast({
-        title: "Error",
-        description: axiosError.response?.data?.message || "An unexpected error occurred",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  const register = async (data: RegisterRequest) => {
-    try {
-      // Validate input data
-      await registerSchema.parseAsync(data);
-
-      const response = await axiosInstance.post<ApiResponse<AuthResponse>>(API_ENDPOINTS.REGISTER, data);
-      const { token, user: userData } = response.data.data;
-
-      if (!token || !userData) {
-        throw new Error('Invalid response from server');
-      }
-
-      localStorage.setItem('token', token);
-      axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setUser(userData);
-
-      toast({
-        title: "Success",
-        description: "Registration successful",
-      });
-      navigate('/');
-    } catch (error) {
-      const axiosError = error as Error & { response?: { data: ApiError } };
-      toast({
-        title: "Error",
-        description: axiosError.response?.data?.message || "An unexpected error occurred",
-        variant: "destructive",
-      });
       throw error;
     }
   };
 
   const logout = async () => {
     try {
-      await axiosInstance.post(API_ENDPOINTS.REVOKE_TOKEN);
-    } catch (error) {
-      console.error('Logout failed:', error);
-    } finally {
-      localStorage.removeItem('token');
-      delete axiosInstance.defaults.headers.common['Authorization'];
+      await auth.signOut();
       setUser(null);
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      localStorage.removeItem('firebaseToken');
       navigate('/login');
       toast({
         title: "Success",
         description: "Logged out successfully",
       });
+    } catch (error) {
+      console.error('Logout failed:', error);
+      toast({
+        title: "Error",
+        description: "Failed to logout",
+        variant: "destructive",
+      });
     }
   };
 
-  const value = {
+  const value = React.useMemo(() => ({
     user,
     isLoading,
-    login,
-    register,
     logout,
-    isAuthenticated: !!user,
-  };
+    register,
+    isAuthenticated: !!user
+  }), [user, isLoading]);
+
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <AuthContext.Provider value={value}>
@@ -175,10 +242,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export const useAuth = () => {
+export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}; 
+} 

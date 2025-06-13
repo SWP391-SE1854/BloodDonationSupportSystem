@@ -1,12 +1,38 @@
 export interface User {
   id: string;
-  name: string;
   email: string;
-  role: 'admin' | 'staff' | 'donor';
-  phone?: string;
+  displayName?: string;
+  photoURL?: string;
+  role: 'admin' | 'user';
+  dateOfBirth?: string;
+  bloodType?: string;
   location?: string;
+  phoneNumber?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  displayName?: string;
+  role?: 'admin' | 'user';
+}
+
+export interface AuthResponse {
+  token: string;
+  user: User;
+}
+
+export interface ApiError {
+  message: string;
+  code?: string;
+  status?: number;
 }
 
 export interface BloodRequest {
@@ -89,4 +115,4 @@ export interface PaginatedResponse<T> {
   page: number;
   pageSize: number;
   totalPages: number;
-} ssvsefdnefba
+}

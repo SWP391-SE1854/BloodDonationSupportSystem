@@ -1,27 +1,44 @@
-import axiosInstance from '@/lib/axios';
+import axios from 'axios';
+import { environment } from '../config/environment';
+import { auth } from '@/config/firebase';
 
-export const apiService = {
-  // GET request example
-  async getData() {
-    const response = await axiosInstance.get('/your-endpoint');
-    return response.data;
+// Create axios instance with default config
+const api = axios.create({
+  baseURL: environment.apiUrl,
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
   },
+});
 
-  // POST request example
-  async createData(data: any) {
-    const response = await axiosInstance.post('/your-endpoint', data);
-    return response.data;
+// Request interceptor
+api.interceptors.request.use(
+  async (config) => {
+    // Get the JWT token from localStorage
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
   },
-
-  // PUT request example
-  async updateData(id: string, data: any) {
-    const response = await axiosInstance.put(`/your-endpoint/${id}`, data);
-    return response.data;
-  },
-
-  // DELETE request example
-  async deleteData(id: string) {
-    const response = await axiosInstance.delete(`/your-endpoint/${id}`);
-    return response.data;
+  (error) => {
+    return Promise.reject(error);
   }
-}; 
+);
+
+// Response interceptor
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Log the error but don't redirect
+    console.error('API Error:', {
+      status: error.response?.status,
+      message: error.message,
+      url: error.config?.url
+    });
+    return Promise.reject(error);
+  }
+);
+
+export default api; 

@@ -30,19 +30,26 @@ import {
   BarChart,
   UserPlus,
   UserCog,
-  LogOut
+  LogOut,
+  Key,
+  Mail,
+  RefreshCw
 } from "lucide-react";
-import { adminApi, dashboardApi } from "@/services/api";
+import { adminApi, dashboardApi, firebaseApi } from "@/services/api";
 import type { User as UserType, DashboardStats, SystemLog } from "@/types/api";
+import { useToast } from "@/hooks/use-toast";
 
 const Admin = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState("all");
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [users, setUsers] = useState<UserType[]>([]);
   const [logs, setLogs] = useState<SystemLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [resetEmail, setResetEmail] = useState("");
+  const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -67,8 +74,37 @@ const Admin = () => {
   }, []);
 
   const handleLogout = async () => {
-    // Implement logout logic
     navigate("/login");
+  };
+
+  const handlePasswordReset = async () => {
+    if (!resetEmail) {
+      toast({
+        title: "Error",
+        description: "Please enter an email address",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsResetting(true);
+    try {
+      await firebaseApi.sendResetPassword(resetEmail);
+      toast({
+        title: "Success",
+        description: "Password reset email sent successfully",
+      });
+      setResetEmail("");
+    } catch (error) {
+      console.error("Password reset failed:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send password reset email",
+        variant: "destructive"
+      });
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   const getRoleColor = (role: string) => {
@@ -167,8 +203,9 @@ const Admin = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid grid-cols-4 w-full max-w-2xl">
+          <TabsList className="grid grid-cols-5 w-full max-w-2xl">
             <TabsTrigger value="users">User Management</TabsTrigger>
+            <TabsTrigger value="firebase">Firebase</TabsTrigger>
             <TabsTrigger value="logs">System Logs</TabsTrigger>
             <TabsTrigger value="settings">System Settings</TabsTrigger>
             <TabsTrigger value="reports">Reports</TabsTrigger>
@@ -260,6 +297,77 @@ const Admin = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Firebase Management Tab */}
+          <TabsContent value="firebase">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Key className="h-5 w-5 text-purple-500" />
+                    <span>Password Reset</span>
+                  </CardTitle>
+                  <CardDescription>
+                    Send password reset emails to users
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">User Email</label>
+                    <div className="flex space-x-2">
+                      <Input
+                        type="email"
+                        placeholder="Enter user's email"
+                        value={resetEmail}
+                        onChange={(e) => setResetEmail(e.target.value)}
+                      />
+                      <Button 
+                        onClick={handlePasswordReset}
+                        disabled={isResetting}
+                        className="bg-purple-500 hover:bg-purple-600"
+                      >
+                        {isResetting ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            <Mail className="h-4 w-4 mr-2" />
+                            Send Reset
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Shield className="h-5 w-5 text-purple-500" />
+                    <span>Firebase Status</span>
+                  </CardTitle>
+                  <CardDescription>
+                    Monitor Firebase authentication status
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Authentication Status</span>
+                      <Badge className="bg-green-100 text-green-800">Active</Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Last Reset</span>
+                      <span className="text-sm text-gray-600">2 hours ago</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* System Logs Tab */}

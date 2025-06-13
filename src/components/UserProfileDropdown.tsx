@@ -7,9 +7,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, Settings, LogOut } from "lucide-react";
+import { User, Settings, LogOut, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { Badge } from "@/components/ui/badge";
 
 export function UserProfileDropdown() {
   const { user, logout } = useAuth();
@@ -18,20 +19,53 @@ export function UserProfileDropdown() {
     return null;
   }
 
-  const initials = `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+  // Get initials from displayName or email if firstName/lastName not available
+  const getInitials = () => {
+    if (user.firstName && user.lastName) {
+      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    }
+    if (user.displayName) {
+      return user.displayName.split(' ').map(n => n[0]).join('').toUpperCase();
+    }
+    if (user.email) {
+      return user.email[0].toUpperCase();
+    }
+    return 'U';
+  };
+
+  const displayName = user.firstName && user.lastName 
+    ? `${user.firstName} ${user.lastName}`
+    : user.displayName || user.email || 'User';
+
+  const isAdmin = user.email === "thang300@gmail.com"; // Special admin email
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="focus:outline-none">
-        <Avatar>
-          <AvatarImage src="https://img.freepik.com/free-vector/doctor-character-background_1270-84.jpg" />
-          <AvatarFallback>{initials}</AvatarFallback>
-        </Avatar>
+        <div className="relative">
+          <Avatar>
+            <AvatarImage src="https://img.freepik.com/free-vector/doctor-character-background_1270-84.jpg" />
+            <AvatarFallback>{getInitials()}</AvatarFallback>
+          </Avatar>
+          {isAdmin && (
+            <Badge 
+              className="absolute -top-1 -right-1 bg-red-500 text-white px-2 py-0.5 text-xs"
+              variant="destructive"
+            >
+              Admin
+            </Badge>
+          )}
+        </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{`${user.firstName} ${user.lastName}`}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium leading-none">{displayName}</p>
+              {isAdmin && (
+                <Shield className="h-4 w-4 text-red-500" />
+              )}
+            </div>
             <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
           </div>
         </DropdownMenuLabel>
@@ -42,6 +76,14 @@ export function UserProfileDropdown() {
             Profile
           </Link>
         </DropdownMenuItem>
+        {isAdmin && (
+          <DropdownMenuItem asChild>
+            <Link to="/admin" className="flex items-center cursor-pointer text-red-500">
+              <Shield className="w-4 h-4 mr-2" />
+              Admin Dashboard
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem asChild>
           <Link to="/settings" className="flex items-center cursor-pointer">
             <Settings className="w-4 h-4 mr-2" />
