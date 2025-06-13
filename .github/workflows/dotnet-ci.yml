@@ -1,0 +1,12 @@
+name: Just Check Push
+
+on:
+  push:
+    branches: [ BackEnd ]
+
+jobs:
+  simple-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Say Hello
+        run: echo "CI is working! But no project to build yet."
