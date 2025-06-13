@@ -1,82 +1,73 @@
-# Blood Donation Management System
+# Welcome to your Lovable project
 
-A modern web application for managing blood donations using React, TypeScript, and a local SQL database.
+## Project info
 
-## Prerequisites
+**URL**: https://lovable.dev/projects/13056b36-b166-41d1-b1c1-70c7167618cc
 
-- Node.js (v16 or higher)
-- npm or yarn
-- Local SQL database server
+## How can I edit this code?
 
-## Installation
+There are several ways of editing your application.
 
-1. Clone the repository:
-```bash
-git clone [repository-url]
-cd blood-donation-system
-```
+**Use Lovable**
 
-2. Install dependencies:
-```bash
-npm install
-```
+Simply visit the [Lovable Project](https://lovable.dev/projects/13056b36-b166-41d1-b1c1-70c7167618cc) and start prompting.
 
-3. Set up environment variables:
-   - Create `.env` file in the root directory
-   - Add the following variables:
-     ```
-     VITE_API_BASE_URL=http://localhost:5000/api
-     ```
+Changes made via Lovable will be committed automatically to this repo.
 
-## Running the Application
+**Use your preferred IDE**
 
-1. Start the development server:
-```bash
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+
+Follow these steps:
+
+```sh
+# Step 1: Clone the repository using the project's Git URL.
+git clone <YOUR_GIT_URL>
+
+# Step 2: Navigate to the project directory.
+cd <YOUR_PROJECT_NAME>
+
+# Step 3: Install the necessary dependencies.
+npm i
+
+# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
 
-2. Access the application:
-   - Frontend: http://localhost:5173
+**Edit a file directly in GitHub**
 
-## Features
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
 
-### Authentication & Authorization
-- JWT-based authentication
-- Role-based access control (Admin, Staff, Donor)
-- Protected routes
-- Session management
+**Use GitHub Codespaces**
 
-### User Management
-- User registration and profile management
-- Role-based permissions
-- Profile updates and password changes
-- Account deletion
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-### Blood Donation Management
-- Blood request creation and tracking
-- Donor matching system
-- Donation history tracking
-- Blood inventory management
+## What technologies are used for this project?
 
-### Admin Features
-- User management dashboard
-- System monitoring and logs
-- Report generation
-- System configuration
+This project is built with:
 
-### Staff Features
-- Blood request management
-- Donor record management
-- Inventory tracking
-- Donation scheduling
-
-## Tech Stack
-
-- React
-- TypeScript
 - Vite
+- TypeScript
+- React
+- shadcn-ui
 - Tailwind CSS
-- Shadcn UI
-- Axios for API calls
-- Local SQL Database
 
+## How can I deploy this project?
+
+Simply open [Lovable](https://lovable.dev/projects/13056b36-b166-41d1-b1c1-70c7167618cc) and click on Share -> Publish.
+
+## Can I connect a custom domain to my Lovable project?
+
+Yes, you can!
+
+To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+
+Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
