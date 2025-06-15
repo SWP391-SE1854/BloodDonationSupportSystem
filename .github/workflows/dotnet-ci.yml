@@ -1,12 +1,10 @@
-# .github/workflows/dotnet-ci.yml
-
 name: .NET CI
 
 on:
   push:
-    branches: [ main, BackEnd ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, BackEnd ]
+    branches: [ main ]
 
 jobs:
   build:
@@ -19,14 +17,13 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: '8.0.x'
 
     - name: Restore dependencies
-      run: dotnet restore BloodDonationSystem.sln
+      run: dotnet restore ./BloodDonationSystem.sln
 
-    - name: Build project
-      run: dotnet build BloodDonationSystem.sln --no-restore --configuration Release
+    - name: Build
+      run: dotnet build ./BloodDonationSystem.sln --no-restore
 
-    - name: Run Tests
-      working-directory: BloodDonationSystem
-      run: dotnet test ./BloodDonationSystem.sln
+    - name: Test
+      run: dotnet test ./BloodDonationSystem.sln --no-build --verbosity normal
