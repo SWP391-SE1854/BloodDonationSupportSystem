@@ -4,8 +4,9 @@
     "\\BusinessLogic",
     "\\DataAccess",
     "\\DataAccess\\Entities",
+    "\\DataAccess\\Repositories",
     "\\Presentation"
   ],
-  "SelectedNode": "\\BloodDonationSystem.sln",
+  "SelectedNode": "\\DataAccess\\Entities\\BlogPost.cs",
   "PreviewInSolutionExplorer": false
 }
