@@ -3,8 +3,9 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using BloodDonationSystem.BusinessLogic.IServices;
 
-public class JwtService
+public class JwtService : IJwtService
 {
     private readonly string _secretKey;
     private readonly string _issuer;
@@ -39,5 +40,7 @@ public class JwtService
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+
 }
 

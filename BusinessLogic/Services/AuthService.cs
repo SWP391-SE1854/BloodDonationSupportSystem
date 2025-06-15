@@ -1,14 +1,15 @@
 ﻿using static BCrypt.Net.BCrypt;
 using BloodDonationSystem.DataAccess.Entities;
 using BloodDonationSystem.DataAccess.Repositories.UserRepo;
+using BloodDonationSystem.BusinessLogic.IServices;
 
 public class AuthService
     {
         private readonly IUserRepository _userRepo;
 
-        private readonly JwtService _jwtService;
+        private readonly IJwtService _jwtService;
 
-        public AuthService(IUserRepository userRepo, JwtService jwtService)
+        public AuthService(IUserRepository userRepo, IJwtService jwtService)
         {
             _userRepo = userRepo;
             _jwtService = jwtService;

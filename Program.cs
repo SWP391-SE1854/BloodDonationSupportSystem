@@ -1,4 +1,5 @@
 ﻿
+using BloodDonationSystem.BusinessLogic.IServices;
 using BloodDonationSystem.BusinessLogic.Services;
 using BloodDonationSystem.DataAccess;
 using BloodDonationSystem.DataAccess.Repositories.HealthRecordRepo;
@@ -26,7 +27,7 @@ namespace BloodDonationSystem
             builder.Services.AddSwaggerGen();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<AuthService>();
-            builder.Services.AddScoped<JwtService>();
+            builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<IHealthRecordRepository, HealthRecordRepository>();
 
             builder.Services.AddDbContext<AppDbContext>(options =>
