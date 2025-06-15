@@ -2,6 +2,7 @@
 using BloodDonationSystem.BusinessLogic.IServices;
 using BloodDonationSystem.BusinessLogic.Services;
 using BloodDonationSystem.DataAccess;
+using BloodDonationSystem.DataAccess.Repositories.DonationRepo;
 using BloodDonationSystem.DataAccess.Repositories.HealthRecordRepo;
 using BloodDonationSystem.DataAccess.Repositories.UserRepo;
 using FirebaseAdmin;
@@ -29,6 +30,14 @@ namespace BloodDonationSystem
             builder.Services.AddScoped<AuthService>();
             builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<IHealthRecordRepository, HealthRecordRepository>();
+            builder.Services.AddScoped<IBloodInventoryRepository, BloodInventoryRepository>();
+            builder.Services.AddScoped<IBlogPostRepository, BlogPostRepository>();
+            builder.Services.AddScoped<IBloodRequestRepository, BloodRequestRepository>();
+            builder.Services.AddScoped<IDonationRepository, DonationRepository>();
+            builder.Services.AddScoped<ILocationRepository, LocationRepository>();
+            builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+            builder.Services.AddScoped<IDonationHistoryRepository, DonationHistoryRepository>();
+
 
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

@@ -120,7 +120,7 @@ namespace BloodDonationSystem.Presentation.Controllers.UserController
             existingUser.address = updatedUser.address ?? existingUser.address;
             existingUser.city = updatedUser.city ?? existingUser.city;
             existingUser.district = updatedUser.district ?? existingUser.district;
-            existingUser.role = updatedUser.role;
+            
 
             await _userRepository.UpdateUserAsync(existingUser);
             return Ok(existingUser);
@@ -168,8 +168,8 @@ namespace BloodDonationSystem.Presentation.Controllers.UserController
             });
         }
 
-        // PUT: api/members/member/2
-        [HttpPut("member/{id}")]
+        // PUT: api/members/member/modify_profile
+        [HttpPut("member/modify_profile")]
         public async Task<IActionResult> UpdateMember([FromBody] User updatedUser)
         {
             // Lấy user_id từ token
@@ -193,7 +193,7 @@ namespace BloodDonationSystem.Presentation.Controllers.UserController
             existingUser.address = updatedUser.address ?? existingUser.address;
             existingUser.city = updatedUser.city ?? existingUser.city;
             existingUser.district = updatedUser.district ?? existingUser.district;
-            existingUser.role = updatedUser.role;
+           
                 
 
             await _userRepository.UpdateUserAsync(existingUser);

@@ -18,6 +18,7 @@ namespace BloodDonationSystem.DataAccess
         public DbSet<Donation> Donations { get; set; }
         public DbSet<Location> Locations { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<DonationHistory> DonationHistories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

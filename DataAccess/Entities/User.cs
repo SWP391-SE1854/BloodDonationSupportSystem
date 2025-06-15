@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BloodDonationSystem.DataAccess.Entities
 {
@@ -15,7 +16,12 @@ namespace BloodDonationSystem.DataAccess.Entities
         public string? address { get; set; } // Địa chỉ người dùng
         public string? city { get; set; } // Thành phố người dùng
         public string? district { get; set; } // Quận huyện người dùng
-       
-      
+        public int location_id { get; set; }
+
+
+        //Navigation
+        [ForeignKey("location_id")]
+        public Location? Location { get; set; }
+
     }
 }

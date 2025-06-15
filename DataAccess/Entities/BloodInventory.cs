@@ -12,5 +12,6 @@ public class BloodInventory
     public DateTime expiration_date { get; set; }
 
     // Navigation
+    [ForeignKey("donation_id")]
     public Donation? Donation { get; set; }
 }
