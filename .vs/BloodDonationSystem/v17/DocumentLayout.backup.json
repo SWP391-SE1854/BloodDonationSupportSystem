@@ -3,16 +3,44 @@
   "WorkspaceRootPath": "D:\\c\\BloodDonationSystem\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\BloodInventory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DataAccess\\Entities\\BloodInventory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\c\\BloodDonationSystem\\DataAccess\\AppDbContext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DataAccess\\AppDbContext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\Location.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DataAccess\\Entities\\Location.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\Donation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DataAccess\\Entities\\Donation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\BloodRequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DataAccess\\Entities\\BloodRequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\Notification.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DataAccess\\Entities\\Notification.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\HealthRecord.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DataAccess\\Entities\\HealthRecord.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\DonationHistory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DataAccess\\Entities\\DonationHistory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\User.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DataAccess\\Entities\\User.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\BlogPost.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DataAccess\\Entities\\BlogPost.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\Location.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DataAccess\\Entities\\Location.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -22,7 +50,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 7,
           "Children": [
             {
               "$type": "Bookmark",
@@ -34,20 +62,111 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "Location.cs",
-              "DocumentMoniker": "D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\Location.cs",
-              "RelativeDocumentMoniker": "DataAccess\\Entities\\Location.cs",
-              "ToolTip": "D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\Location.cs",
-              "RelativeToolTip": "DataAccess\\Entities\\Location.cs",
+              "DocumentIndex": 5,
+              "Title": "HealthRecord.cs",
+              "DocumentMoniker": "D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\HealthRecord.cs",
+              "RelativeDocumentMoniker": "DataAccess\\Entities\\HealthRecord.cs",
+              "ToolTip": "D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\HealthRecord.cs",
+              "RelativeToolTip": "DataAccess\\Entities\\HealthRecord.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-09T12:20:23.52Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Notification.cs",
+              "DocumentMoniker": "D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\Notification.cs",
+              "RelativeDocumentMoniker": "DataAccess\\Entities\\Notification.cs",
+              "ToolTip": "D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\Notification.cs",
+              "RelativeToolTip": "DataAccess\\Entities\\Notification.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAnAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-09T12:19:14.43Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "BloodRequest.cs",
+              "DocumentMoniker": "D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\BloodRequest.cs",
+              "RelativeDocumentMoniker": "DataAccess\\Entities\\BloodRequest.cs",
+              "ToolTip": "D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\BloodRequest.cs",
+              "RelativeToolTip": "DataAccess\\Entities\\BloodRequest.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-08T08:39:52.863Z",
+              "WhenOpened": "2025-06-09T12:20:44.915Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
+              "Title": "Donation.cs",
+              "DocumentMoniker": "D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\Donation.cs",
+              "RelativeDocumentMoniker": "DataAccess\\Entities\\Donation.cs",
+              "ToolTip": "D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\Donation.cs",
+              "RelativeToolTip": "DataAccess\\Entities\\Donation.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-09T12:20:42.552Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "AppDbContext.cs",
+              "DocumentMoniker": "D:\\c\\BloodDonationSystem\\DataAccess\\AppDbContext.cs",
+              "RelativeDocumentMoniker": "DataAccess\\AppDbContext.cs",
+              "ToolTip": "D:\\c\\BloodDonationSystem\\DataAccess\\AppDbContext.cs",
+              "RelativeToolTip": "DataAccess\\AppDbContext.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAA2AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-08T08:05:07.363Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "BloodInventory.cs",
+              "DocumentMoniker": "D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\BloodInventory.cs",
+              "RelativeDocumentMoniker": "DataAccess\\Entities\\BloodInventory.cs",
+              "ToolTip": "D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\BloodInventory.cs",
+              "RelativeToolTip": "DataAccess\\Entities\\BloodInventory.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-09T12:20:47.12Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "DonationHistory.cs",
+              "DocumentMoniker": "D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\DonationHistory.cs",
+              "RelativeDocumentMoniker": "DataAccess\\Entities\\DonationHistory.cs",
+              "ToolTip": "D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\DonationHistory.cs",
+              "RelativeToolTip": "DataAccess\\Entities\\DonationHistory.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-09T12:20:30.379Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "User.cs",
+              "DocumentMoniker": "D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\User.cs",
+              "RelativeDocumentMoniker": "DataAccess\\Entities\\User.cs",
+              "ToolTip": "D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\User.cs",
+              "RelativeToolTip": "DataAccess\\Entities\\User.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAHAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-09T12:19:15.845Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
               "Title": "BlogPost.cs",
               "DocumentMoniker": "D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\BlogPost.cs",
               "RelativeDocumentMoniker": "DataAccess\\Entities\\BlogPost.cs",
@@ -60,15 +179,15 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "AppDbContext.cs",
-              "DocumentMoniker": "D:\\c\\BloodDonationSystem\\DataAccess\\AppDbContext.cs",
-              "RelativeDocumentMoniker": "DataAccess\\AppDbContext.cs",
-              "ToolTip": "D:\\c\\BloodDonationSystem\\DataAccess\\AppDbContext.cs",
-              "RelativeToolTip": "DataAccess\\AppDbContext.cs",
-              "ViewState": "AgIAAAoAAAAAAAAAAAAAwCMAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 9,
+              "Title": "Location.cs",
+              "DocumentMoniker": "D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\Location.cs",
+              "RelativeDocumentMoniker": "DataAccess\\Entities\\Location.cs",
+              "ToolTip": "D:\\c\\BloodDonationSystem\\DataAccess\\Entities\\Location.cs",
+              "RelativeToolTip": "DataAccess\\Entities\\Location.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAABFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-08T08:05:07.363Z",
+              "WhenOpened": "2025-06-08T08:39:52.863Z",
               "EditorCaption": ""
             }
           ]
