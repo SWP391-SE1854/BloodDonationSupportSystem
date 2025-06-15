@@ -47,7 +47,7 @@ namespace BloodDonationSystem.Tests.Services
         [Test]
         public void LoginAsync_UserWithoutRole_ThrowsException()
         {
-            var user = new User { email = "no-role@example.com", role = null, name = "abc" };
+            var user = new User { email = "no-role@example.com", role = "member", name = "abc" };
             _userRepoMock.Setup(r => r.GetUserByEmailAsync(user.email)).ReturnsAsync(user);
 
             Assert.ThrowsAsync<InvalidOperationException>(() => _authService.LoginAsync(user.email, "pass"));
