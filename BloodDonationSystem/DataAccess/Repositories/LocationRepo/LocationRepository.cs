@@ -1,7 +1,8 @@
 using BloodDonationSystem.DataAccess.Entities;
+using BloodDonationSystem.DataAccess.Repositories.LocationRepo;
 using Microsoft.EntityFrameworkCore;
 
-namespace BloodDonationSystem.DataAccess.Repositories.LocationRepo
+namespace BloodDonationSystem.DataAccess.Repositories.Impl
 {
     public class LocationRepository : ILocationRepository
     {
@@ -14,24 +15,24 @@ namespace BloodDonationSystem.DataAccess.Repositories.LocationRepo
 
         public async Task<Location?> GetByIdAsync(int locationId)
         {
-            return await _context.Set<Location>().FindAsync(locationId);
+            return await _context.Locations.FindAsync(locationId);
         }
 
         public async Task<List<Location>> GetAllAsync()
         {
-            return await _context.Set<Location>().ToListAsync();
+            return await _context.Locations.ToListAsync();
         }
 
         public async Task<Location> AddAsync(Location location)
         {
-            _context.Set<Location>().Add(location);
+            _context.Locations.Add(location);
             await _context.SaveChangesAsync();
             return location;
         }
 
         public async Task<bool> UpdateAsync(Location location)
         {
-            var existing = await _context.Set<Location>().FindAsync(location.location_id);
+            var existing = await _context.Locations.FindAsync(location.location_id);
             if (existing == null)
                 return false;
 
@@ -42,11 +43,11 @@ namespace BloodDonationSystem.DataAccess.Repositories.LocationRepo
 
         public async Task<bool> DeleteAsync(int locationId)
         {
-            var location = await _context.Set<Location>().FindAsync(locationId);
+            var location = await _context.Locations.FindAsync(locationId);
             if (location == null)
                 return false;
 
-            _context.Set<Location>().Remove(location);
+            _context.Locations.Remove(location);
             await _context.SaveChangesAsync();
             return true;
         }

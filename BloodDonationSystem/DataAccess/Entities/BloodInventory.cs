@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BloodDonationSystem.DataAccess.Entities;
 public class BloodInventory
@@ -12,5 +13,6 @@ public class BloodInventory
     public DateTime expiration_date { get; set; }
 
     // Navigation
+    [ForeignKey("donation_id")]
     public Donation? Donation { get; set; }
 }

@@ -25,4 +25,10 @@ public class HealthRecord
         public bool increment_donation { get; set; }
     }
 
-}
+
+    // Navigation
+    [ForeignKey("user_id")]
+    public User? User { get; set; }
+
+    
+ }

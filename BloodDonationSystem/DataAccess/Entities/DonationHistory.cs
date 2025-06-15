@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BloodDonationSystem.DataAccess.Entities
 {
@@ -15,9 +16,11 @@ namespace BloodDonationSystem.DataAccess.Entities
         public int quantity { get; set; }
 
         // Navigation
+        [ForeignKey("user_id")]
         public User? User { get; set; }
-        public BloodInventory? BloodInventory { get; set; }
 
+        [ForeignKey("unit_id")]
+        public BloodInventory? BloodInventory { get; set; }
 
 
 

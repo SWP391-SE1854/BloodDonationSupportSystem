@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BloodDonationSystem.DataAccess.Entities;
 public class BloodRequest
@@ -10,4 +11,11 @@ public class BloodRequest
     public bool emergency_status { get; set; }
     public DateTime request_date { get; set; }
     public int location_id { get; set; }
+
+    // Navigation
+    [ForeignKey("user_id")]
+    public User? User { get; set; }
+
+    [ForeignKey("location_id")]
+    public Location? Location { get; set; }
 }

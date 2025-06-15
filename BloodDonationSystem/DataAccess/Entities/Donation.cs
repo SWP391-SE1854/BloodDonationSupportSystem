@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BloodDonationSystem.DataAccess.Entities
 {
@@ -13,9 +14,12 @@ namespace BloodDonationSystem.DataAccess.Entities
         public string? blood_type { get; set; } // Nhóm máu
         public int quantity { get; set; } // Số lượng máu (ml)
         public string? status { get; set; } // Trạng thái hiến máu (e.g., "Completed", "Pending")
-        
+
         // Navigation
+        [ForeignKey("user_id")]
         public User? User { get; set; }
+        
+        [ForeignKey("unit_id")]
         public BloodInventory? BloodInventory { get; set; }
 
     }

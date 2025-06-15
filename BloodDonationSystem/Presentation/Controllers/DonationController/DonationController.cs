@@ -20,7 +20,7 @@ namespace BloodDonationSystem.Presentation.Controllers.DonationController
             _donationRepository = donationRepository;
         }
 
-        // ADMIN & STAFF: GET ALL DONATIONS
+        // Lấy toàn bộ yêu cầu hiến máu (chỉ admin và staff được phép)
         [Authorize(Policy = "AdminOrStaff")]
         [HttpGet("all")]
         public async Task<IActionResult> GetAllDonations()
@@ -28,28 +28,20 @@ namespace BloodDonationSystem.Presentation.Controllers.DonationController
             var donations = await _donationRepository.GetAllAsync();
             return Ok(donations);
         }
-
-        // MEMBER, STAFF, ADMIN: Lấy yêu cầu của người dùng hiện tại (member chỉ xem của mình)
-        [Authorize(Policy = "MemberOnly,StaffOnly,AdminOnly")]
-        [HttpGet("user")]
-        public async Task<IActionResult> GetDonationsForCurrentUser()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
-                return Unauthorized(new { Message = "Token không hợp lệ hoặc thiếu thông tin." });
-
-            var donations = await _donationRepository.GetByIdAsync(userId);
-            return Ok(donations);
-        }
-
-        // STAFF & ADMIN: GET DONATIONS BY ANY USER ID
+        // Lấy tất cả yêu cầu hiến máu theo user ID cụ thể (admin hoặc staff)
         [Authorize(Policy = "AdminOrStaff")]
-        [HttpGet("user/{userId}")]
+        [HttpGet("users")]
         public async Task<IActionResult> GetDonationsByUserId(int userId)
         {
-            var donations = await _donationRepository.GetByIdAsync(userId);
-            return Ok(donations);
+            var donation = await _donationRepository.GetByIdAsync(userId);
+            if (donation == null)
+                return NotFound(new { Message = "Không tìm thấy yêu cầu của người dùng này." });
+
+            return Ok(donation);
         }
+        
+
+      
 
         // MEMBER: Tạo yêu cầu mới (chỉ tạo cho chính mình)
         [Authorize(Policy = "MemberOnly")]
