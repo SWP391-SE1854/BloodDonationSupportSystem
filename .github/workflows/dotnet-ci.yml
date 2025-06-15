@@ -29,4 +29,4 @@ jobs:
 
     - name: Run Tests
       working-directory: BloodDonationSystem
-      run: dotnet test ./BloodDonationSystem/BloodDonationSystem.sln
+      run: dotnet test ./BloodDonationSystem.sln
