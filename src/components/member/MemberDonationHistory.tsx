@@ -1,0 +1,239 @@
+
+import React, { useState } from 'react';
+import { Heart, Calendar, MapPin, Filter, Download, Search } from 'lucide-react';
+
+const MemberDonationHistory = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  // Based on DonationHistories table schema
+  const donationHistories = [
+    {
+      donation_id: 1,
+      user_id: 1,
+      unit_id: 101,
+      donation_date: '2025-05-15',
+      status: 'completed',
+      component: 'Whole Blood',
+      location: 'City Medical Center',
+      quantity: 450
+    },
+    {
+      donation_id: 2,
+      user_id: 1,
+      unit_id: 102,
+      donation_date: '2025-03-10',
+      status: 'completed',
+      component: 'Platelets',
+      location: 'Community Health Center',
+      quantity: 300
+    },
+    {
+      donation_id: 3,
+      user_id: 1,
+      unit_id: 103,
+      donation_date: '2025-01-22',
+      status: 'completed',
+      component: 'Whole Blood',
+      location: 'Regional Blood Bank',
+      quantity: 450
+    },
+    {
+      donation_id: 4,
+      user_id: 1,
+      unit_id: 104,
+      donation_date: '2024-11-18',
+      status: 'completed',
+      component: 'Plasma',
+      location: 'University Hospital',
+      quantity: 600
+    },
+    {
+      donation_id: 5,
+      user_id: 1,
+      unit_id: 105,
+      donation_date: '2024-09-05',
+      status: 'completed',
+      component: 'Whole Blood',
+      location: 'City Medical Center',
+      quantity: 450
+    }
+  ];
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'bg-green-600';
+      case 'pending': return 'bg-yellow-600';
+      case 'cancelled': return 'bg-red-600';
+      default: return 'bg-gray-600';
+    }
+  };
+
+  const getComponentColor = (component: string) => {
+    switch (component) {
+      case 'Whole Blood': return 'text-red-600 bg-red-100';
+      case 'Platelets': return 'text-blue-600 bg-blue-100';
+      case 'Plasma': return 'text-yellow-600 bg-yellow-100';
+      default: return 'text-gray-600 bg-gray-100';
+    }
+  };
+
+  const filteredDonations = donationHistories.filter(donation => {
+    const matchesSearch = donation.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         donation.component.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         donation.donation_id.toString().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || donation.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const totalDonations = donationHistories.length;
+  const totalQuantity = donationHistories.reduce((sum, d) => sum + d.quantity, 0);
+  const lastDonation = donationHistories[0]?.donation_date;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Donation History</h1>
+          <p className="text-gray-600 mt-2">Your complete donation records from database</p>
+        </div>
+        <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+          <Download className="h-4 w-4" />
+          <span>Export History</span>
+        </button>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white border border-red-100 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Donations</p>
+              <p className="text-3xl font-bold text-red-600">{totalDonations}</p>
+            </div>
+            <Heart className="h-8 w-8 text-red-600" />
+          </div>
+        </div>
+
+        <div className="bg-white border border-blue-100 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Volume</p>
+              <p className="text-3xl font-bold text-blue-600">{totalQuantity}ml</p>
+            </div>
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <div className="h-4 w-4 bg-blue-600 rounded"></div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border border-green-100 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Last Donation</p>
+              <p className="text-lg font-bold text-green-600">{lastDonation}</p>
+            </div>
+            <Calendar className="h-8 w-8 text-green-600" />
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white border border-red-100 rounded-lg">
+        <div className="p-6 border-b border-gray-100">
+          <div className="flex items-center space-x-2">
+            <Filter className="h-5 w-5 text-red-600" />
+            <span className="font-semibold">Filter & Search</span>
+          </div>
+        </div>
+        <div className="p-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by location, component, or donation ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 border border-red-200 focus:border-red-500 rounded-lg px-3 py-2 outline-none"
+              />
+            </div>
+            <select 
+              value={statusFilter} 
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full sm:w-48 border border-red-200 focus:border-red-500 rounded-lg px-3 py-2 outline-none"
+            >
+              <option value="all">All Status</option>
+              <option value="completed">Completed</option>
+              <option value="pending">Pending</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Donation History List */}
+      <div className="bg-white border border-red-100 rounded-lg">
+        <div className="p-6 border-b border-gray-100">
+          <h3 className="font-semibold">Donation Records</h3>
+          <p className="text-sm text-gray-600 mt-1">From DonationHistories table ({filteredDonations.length} records)</p>
+        </div>
+        <div className="p-6">
+          <div className="space-y-4">
+            {filteredDonations.map((donation) => (
+              <div key={donation.donation_id} className="border border-gray-100 rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0">
+                  <div className="flex items-start space-x-4">
+                    <div className="p-2 bg-red-100 rounded-lg">
+                      <Heart className="h-5 w-5 text-red-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+                        <h3 className="font-semibold text-gray-900">Donation ID: {donation.donation_id}</h3>
+                        <span className={`inline-block px-2 py-1 rounded text-xs font-medium text-white ${getStatusColor(donation.status)}`}>
+                          {donation.status.charAt(0).toUpperCase() + donation.status.slice(1)}
+                        </span>
+                      </div>
+                      <div className="mt-2 space-y-1">
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Calendar className="h-4 w-4 mr-2" />
+                          {donation.donation_date}
+                        </div>
+                        <div className="flex items-center text-sm text-gray-600">
+                          <MapPin className="h-4 w-4 mr-2" />
+                          {donation.location}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Unit ID: {donation.unit_id}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col sm:items-end space-y-2">
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${getComponentColor(donation.component)}`}>
+                      {donation.component}
+                    </span>
+                    <div className="text-sm text-gray-600">
+                      <span className="font-semibold">{donation.quantity}ml</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {filteredDonations.length === 0 && (
+              <div className="text-center py-8">
+                <Heart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No donations found</h3>
+                <p className="text-gray-600">No donations match your current filters.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MemberDonationHistory;
