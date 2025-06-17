@@ -3,6 +3,7 @@ using BloodDonationSystem.DataAccess.Entities;
 using FirebaseAdmin.Auth;
 using BloodDonationSystem.DataAccess.Repositories.UserRepo;
 using Microsoft.AspNetCore.Authorization;
+using BloodDonationSystem.BusinessLogic.Services;
 
 namespace BloodDonationSystem.Presentation.Controllers;
 
@@ -14,18 +15,24 @@ public class AuthController : ControllerBase
     private readonly JwtService _jwtService;
     private readonly IConfiguration _configuration;
     private readonly IUserRepository _userRepo;
+    private readonly FirebaseAdminService _firebaseService;
+    private readonly EmailService _emailService;
 
     public AuthController(
         AuthService authService,
         JwtService jwtService,
         IConfiguration configuration,
-        IUserRepository userRepo
+        IUserRepository userRepo,
+        FirebaseAdminService firebaseService,
+        EmailService emailService
     )
     {
         _authService = authService;
         _jwtService = jwtService;
         _configuration = configuration;
         _userRepo = userRepo;
+        _firebaseService = firebaseService;
+        _emailService = emailService;
     }
 
     // Đăng ký tài khoản  
@@ -128,6 +135,15 @@ public class AuthController : ControllerBase
             return StatusCode(500, new { message = "Lỗi khi xác thực Firebase", error = ex.Message });
         }
     }
+
+        [HttpPost("send-reset-password")]
+        public async Task<IActionResult> SendResetPassword([FromBody] string email)
+        {
+            var resetLink = await _firebaseService.GeneratePasswordResetLinkAsync(email);
+            await _emailService.SendResetPasswordEmail(email, resetLink);
+            return Ok(new { message = "Đã gửi email khôi phục mật khẩu" });
+        }
+    
 
 }
 
