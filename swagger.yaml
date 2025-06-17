@@ -5,7 +5,7 @@ info:
   description: API documentation for the Blood Donation Management System
 
 servers:
-  - url: http://localhost:3000/api
+  - url: http://localhost:5081/api
     description: Development server
 
 components:
