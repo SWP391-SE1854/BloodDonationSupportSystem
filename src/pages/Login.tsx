@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { auth, googleProvider } from "@/config/firebase";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { API_BASE_URL } from '@/config/api';
+import { loginSchema } from '@/lib/validations';
+import { jwtDecode } from 'jwt-decode';
 
 const Login = () => {
   const { toast } = useToast();
@@ -18,9 +20,29 @@ const Login = () => {
     email: "",
     password: ""
   });
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const validateForm = () => {
+    try {
+      loginSchema.parse(formData);
+      setErrors({});
+      return true;
+    } catch (error: any) {
+      const newErrors: { [key: string]: string } = {};
+      error.errors?.forEach((err: any) => {
+        newErrors[err.path[0]] = err.message;
+      });
+      setErrors(newErrors);
+      return false;
+    }
   };
 
   const handleGoogleLogin = async () => {
@@ -42,14 +64,50 @@ const Login = () => {
       const data = await response.json();
       console.log("System token:", data.token);
       
-      // Store user data and redirect
+      // Store the JWT token
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
+
+      // Decode the JWT token to get the role
+      let role = '';
+      if (data.token) {
+        try {
+          const decoded = jwtDecode<{ 
+            "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier": string;
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress": string;
+            exp: number;
+            iss: string;
+            aud: string;
+          }>(data.token);
+          role = decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+          console.log('JWT Token decoded:', decoded);
+          console.log('Extracted role:', role);
+        } catch (e) {
+          console.error('Failed to decode JWT token:', e);
+        }
+      }
+
+      // Store user data
       localStorage.setItem('user', JSON.stringify({
         email: user.email,
         displayName: user.displayName,
         uid: user.uid
       }));
       
-      navigate('/profile');
+      // Redirect based on role
+      console.log('Redirecting based on role:', role);
+      if (role === 'Admin') {
+        console.log('Redirecting to admin dashboard');
+        navigate('/admin/dashboard');
+      } else if (role === 'Staff') {
+        console.log('Redirecting to staff profile');
+        navigate('/staff/profile');
+      } else {
+        console.log('Redirecting to member profile');
+        navigate('/member/profile');
+      }
     } catch (error) {
       console.error('Login failed:', error);
       toast({
@@ -64,8 +122,10 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) {
+      return;
+    }
     setIsLoading(true);
-    
     try {
       const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
@@ -87,14 +147,45 @@ const Login = () => {
         localStorage.setItem('token', data.token);
       }
 
-      // Store user data and redirect
+      // Decode the JWT token to get the role
+      let role = '';
+      if (data.token) {
+        try {
+          const decoded = jwtDecode<{ 
+            "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier": string;
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress": string;
+            exp: number;
+            iss: string;
+            aud: string;
+          }>(data.token);
+          role = decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+          console.log('JWT Token decoded:', decoded);
+          console.log('Extracted role:', role);
+        } catch (e) {
+          console.error('Failed to decode JWT token:', e);
+        }
+      }
+
+      // Store user data
       localStorage.setItem('user', JSON.stringify({
         email: user.email,
         displayName: user.displayName,
         uid: user.uid
       }));
       
-      navigate('/profile');
+      // Redirect based on role
+      console.log('Redirecting based on role:', role);
+      if (role === 'Admin') {
+        console.log('Redirecting to admin dashboard');
+        navigate('/admin/dashboard');
+      } else if (role === 'Staff') {
+        console.log('Redirecting to staff profile');
+        navigate('/staff/profile');
+      } else {
+        console.log('Redirecting to member profile');
+        navigate('/member/profile');
+      }
     } catch (error) {
       console.error('Login failed:', error);
       toast({
@@ -156,7 +247,11 @@ const Login = () => {
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   required
                   disabled={isLoading}
+                  className={errors.email ? "border-red-500" : ""}
                 />
+                {errors.email && (
+                  <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                )}
               </div>
 
               <div>
@@ -172,7 +267,11 @@ const Login = () => {
                   onChange={(e) => handleInputChange("password", e.target.value)}
                   required
                   disabled={isLoading}
+                  className={errors.password ? "border-red-500" : ""}
                 />
+                {errors.password && (
+                  <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                )}
               </div>
 
               <Button 

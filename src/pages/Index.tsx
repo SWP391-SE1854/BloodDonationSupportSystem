@@ -183,7 +183,7 @@ const Index = () => {
               <Link to="/about">
                 <Button 
                   variant="outline" 
-                  className="border-2 border-white text-white hover:bg-white hover:text-gray-900 px-10 py-4 text-xl font-medium transition-all duration-300 backdrop-blur-sm"
+                  className="border-2 border-white hover:text-gray-900 px-10 py-4 text-xl font-medium transition-all duration-300 transform hover:scale-105"
                   size="lg"
                 >
                   Learn More
@@ -194,11 +194,6 @@ const Index = () => {
         </div>
 
         {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-          <div className="w-6 h-10 border-2 border-white rounded-full flex justify-center">
-            <div className="w-1 h-3 bg-white rounded-full mt-2 animate-pulse"></div>
-          </div>
-        </div>
       </section>
 
       {/* Features Section */}

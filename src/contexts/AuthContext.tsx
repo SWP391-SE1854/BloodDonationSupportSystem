@@ -20,18 +20,15 @@ interface User {
   email: string | null;
   displayName: string | null;
   uid: string;
-  firstName?: string;
-  lastName?: string;
+  name?: string;
   role?: string;
   photoURL?: string | null;
 }
 
 interface RegisterData {
-  firstName: string;
-  lastName: string;
+  name: string;
   email: string;
-  phone: string;
-  bloodType: string;
+  phoneNumber: string;
   address: string;
   city: string;
   district: string;
@@ -112,8 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             email: firebaseUser.email,
             displayName: firebaseUser.displayName,
             uid: firebaseUser.uid,
-            firstName: userData.name?.split(' ')[0] || '',
-            lastName: userData.name?.split(' ')[1] || '',
+            name: userData.name || firebaseUser.displayName,
             role: role || userData.role
           });
 
@@ -152,10 +148,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // Format the data to match backend RegisterRequest model
       const registerData = {
-        Name: `${data.firstName} ${data.lastName}`,
+        Name: data.name,
         Email: data.email,
-        Password: data.password, // Add password field
-        Phone: data.phone,
+        Password: data.password,
+        Phone: data.phoneNumber,
         Dob: new Date(data.dateOfBirth), // Convert string to Date
         City: data.city,
         District: data.district,

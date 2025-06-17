@@ -1,37 +1,143 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, User, Mail, Phone, MapPin, Lock, Building2, MapPinned, Hash, Droplet, Calendar } from "lucide-react";
+import { Heart, User, Mail, Phone, MapPin, Lock, Building2, MapPinned, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { auth, googleProvider } from "@/config/firebase";
-import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import { signInWithPopup } from "firebase/auth";
+import { registerSchema } from "@/lib/validations";
+import { z } from "zod";
+import { useNavigate } from "react-router-dom";
 
 const Register = () => {
   const { toast } = useToast();
-  const { register } = useAuth();
-  const navigate = useNavigate();
+  const { register, loginWithFirebase } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [showAllErrors, setShowAllErrors] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    name: "",
     email: "",
     phone: "",
-    bloodType: "",
     address: "",
     city: "",
     district: "",
     password: "",
     confirmPassword: "",
-    dateOfBirth: "" // Added date of birth
+    dateOfBirth: ""
   });
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const navigate = useNavigate();
+
+  const validateField = (field: string, value: string) => {
+    try {
+      // Create a test object with the current field value and default values for others
+      const testData = {
+        name: field === 'name' ? value : formData.name,
+        email: field === 'email' ? value : formData.email,
+        password: field === 'password' ? value : formData.password,
+        confirmPassword: field === 'confirmPassword' ? value : formData.confirmPassword,
+        phoneNumber: field === 'phone' ? value : formData.phone,
+        district: field === 'district' ? value : formData.district,
+        city: field === 'city' ? value : formData.city,
+        address: field === 'address' ? value : formData.address,
+        dateOfBirth: field === 'dateOfBirth' ? value : formData.dateOfBirth
+      };
+      
+      registerSchema.parse(testData);
+      return "";
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        // Find the error for the specific field
+        const fieldError = err.errors.find(e => {
+          const path = e.path[0];
+          return path === field || (field === 'phone' && path === 'phoneNumber');
+        });
+        return fieldError?.message || "";
+      }
+      return "";
+    }
+  };
+
+  const validateAllFields = () => {
+    try {
+      registerSchema.parse({
+        ...formData,
+        phoneNumber: formData.phone
+      });
+      setErrors({});
+      return true;
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const fieldErrors: { [key: string]: string } = {};
+        err.errors.forEach(e => {
+          if (e.path[0]) {
+            const fieldName = e.path[0] as string;
+            // Map phoneNumber back to phone for display
+            const displayField = fieldName === 'phoneNumber' ? 'phone' : fieldName;
+            fieldErrors[displayField] = e.message;
+          }
+        });
+        setErrors(fieldErrors);
+      }
+      return false;
+    }
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Always validate the current field in real-time
+    const fieldError = validateField(field, value);
+    setErrors(prev => ({ 
+      ...prev, 
+      [field]: fieldError 
+    }));
+    
+    // If showing all errors, also validate all fields to update other field errors
+    if (showAllErrors) {
+      validateAllFields();
+    }
+  };
+
+  const handleInputBlur = (field: string, value: string) => {
+    // Validate field on blur
+    const fieldError = validateField(field, value);
+    setErrors(prev => ({ 
+      ...prev, 
+      [field]: fieldError 
+    }));
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, nextFieldId?: string) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      
+      // Get the current field name from the event target
+      const currentField = (e.target as HTMLInputElement).id;
+      const currentValue = (e.target as HTMLInputElement).value;
+      
+      // Validate the current field before allowing navigation
+      const currentError = validateField(currentField, currentValue);
+      if (currentError) {
+        // Don't navigate if there's an error in the current field
+        setErrors(prev => ({ 
+          ...prev, 
+          [currentField]: currentError 
+        }));
+        return;
+      }
+      
+      if (nextFieldId) {
+        const nextField = document.getElementById(nextFieldId);
+        if (nextField) {
+          nextField.focus();
+        }
+      }
+    }
   };
 
   const handleGoogleSignUp = async () => {
@@ -39,34 +145,33 @@ const Register = () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
+      console.log("Google sign-up successful");
+
+      // Get Firebase token for login
       const token = await user.getIdToken();
-      console.log("Google sign-up successful - Firebase Token:", token);
-
-      // Get user's name from Google profile
-      const displayName = user.displayName || "";
-      const [firstName = "", lastName = ""] = displayName.split(" ");
-
-      // Register in your backend system with Google user data
-      await register({
-        firstName,
-        lastName,
-        email: user.email || "",
-        phone: user.phoneNumber || "",
-        bloodType: "",
-        address: "",
-        city: "",
-        district: "",
-        password: "",
-        dateOfBirth: "",
-        token
+      
+      // Use Firebase login instead of registration for Google users
+      // This will create the user in backend if they don't exist
+      await loginWithFirebase(token);
+      
+      // Store user data
+      localStorage.setItem('user', JSON.stringify({
+        email: user.email,
+        displayName: user.displayName,
+        uid: user.uid
+      }));
+      
+      toast({
+        title: "Success",
+        description: "Google sign-up successful!",
       });
-
-      // Navigation is handled by the register function in AuthContext
+      
+      navigate('/profile');
     } catch (error) {
       console.error('Google sign-up failed:', error);
-      const errorMessage = error instanceof Error ? error.message : "An error occurred during registration";
+      const errorMessage = error instanceof Error ? error.message : "An error occurred during sign-up";
       toast({
-        title: "Registration Failed",
+        title: "Sign-up Failed",
         description: errorMessage,
         variant: "destructive"
       });
@@ -77,34 +182,23 @@ const Register = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive"
-      });
-      return;
-    }
-
+    setShowAllErrors(true);
+    
+    if (!validateAllFields()) return;
+    
     setIsLoading(true);
     try {
-      // First create the user in Firebase
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        formData.email,
-        formData.password
-      );
-      
-      const user = userCredential.user;
-      const firebaseToken = await user.getIdToken();
-      console.log("Registration successful - Firebase Token:", firebaseToken);
-
-      // Then register in your backend system
+      // Register with backend system (backend will create Firebase user)
       await register({
-        ...formData,
-        token: firebaseToken
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        district: formData.district,
+        password: formData.password,
+        dateOfBirth: formData.dateOfBirth
       });
-
       // Navigation is handled by the register function in AuthContext
     } catch (error: unknown) {
       console.error('Registration failed:', error);
@@ -155,30 +249,20 @@ const Register = () => {
             <p className="text-center text-gray-600 mb-6">Join our community of blood donors</p>
 
             <form onSubmit={handleSubmit} className="space-y-4 mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <User className="h-4 w-4 text-red-500" />
-                    <Label htmlFor="firstName">First Name</Label>
+                    <Label htmlFor="name">Full Name</Label>
                   </div>
                   <Input
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={(e) => handleInputChange("firstName", e.target.value)}
-                    required
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    onBlur={(e) => handleInputBlur("name", e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, "email")}
                   />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <User className="h-4 w-4 text-red-500" />
-                    <Label htmlFor="lastName">Last Name</Label>
-                  </div>
-                  <Input
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) => handleInputChange("lastName", e.target.value)}
-                    required
-                  />
+                  {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                 </div>
               </div>
 
@@ -190,11 +274,13 @@ const Register = () => {
                   </div>
                   <Input
                     id="email"
-                    type="email"
+                    type="text"
                     value={formData.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
-                    required
+                    onBlur={(e) => handleInputBlur("email", e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, "phone")}
                   />
+                  {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -205,8 +291,11 @@ const Register = () => {
                     id="phone"
                     value={formData.phone}
                     onChange={(e) => handleInputChange("phone", e.target.value)}
-                    required
+                    onBlur={(e) => handleInputBlur("phone", e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, "dateOfBirth")}
+                    maxLength={10}
                   />
+                  {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
                 </div>
               </div>
 
@@ -221,29 +310,10 @@ const Register = () => {
                     type="date"
                     value={formData.dateOfBirth}
                     onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
-                    required
+                    onBlur={(e) => handleInputBlur("dateOfBirth", e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, "address")}
                   />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Heart className="h-4 w-4 text-red-500" />
-                    <Label htmlFor="bloodType">Blood Type</Label>
-                  </div>
-                  <Select onValueChange={(value) => handleInputChange("bloodType", value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select blood type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="A+">A+</SelectItem>
-                      <SelectItem value="A-">A-</SelectItem>
-                      <SelectItem value="B+">B+</SelectItem>
-                      <SelectItem value="B-">B-</SelectItem>
-                      <SelectItem value="AB+">AB+</SelectItem>
-                      <SelectItem value="AB-">AB-</SelectItem>
-                      <SelectItem value="O+">O+</SelectItem>
-                      <SelectItem value="O-">O-</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  {errors.dateOfBirth && <p className="text-red-500 text-xs mt-1">{errors.dateOfBirth}</p>}
                 </div>
               </div>
 
@@ -256,8 +326,10 @@ const Register = () => {
                   id="address"
                   value={formData.address}
                   onChange={(e) => handleInputChange("address", e.target.value)}
-                  required
+                  onBlur={(e) => handleInputBlur("address", e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(e, "city")}
                 />
+                {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -270,8 +342,10 @@ const Register = () => {
                     id="city"
                     value={formData.city}
                     onChange={(e) => handleInputChange("city", e.target.value)}
-                    required
+                    onBlur={(e) => handleInputBlur("city", e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, "district")}
                   />
+                  {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -282,8 +356,10 @@ const Register = () => {
                     id="district"
                     value={formData.district}
                     onChange={(e) => handleInputChange("district", e.target.value)}
-                    required
+                    onBlur={(e) => handleInputBlur("district", e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, "password")}
                   />
+                  {errors.district && <p className="text-red-500 text-xs mt-1">{errors.district}</p>}
                 </div>
               </div>
 
@@ -298,8 +374,10 @@ const Register = () => {
                     type="password"
                     value={formData.password}
                     onChange={(e) => handleInputChange("password", e.target.value)}
-                    required
+                    onBlur={(e) => handleInputBlur("password", e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, "confirmPassword")}
                   />
+                  {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -311,8 +389,10 @@ const Register = () => {
                     type="password"
                     value={formData.confirmPassword}
                     onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                    required
+                    onBlur={(e) => handleInputBlur("confirmPassword", e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e)}
                   />
+                  {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
                 </div>
               </div>
 

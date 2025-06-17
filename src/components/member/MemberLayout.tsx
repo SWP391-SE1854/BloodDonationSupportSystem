@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Heart, User, LogOut, Home, Calendar, FileText, Activity } from 'lucide-react';
 
@@ -22,7 +21,7 @@ const MemberLayout = ({ children, currentPage, onNavigate, onLogout, userName }:
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-white flex">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg border-r border-red-100">
+      <div className="w-64 bg-white shadow-lg border-r border-red-100 flex flex-col">
         <div className="p-6 border-b border-red-100">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-red-100 rounded-lg">
@@ -35,7 +34,7 @@ const MemberLayout = ({ children, currentPage, onNavigate, onLogout, userName }:
           </div>
         </div>
 
-        <nav className="p-4 space-y-2">
+        <nav className="p-4 space-y-2 flex-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -55,14 +54,15 @@ const MemberLayout = ({ children, currentPage, onNavigate, onLogout, userName }:
           })}
         </nav>
 
-        <div className="absolute bottom-4 left-4 right-4">
-          <div className="text-center mb-4 p-3 bg-red-50 rounded-lg">
-            <p className="text-sm text-gray-600">Logged in as</p>
-            <p className="font-semibold text-red-700">{userName}</p>
+        {/* User info and logout at bottom */}
+        <div className="p-4 border-t border-red-100">
+          <div className="text-center mb-3 p-2 bg-gray-50 rounded-lg">
+            <p className="text-xs text-gray-500">Logged in as</p>
+            <p className="text-sm font-medium text-gray-700 truncate">{userName}</p>
           </div>
           <button
             onClick={onLogout}
-            className="w-full flex items-center justify-center space-x-2 px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            className="w-full flex items-center justify-center space-x-2 px-3 py-2 text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
           >
             <LogOut className="h-4 w-4" />
             <span>Logout</span>

@@ -16,6 +16,8 @@ import AboutUs from "./pages/AboutUs";
 import BloodRequest from "./pages/BloodRequest";
 import Staff from "./pages/Staff";
 import Admin from "./pages/Admin";
+import AdminProfile from "./components/admin/AdminProfile";
+import MemberPortal from "./components/member/MemberPortal";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +43,14 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/member/*"
+              element={
+                <ProtectedRoute>
+                  <MemberPortal user={{}} onLogout={() => {}} />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/blog" element={<Blog />} />
             <Route
               path="/staff"
@@ -55,6 +65,22 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <Admin />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <Admin />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/profile"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AdminProfile />
                 </ProtectedRoute>
               }
             />

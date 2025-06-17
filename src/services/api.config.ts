@@ -1,6 +1,5 @@
 import { API_BASE_URL } from '@/config/api';
 
-export const API_BASE_URL = 'http://localhost:5081/api';
 export const API_TIMEOUT = 30000;
 
 export const API_ENDPOINTS = {
@@ -13,12 +12,25 @@ export const API_ENDPOINTS = {
     RESET_PASSWORD: `${API_BASE_URL}/auth/reset-password`,
     REFRESH_TOKEN: `${API_BASE_URL}/auth/refresh-token`,
   },
-  // User endpoints
+  
+  // User endpoints based on the C# controller
   USER: {
-    PROFILE: `${API_BASE_URL}/users/profile`,
-    UPDATE_PROFILE: `${API_BASE_URL}/users/profile`,
-    CHANGE_PASSWORD: `${API_BASE_URL}/users/change-password`,
+    // Member endpoints - using the actual C# controller structure
+    GET_MEMBER_PROFILE: `${API_BASE_URL}/user/member`,
+    UPDATE_MEMBER_PROFILE: (id: number) => `${API_BASE_URL}/user/member/${id}`,
+    
+    // Staff endpoints
+    GET_STAFF_PROFILE: `${API_BASE_URL}/user/staff`,
+    UPDATE_STAFF_PROFILE: `${API_BASE_URL}/user/staff`,
+    GET_ALL_MEMBERS: `${API_BASE_URL}/user/staff/all`,
+    
+    // Admin endpoints
+    GET_ALL_USERS: `${API_BASE_URL}/user/admin/all`,
+    GET_USER_BY_ID: (id: number) => `${API_BASE_URL}/user/admin/${id}`,
+    UPDATE_USER: (id: number) => `${API_BASE_URL}/user/admin/${id}`,
+    DELETE_USER: (id: number) => `${API_BASE_URL}/user/admin/${id}`,
   },
+  
   // Donation endpoints
   DONATION: {
     LIST: `${API_BASE_URL}/donations`,
@@ -27,6 +39,7 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string) => `${API_BASE_URL}/donations/${id}`,
     DELETE: (id: string) => `${API_BASE_URL}/donations/${id}`,
   },
+  
   // Blood request endpoints
   BLOOD_REQUEST: {
     LIST: `${API_BASE_URL}/blood-requests`,
@@ -35,6 +48,7 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string) => `${API_BASE_URL}/blood-requests/${id}`,
     DELETE: (id: string) => `${API_BASE_URL}/blood-requests/${id}`,
   },
+  
   // Location endpoints
   LOCATION: {
     LIST: `${API_BASE_URL}/locations`,
@@ -43,30 +57,19 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string) => `${API_BASE_URL}/locations/${id}`,
     DELETE: (id: string) => `${API_BASE_URL}/locations/${id}`,
   },
+  
   // Blood type endpoints
   BLOOD_TYPE: {
     LIST: `${API_BASE_URL}/blood-types`,
   },
+  
   // Statistics endpoints
   STATISTICS: {
     DASHBOARD: `${API_BASE_URL}/statistics/dashboard`,
     DONATIONS: `${API_BASE_URL}/statistics/donations`,
     REQUESTS: `${API_BASE_URL}/statistics/requests`,
   },
-  // User Management endpoints
-  GET_CURRENT_USER_PROFILE: '/user/member',
-
-  // New endpoints
-  PROFILE: '/users/profile',
-  USERS: '/users',
-  DONORS: '/donors',
-  BLOOD_REQUESTS: '/blood-requests',
-  INVENTORY: '/inventory',
-  STATS: '/stats',
-  REPORTS: '/reports',
-  NOTIFICATIONS: '/notifications',
-  HEALTH_RECORDS: '/health-records',
-
+  
   // Blood Bank endpoints
   GET_BLOOD_BANKS: '/bloodbank',
   GET_BLOOD_BANK_BY_ID: (id: number) => `/bloodbank/${id}`,

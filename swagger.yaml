@@ -19,27 +19,50 @@ components:
     User:
       type: object
       properties:
-        id:
-          type: string
-          format: uuid
+        user_id:
+          type: integer
         name:
           type: string
         email:
           type: string
           format: email
-        role:
-          type: string
-          enum: [admin, staff, donor]
         phone:
           type: string
-        location:
+        dob:
           type: string
-        createdAt:
+          format: date
+        role:
           type: string
-          format: date-time
-        updatedAt:
+          enum: [admin, staff, member, donor]
+        city:
           type: string
-          format: date-time
+        district:
+          type: string
+        address:
+          type: string
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        dob:
+          type: string
+          format: date
+        address:
+          type: string
+        city:
+          type: string
+        district:
+          type: string
+        role:
+          type: string
+          enum: [admin, staff, member, donor]
 
     BloodRequest:
       type: object
@@ -252,6 +275,184 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/User'
+
+  /user/member:
+    get:
+      tags:
+        - User Profile
+      summary: Get member profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Member profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+    put:
+      tags:
+        - User Profile
+      summary: Update member profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+
+  /user/staff:
+    get:
+      tags:
+        - User Profile
+      summary: Get staff profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Staff profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+    put:
+      tags:
+        - User Profile
+      summary: Update staff profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+
+  /user/staff/all:
+    get:
+      tags:
+        - User Profile
+      summary: Get all members (staff only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: All members retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+
+  /user/admin/all:
+    get:
+      tags:
+        - User Profile
+      summary: Get all users (admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: All users retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+
+  /user/admin/{id}:
+    get:
+      tags:
+        - User Profile
+      summary: Get user by ID (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: User ID
+      responses:
+        '200':
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+    put:
+      tags:
+        - User Profile
+      summary: Update user by ID (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: User ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
 
   /blood-requests:
     get:

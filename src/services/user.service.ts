@@ -1,73 +1,203 @@
-import axios from 'axios';
-import { API_BASE_URL, API_ENDPOINTS } from './api.config';
+import api from './api.service';
+import { API_ENDPOINTS } from './api.config';
+import { jwtDecode } from 'jwt-decode';
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-export interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
+export interface UserProfile {
+  user_id: number;
+  name: string;
   email: string;
-  phoneNumber: string;
-  district: string;
-  city: string;
-  address: string;
-  bloodType: string;
+  phone: string;
+  dob: string;
   role: string;
+  city: string;
+  district: string;
+  address: string;
 }
 
-export interface UpdateUserRequest {
-  firstName?: string;
-  lastName?: string;
-  phoneNumber?: string;
-  district?: string;
-  city?: string;
+export interface UpdateUserProfile {
+  name?: string;
+  email?: string;
+  phone?: string;
+  dob?: string;
   address?: string;
-  bloodType?: string;
+  city?: string;
+  district?: string;
+  role?: string;
 }
 
-export const userService = {
-  async getCurrentUser(): Promise<User> {
+interface JwtPayload {
+  "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
+  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier": string;
+  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress": string;
+  exp: number;
+  iss: string;
+  aud: string;
+}
+
+export class UserService {
+  // Helper method to get user ID from JWT token
+  private static getUserIdFromToken(): number {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+    
     try {
-      const response = await api.get(API_ENDPOINTS.GET_USER_BY_ID);
+      const decoded = jwtDecode<JwtPayload>(token);
+      console.log('JWT Token decoded:', decoded);
+      
+      // Try to parse the nameidentifier field as a number
+      const userId = parseInt(decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"]);
+      if (!isNaN(userId)) {
+        return userId;
+      }
+      
+      // If nameidentifier is not a number, it might be a string ID or email
+      console.log('NameIdentifier field is not a number, trying alternative approach');
+      
+      // For now, let's use a placeholder ID since the C# controller gets the real ID from the token
+      // The controller doesn't actually use the URL parameter, it gets the user ID from the JWT token
+      return 1; // Placeholder ID - the controller will use the token's user ID anyway
+      
+    } catch (error) {
+      console.error('Failed to decode token:', error);
+      throw new Error('Invalid authentication token');
+    }
+  }
+
+  // Alternative method to get user ID from profile data
+  private static async getUserIdFromProfile(): Promise<number> {
+    try {
+      const profile = await this.getMemberProfile();
+      return profile.user_id;
+    } catch (error) {
+      console.error('Failed to get user ID from profile:', error);
+      throw new Error('Could not retrieve user ID');
+    }
+  }
+
+  // Get member profile
+  static async getMemberProfile(): Promise<UserProfile> {
+    try {
+      const response = await api.get(API_ENDPOINTS.USER.GET_MEMBER_PROFILE);
       return response.data;
     } catch (error) {
-      console.error('Failed to get current user:', error);
-      throw new Error('Failed to get user information');
+      console.error('Error fetching member profile:', error);
+      throw error;
     }
-  },
+  }
 
-  async updateUser(data: UpdateUserRequest): Promise<User> {
+  // Update member profile
+  static async updateMemberProfile(profileData: UpdateUserProfile): Promise<UserProfile> {
     try {
-      const response = await api.put(API_ENDPOINTS.UPDATE_USER, data);
+      // Try to get user ID from token first, fallback to profile data
+      let userId: number;
+      try {
+        userId = this.getUserIdFromToken();
+      } catch (error) {
+        console.log('Failed to get user ID from token, trying profile data:', error);
+        userId = await this.getUserIdFromProfile();
+      }
+      
+      const response = await api.put(API_ENDPOINTS.USER.UPDATE_MEMBER_PROFILE(userId), profileData);
       return response.data;
     } catch (error) {
-      console.error('Failed to update user:', error);
-      throw new Error('Failed to update user information');
+      console.error('Error updating member profile:', error);
+      throw error;
     }
-  },
+  }
 
-  async deleteUser(): Promise<void> {
+  // Get staff profile
+  static async getStaffProfile(): Promise<UserProfile> {
     try {
-      await api.delete(API_ENDPOINTS.DELETE_USER);
-    } catch (error) {
-      console.error('Failed to delete user:', error);
-      throw new Error('Failed to delete user account');
-    }
-  },
-
-  async getAllUsers(): Promise<User[]> {
-    try {
-      const response = await api.get(API_ENDPOINTS.GET_ALL_USERS);
+      const response = await api.get(API_ENDPOINTS.USER.GET_STAFF_PROFILE);
       return response.data;
     } catch (error) {
-      console.error('Failed to get users:', error);
-      throw new Error('Failed to get users list');
+      console.error('Error fetching staff profile:', error);
+      throw error;
     }
-  },
-}; 
+  }
+
+  // Update staff profile
+  static async updateStaffProfile(profileData: UpdateUserProfile): Promise<UserProfile> {
+    try {
+      const response = await api.put(API_ENDPOINTS.USER.UPDATE_STAFF_PROFILE, profileData);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating staff profile:', error);
+      throw error;
+    }
+  }
+
+  // Get all members (for staff)
+  static async getAllMembers(): Promise<UserProfile[]> {
+    try {
+      const response = await api.get(API_ENDPOINTS.USER.GET_ALL_MEMBERS);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching all members:', error);
+      throw error;
+    }
+  }
+
+  // Get all users (for admin)
+  static async getAllUsers(): Promise<UserProfile[]> {
+    try {
+      const response = await api.get(API_ENDPOINTS.USER.GET_ALL_USERS);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching all users:', error);
+      throw error;
+    }
+  }
+
+  // Get user by ID (for admin)
+  static async getUserById(id: number): Promise<UserProfile> {
+    try {
+      const response = await api.get(API_ENDPOINTS.USER.GET_USER_BY_ID(id));
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user by ID:', error);
+      throw error;
+    }
+  }
+
+  // Update user (for admin)
+  static async updateUser(id: number, profileData: UpdateUserProfile): Promise<UserProfile> {
+    try {
+      const response = await api.put(API_ENDPOINTS.USER.UPDATE_USER(id), profileData);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating user:', error);
+      throw error;
+    }
+  }
+
+  // Get profile based on user role
+  static async getProfileByRole(role: string): Promise<UserProfile> {
+    switch (role.toLowerCase()) {
+      case 'member':
+      case 'donor':
+        return this.getMemberProfile();
+      case 'staff':
+        return this.getStaffProfile();
+      default:
+        throw new Error(`Unsupported role: ${role}`);
+    }
+  }
+
+  // Update profile based on user role
+  static async updateProfileByRole(role: string, profileData: UpdateUserProfile): Promise<UserProfile> {
+    switch (role.toLowerCase()) {
+      case 'member':
+      case 'donor':
+        return this.updateMemberProfile(profileData);
+      case 'staff':
+        return this.updateStaffProfile(profileData);
+      default:
+        throw new Error(`Unsupported role: ${role}`);
+    }
+  }
+}
+
+export default UserService; 

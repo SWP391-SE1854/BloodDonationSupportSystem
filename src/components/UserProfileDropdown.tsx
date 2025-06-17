@@ -37,7 +37,16 @@ export function UserProfileDropdown() {
     ? `${user.firstName} ${user.lastName}`
     : user.displayName || user.email || 'User';
 
-  const isAdmin = user.email === "thang300@gmail.com"; // Special admin email
+  const isAdmin = user.role && user.role.toLowerCase() === "admin";
+  const isStaff = user.role && user.role.toLowerCase() === "staff";
+  const isMember = user.role && user.role.toLowerCase() === "member";
+
+  // Determine profile route based on role
+  const getProfileRoute = () => {
+    if (isAdmin) return "/admin/profile";
+    if (isStaff) return "/staff/profile";
+    return "/member/profile";
+  };
 
   return (
     <DropdownMenu>
@@ -71,7 +80,7 @@ export function UserProfileDropdown() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link to="/profile" className="flex items-center cursor-pointer">
+          <Link to={getProfileRoute()} className="flex items-center cursor-pointer">
             <User className="w-4 h-4 mr-2" />
             Profile
           </Link>
