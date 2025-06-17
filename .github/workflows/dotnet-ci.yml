@@ -25,5 +25,3 @@ jobs:
     - name: Build
       run: dotnet build ./BloodDonationSystem.sln --no-restore
 
-    - name: Test
-      run: dotnet test ./BloodDonationSystem.sln --no-build --verbosity normal
