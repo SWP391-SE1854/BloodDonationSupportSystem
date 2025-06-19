@@ -603,18 +603,36 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Dependency directories
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
 *.local
+*.sqlite            # added for Visual Studio SQLite tracking
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
+
+# Visual Studio-specific
+.vs/                
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
+*.user     
+
+# Optional: OS/Tooling-related files
+Thumbs.db
+ehthumbs.db
+*.swp
+*.sw?               # typo correction if meant to catch swap files
+
+# Environment files (if used)
+.env
+.env.local
+.env.*.local
