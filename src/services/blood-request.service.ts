@@ -1,36 +1,20 @@
-import axios from 'axios';
-import { API_BASE_URL, API_ENDPOINTS } from './api.config';
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+import api from './api.service';
+import { API_ENDPOINTS } from './api.config';
 
 export interface BloodRequest {
   id: number;
-  userId: string;
-  bloodType: string;
-  units: number;
-  urgency: string;
-  status: string;
-  hospitalName: string;
-  location: string;
-  contactNumber: string;
-  additionalNotes?: string;
-  createdAt: string;
-  updatedAt: string;
+  user_id: number;
+  blood_id: number;
+  request_date: string;
+  emergency_status: boolean;
+  location_id: number;
 }
 
-export interface CreateBloodRequestRequest {
-  bloodType: string;
-  units: number;
-  urgency: string;
-  hospitalName: string;
-  location: string;
-  contactNumber: string;
-  additionalNotes?: string;
+export interface CreateBloodRequest {
+  user_id: number;
+  blood_id: number;
+  emergency_status: boolean;
+  location_id: number;
 }
 
 export interface UpdateBloodRequestRequest {
@@ -43,28 +27,55 @@ export interface UpdateBloodRequestRequest {
   additionalNotes?: string;
 }
 
-export const bloodRequestService = {
-  async getBloodRequests(): Promise<BloodRequest[]> {
-    const response = await api.get(API_ENDPOINTS.GET_BLOOD_REQUESTS);
-    return response.data;
-  },
+export class BloodRequestService {
+  static async getAllBloodRequests(): Promise<BloodRequest[]> {
+    try {
+      const response = await api.get(API_ENDPOINTS.BLOOD_REQUEST.GET_ALL);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching all blood requests:', error);
+      throw error;
+    }
+  }
 
-  async getBloodRequestById(id: number): Promise<BloodRequest> {
-    const response = await api.get(API_ENDPOINTS.GET_BLOOD_REQUEST_BY_ID(id));
-    return response.data;
-  },
+  static async getBloodRequestById(id: number): Promise<BloodRequest> {
+    try {
+      const response = await api.get(API_ENDPOINTS.BLOOD_REQUEST.GET_BY_ID(id));
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching blood request with id ${id}:`, error);
+      throw error;
+    }
+  }
 
-  async createBloodRequest(data: CreateBloodRequestRequest): Promise<BloodRequest> {
-    const response = await api.post(API_ENDPOINTS.CREATE_BLOOD_REQUEST, data);
-    return response.data;
-  },
+  static async createBloodRequest(data: CreateBloodRequest): Promise<BloodRequest> {
+    try {
+      const response = await api.post(API_ENDPOINTS.BLOOD_REQUEST.CREATE, data);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating blood request:', error);
+      throw error;
+    }
+  }
 
-  async updateBloodRequest(id: number, data: UpdateBloodRequestRequest): Promise<BloodRequest> {
-    const response = await api.put(API_ENDPOINTS.UPDATE_BLOOD_REQUEST(id), data);
-    return response.data;
-  },
+  static async updateBloodRequest(id: number, data: Partial<CreateBloodRequest>): Promise<BloodRequest> {
+    try {
+      const response = await api.put(API_ENDPOINTS.BLOOD_REQUEST.UPDATE(id), data);
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating blood request with id ${id}:`, error);
+      throw error;
+    }
+  }
 
-  async deleteBloodRequest(id: number): Promise<void> {
-    await api.delete(API_ENDPOINTS.DELETE_BLOOD_REQUEST(id));
-  },
-}; 
+  static async deleteBloodRequest(id: number): Promise<void> {
+    try {
+      await api.delete(API_ENDPOINTS.BLOOD_REQUEST.DELETE(id));
+    } catch (error) {
+      console.error(`Error deleting blood request with id ${id}:`, error);
+      throw error;
+    }
+  }
+}
+
+export default BloodRequestService; 

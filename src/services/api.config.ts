@@ -31,22 +31,29 @@ export const API_ENDPOINTS = {
     DELETE_USER: (id: number) => `/user/admin/${id}`,
   },
   
+  // Blog Post endpoints
+  BLOG_POST: {
+    GET_ALL: '/blogpost/all',
+    GET_BY_ID: (id: number) => `/blogpost/${id}`,
+    CREATE: '/blogpost/new',
+    UPDATE: (id: number) => `/blogpost/update/${id}`,
+    DELETE: (id: number) => `/blogpost/delete/${id}`,
+  },
+
   // Donation endpoints
   DONATION: {
-    LIST: `/donations`,
-    CREATE: `/donations`,
-    DETAILS: (id: string) => `/donations/${id}`,
-    UPDATE: (id: string) => `/donations/${id}`,
-    DELETE: (id: string) => `/donations/${id}`,
+    CREATE_MEMBER_REQUEST: '/donation/member',
+    GET_ALL: '/donation/all',
+    GET_BY_USER_ID: (userId: number) => `/donation/users?userId=${userId}`,
   },
   
-  // Blood request endpoints
+  // Blood Request endpoints
   BLOOD_REQUEST: {
-    LIST: `/blood-requests`,
-    CREATE: `/blood-requests`,
-    DETAILS: (id: string) => `/blood-requests/${id}`,
-    UPDATE: (id: string) => `/blood-requests/${id}`,
-    DELETE: (id: string) => `/blood-requests/${id}`,
+    GET_ALL: '/bloodrequest/all',
+    GET_BY_ID: (id: number) => `/bloodrequest/${id}`,
+    CREATE: '/bloodrequest/new',
+    UPDATE: (id: number) => `/bloodrequest/update/${id}`,
+    DELETE: (id: number) => `/bloodrequest/delete/${id}`,
   },
   
   // Location endpoints
@@ -77,32 +84,12 @@ export const API_ENDPOINTS = {
   UPDATE_BLOOD_BANK: (id: number) => `/bloodbank/${id}`,
   DELETE_BLOOD_BANK: (id: number) => `/bloodbank/${id}`,
 
-  // Blood Request endpoints
-  GET_ALL_BLOOD_REQUESTS: '/bloodrequest/all',
-  GET_BLOOD_REQUEST_BY_ID: (id: string) => `/bloodrequest/${id}`,
-  CREATE_BLOOD_REQUEST: '/bloodrequest/new',
-  UPDATE_BLOOD_REQUEST: (id: string) => `/bloodrequest/update/${id}`,
-  DELETE_BLOOD_REQUEST: (id: string) => `/bloodrequest/delete/${id}`,
-
   // Campaign endpoints
   GET_CAMPAIGNS: '/campaign',
   GET_CAMPAIGN_BY_ID: (id: number) => `/campaign/${id}`,
   CREATE_CAMPAIGN: '/campaign',
   UPDATE_CAMPAIGN: (id: number) => `/campaign/${id}`,
   DELETE_CAMPAIGN: (id: number) => `/campaign/${id}`,
-
-  // Donation History endpoints
-  GET_DONATION_HISTORIES: '/donationhistory',
-  GET_DONATION_HISTORY_BY_ID: (id: number) => `/donationhistory/${id}`,
-  CREATE_DONATION_HISTORY: '/donationhistory',
-  UPDATE_DONATION_HISTORY: (id: number) => `/donationhistory/${id}`,
-  DELETE_DONATION_HISTORY: (id: number) => `/donationhistory/${id}`,
-
-  // Donation endpoints
-  GET_ALL_DONATIONS: '/donation/all',
-  GET_USER_DONATIONS: '/donation/user',
-  GET_DONATIONS_BY_USER_ID: (userId: string) => `/donation/user/${userId}`,
-  CREATE_DONATION: '/donation/member',
 
   // Health Record endpoints
   GET_ALL_HEALTH_RECORDS: '/healthrecord/all',

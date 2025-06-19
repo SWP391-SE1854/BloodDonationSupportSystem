@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const storedUser = localStorage.getItem('user');
     
     if (storedToken && storedUser) {
-      try {
+    try {
         // Check if token is expired
         const decoded = jwtDecode<JwtPayload>(storedToken);
         const isExpired = decoded.exp * 1000 < Date.now();
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error('Error parsing stored auth data:', error);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-      }
+    }
     }
     
     // Always listen to Firebase auth state changes
@@ -127,7 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           } catch (error) {
             console.error('Failed to exchange Firebase token:', error);
-          }
+      }
         }
       }
       

@@ -177,7 +177,6 @@ const MemberProfile = ({ user, onUpdateUser }: MemberProfileProps) => {
           <p className="text-gray-600 mt-2">Manage your personal information</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => navigate('/')} variant="outline" className="border-gray-300 text-gray-700">Home</Button>
         {!isEditing ? (
             <Button
             onClick={() => setIsEditing(true)}

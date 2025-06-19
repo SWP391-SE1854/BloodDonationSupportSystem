@@ -13,6 +13,7 @@ import { API_BASE_URL } from '@/config/api';
 import { loginSchema } from '@/lib/validations';
 import { jwtDecode } from 'jwt-decode';
 import { ZodError, ZodIssue } from 'zod';
+import { useAuth } from "@/contexts/AuthContext";
 
 interface JwtPayload {
   role?: string;
@@ -30,6 +31,7 @@ interface JwtPayload {
 const Login = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { loginWithFirebase } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -110,66 +112,7 @@ const Login = () => {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
       const firebaseToken = await user.getIdToken();
-      console.log("Google login successful - Firebase Token:", firebaseToken);
-      
-      // Store the Firebase token directly
-      localStorage.setItem('firebaseToken', firebaseToken);
-
-      try {
-        // Use API_ENDPOINTS to get the correct endpoint
-        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.AUTH.FIREBASE_LOGIN}`, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${firebaseToken}`
-          }
-        });
-
-        const data = await response.json();
-        console.log("Backend response:", data);
-        
-        // Store the JWT token
-        if (data.token) {
-          localStorage.setItem('token', data.token);
-          
-          // Get role from token
-          const role = getRoleFromToken(data.token);
-          
-          // Store user data including role
-          localStorage.setItem('user', JSON.stringify({
-            email: user.email,
-            displayName: user.displayName,
-            uid: user.uid,
-            role: role
-          }));
-          
-          // Success message
-          toast({
-            title: "Login Successful",
-            description: `Welcome back${user.displayName ? `, ${user.displayName}` : ''}!`,
-          });
-          
-          // Redirect based on role
-          redirectBasedOnRole(role);
-        }
-      } catch (apiError) {
-        console.error('Backend connection failed, but Google login successful:', apiError);
-        
-        // Store user info locally since backend is unreachable
-        localStorage.setItem('user', JSON.stringify({
-          email: user.email,
-          displayName: user.displayName,
-          uid: user.uid,
-          role: 'Member' // Default role
-        }));
-        
-        toast({
-          title: "Partial Success",
-          description: "Your Google account was connected, but we couldn't reach our server. Some features may be limited.",
-        });
-        
-        // Default to member profile
-        navigate('/member/profile');
-      }
+      await loginWithFirebase(firebaseToken);
     } catch (error) {
       console.error('Login failed:', error);
       toast({
@@ -194,71 +137,14 @@ const Login = () => {
       const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
       const firebaseToken = await user.getIdToken();
-      console.log("Login successful - Firebase Token:", firebaseToken);
+      
+      await loginWithFirebase(firebaseToken);
 
-      // Store the Firebase token
-      localStorage.setItem('firebaseToken', firebaseToken);
-
-      try {
-        // Exchange Firebase token for system token
-        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.AUTH.FIREBASE_LOGIN}`, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${firebaseToken}`
-          }
-        });
-
-        const data = await response.json();
-        console.log("System token response:", data);
-
-        // Store the JWT token
-        if (data.token) {
-          localStorage.setItem('token', data.token);
-          
-          // Get role from token
-          const role = getRoleFromToken(data.token);
-          
-          // Store user data including role
-          localStorage.setItem('user', JSON.stringify({
-            email: user.email,
-            displayName: user.displayName,
-            uid: user.uid,
-            role: role
-          }));
-          
-          // Success message
-          toast({
-            title: "Login Successful",
-            description: `Welcome back${user.displayName ? `, ${user.displayName}` : ''}!`,
-          });
-          
-          // Redirect based on role
-          redirectBasedOnRole(role);
-        }
-      } catch (apiError) {
-        console.error('Backend connection failed, but Firebase login successful:', apiError);
-        
-        // Store user info locally since backend is unreachable
-        localStorage.setItem('user', JSON.stringify({
-          email: user.email,
-          displayName: user.displayName,
-          uid: user.uid,
-          role: 'Member' // Default role
-        }));
-        
-        toast({
-          title: "Partial Success",
-          description: "Your login was successful, but we couldn't reach our server. Some features may be limited.",
-        });
-        
-        // Default to member profile
-        navigate('/member/profile');
-      }
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('Firebase login failed:', error);
       toast({
         title: "Login Failed",
-        description: "Invalid email or password",
+        description: "Invalid email or password. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -269,8 +155,8 @@ const Login = () => {
   const handleResetPassword = async () => {
     setResetLoading(true);
     try {
-      // Use API_ENDPOINTS to get the correct endpoint
-      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.AUTH.RESET_PASSWORD}`, {
+      // Use the correct endpoint based on the API docs
+      const response = await fetch(`${API_ENDPOINTS.AUTH.RESET_PASSWORD}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(resetEmail),

@@ -8,11 +8,12 @@ import { Heart, User, Mail, Phone, MapPin, Lock, Building2, MapPinned, Calendar 
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { auth, googleProvider } from "@/config/firebase";
-import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import { signInWithPopup } from "firebase/auth";
 import { registerSchema } from '@/lib/validations';
 import { ZodError, ZodIssue } from 'zod';
 import { API_ENDPOINTS } from '@/services/api.config';
 import { jwtDecode } from 'jwt-decode';
+import { AxiosError } from 'axios';
 
 interface JwtPayload {
   role?: string;
@@ -142,17 +143,10 @@ const Register = () => {
 
     setIsLoading(true);
     try {
-      // 1. Create user in Firebase
-      await createUserWithEmailAndPassword(
-        auth,
-        formData.email,
-        formData.password
-      );
-
-      // 2. Register user in our backend
+      // The backend will handle both database and Firebase user creation.
       await register(formData);
 
-      // 3. On success, show a message and redirect to the login page.
+      // On success, show a message and redirect to the login page.
       toast({
         title: "Registration Successful",
         description: "Your account has been created. Please log in.",
@@ -160,15 +154,22 @@ const Register = () => {
       navigate("/login");
 
     } catch (error) {
-      // Per user request, no UI error messages are shown.
-      // Errors are logged to the console for debugging.
       console.error('Registration failed:', error);
-      // We can add a generic failure toast here if desired, but for now it's silent.
-      toast({
-        title: "Registration Failed",
-        description: "Could not create your account. Please check the console for errors.",
-        variant: "destructive",
-      });
+
+      if (error instanceof AxiosError && error.response?.status === 409) {
+        toast({
+          title: "Registration Failed",
+          description: "An account with this email already exists.",
+          variant: "destructive",
+        });
+        setErrors(prev => ({ ...prev, email: 'Email already in use.' }));
+      } else {
+        toast({
+          title: "Registration Failed",
+          description: "Could not create your account. Please try again later.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }

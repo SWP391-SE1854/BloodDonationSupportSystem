@@ -1,12 +1,15 @@
-
 import React from 'react';
 import { Heart, Calendar, FileText, Activity, TrendingUp, Users, MapPin } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
+interface User {
+  name: string;
+}
+
 interface DashboardProps {
-  user: any;
+  user: User;
   onNavigate: (page: string) => void;
 }
 
