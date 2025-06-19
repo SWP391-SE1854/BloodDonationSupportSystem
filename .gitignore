@@ -40,3 +40,6 @@ ehthumbs.db
 .env
 .env.local
 .env.*.local
+
+# Vite
+.vite/
