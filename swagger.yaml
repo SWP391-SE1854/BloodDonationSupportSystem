@@ -1,0 +1,679 @@
+openapi: 3.0.0
+info:
+  title: Blood Donation Management System API
+  version: 1.0.0
+  description: API documentation for the Blood Donation Management System
+
+servers:
+  - url: http://localhost:5081/api
+    description: Development server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        dob:
+          type: string
+          format: date
+        role:
+          type: string
+          enum: [admin, staff, member, donor]
+        city:
+          type: string
+        district:
+          type: string
+        address:
+          type: string
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        dob:
+          type: string
+          format: date
+        address:
+          type: string
+        city:
+          type: string
+        district:
+          type: string
+        role:
+          type: string
+          enum: [admin, staff, member, donor]
+
+    BloodRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        patientName:
+          type: string
+        bloodType:
+          type: string
+        urgency:
+          type: string
+          enum: [Critical, High, Medium, Low]
+        unitsNeeded:
+          type: integer
+          minimum: 1
+        hospital:
+          type: string
+        requestTime:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [Pending, In Progress, Completed]
+        contactPhone:
+          type: string
+        assignedDonorId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Donor:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        bloodType:
+          type: string
+        lastDonation:
+          type: string
+          format: date-time
+        eligibleDate:
+          type: string
+          format: date-time
+        phone:
+          type: string
+        location:
+          type: string
+        totalDonations:
+          type: integer
+          minimum: 0
+        status:
+          type: string
+          enum: [Available, Not Eligible]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    BloodInventory:
+      type: object
+      properties:
+        type:
+          type: string
+        units:
+          type: integer
+          minimum: 0
+        lowStock:
+          type: boolean
+        expiring:
+          type: integer
+          minimum: 0
+        lastUpdated:
+          type: string
+          format: date-time
+
+    DashboardStats:
+      type: object
+      properties:
+        pendingRequests:
+          type: integer
+          minimum: 0
+        availableDonors:
+          type: integer
+          minimum: 0
+        bloodUnits:
+          type: integer
+          minimum: 0
+        successRate:
+          type: number
+          minimum: 0
+          maximum: 100
+
+    SystemLog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        userId:
+          type: string
+          format: uuid
+        metadata:
+          type: object
+          additionalProperties: true
+
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+        message:
+          type: string
+        error:
+          type: string
+
+    PaginatedResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+        total:
+          type: integer
+          minimum: 0
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+        totalPages:
+          type: integer
+          minimum: 1
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login to the system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                      user:
+                        $ref: '#/components/schemas/User'
+
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+
+  /user/member:
+    get:
+      tags:
+        - User Profile
+      summary: Get member profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Member profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+    put:
+      tags:
+        - User Profile
+      summary: Update member profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+
+  /user/staff:
+    get:
+      tags:
+        - User Profile
+      summary: Get staff profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Staff profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+    put:
+      tags:
+        - User Profile
+      summary: Update staff profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+
+  /user/staff/all:
+    get:
+      tags:
+        - User Profile
+      summary: Get all members (staff only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: All members retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+
+  /user/admin/all:
+    get:
+      tags:
+        - User Profile
+      summary: Get all users (admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: All users retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+
+  /user/admin/{id}:
+    get:
+      tags:
+        - User Profile
+      summary: Get user by ID (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: User ID
+      responses:
+        '200':
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+    put:
+      tags:
+        - User Profile
+      summary: Update user by ID (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: User ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+
+  /blood-requests:
+    get:
+      tags:
+        - Blood Requests
+      summary: Get all blood requests
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [Pending, In Progress, Completed]
+          description: Filter by status
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search term
+      responses:
+        '200':
+          description: List of blood requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PaginatedResponse'
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/BloodRequest'
+
+    post:
+      tags:
+        - Blood Requests
+      summary: Create a new blood request
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BloodRequest'
+      responses:
+        '201':
+          description: Blood request created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BloodRequest'
+
+  /donors:
+    get:
+      tags:
+        - Donors
+      summary: Get all donors
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number
+        - in: query
+          name: bloodType
+          schema:
+            type: string
+          description: Filter by blood type
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [Available, Not Eligible]
+          description: Filter by status
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search term
+      responses:
+        '200':
+          description: List of donors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PaginatedResponse'
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Donor'
+
+  /inventory:
+    get:
+      tags:
+        - Inventory
+      summary: Get blood inventory status
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current blood inventory status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BloodInventory'
+
+  /dashboard/stats:
+    get:
+      tags:
+        - Dashboard
+      summary: Get dashboard statistics
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DashboardStats'
+
+  /admin/users:
+    get:
+      tags:
+        - Admin
+      summary: Get all users (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number
+        - in: query
+          name: role
+          schema:
+            type: string
+            enum: [admin, staff, donor]
+          description: Filter by role
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search term
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PaginatedResponse'
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/User'
+
+  /admin/logs:
+    get:
+      tags:
+        - Admin
+      summary: Get system logs (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number
+        - in: query
+          name: type
+          schema:
+            type: string
+          description: Filter by log type
+      responses:
+        '200':
+          description: List of system logs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PaginatedResponse'
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SystemLog' 

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firebase Email/Password Login</title>
+</head>
+<body>
+    <h2>Login with Email and Password</h2>
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlv8EpE86eXsuo3lP4g6tUPbYg2RolazE",
+            authDomain: "blooddonationsystem-f2379.firebaseapp.com",
+            projectId: "blooddonationsystem-f2379",
+            storageBucket: "blooddonationsystem-f2379.appspot.com",
+            messagingSenderId: "796297565410",
+            appId: "1:796297565410:web:0db3f0669011b980e27abb"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        window.login = async function () {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                const token = await user.getIdToken();
+                console.log("Login successful - Firebase Token:", token);
+
+                // Send token to backend
+                const response = await fetch("http://localhost:5081/api/auth/firebase-login", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+                console.log("System token:", data.token);
+            } catch (error) {
+                console.error("Login failed:", error.message);
+            }
+        }
+    </script>
+
+</body>
+</html>
