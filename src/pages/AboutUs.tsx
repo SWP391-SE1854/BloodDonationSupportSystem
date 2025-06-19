@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Heart, Users, Target, Award, BarChart, Globe, UserCheck, Calendar } from "lucide-react";
 import { UserProfileDropdown } from "@/components/UserProfileDropdown";
 import { useAuth } from "@/contexts/AuthContext";
+import NavigationBar from "@/components/NavigationBar";
 
 const teamMembers = [
   {
@@ -54,35 +55,7 @@ const AboutUs = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-red-50">
-      {/* Navigation */}
-      <nav className="bg-white/80 backdrop-blur-sm shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center space-x-2">
-              <Heart className="h-8 w-8 text-red-500" />
-              <span className="text-2xl font-bold text-gray-800">Blood Care</span>
-            </Link>
-            <div className="hidden md:flex items-center space-x-8">
-              <Link to="/" className="text-gray-700 hover:text-red-500 transition-colors">Home</Link>
-              <Link to="/blog" className="text-gray-700 hover:text-red-500 transition-colors">Blog</Link>
-              <Link to="/about" className="text-gray-700 hover:text-red-500 transition-colors">About Us</Link>
-              <Link to="/blood-request" className="text-gray-700 hover:text-red-500 transition-colors">Blood Request</Link>
-              {!isAuthenticated ? (
-                <>
-                  <Link to="/register" className="text-gray-700 hover:text-red-500 transition-colors">Register Now</Link>
-                  <Link to="/login">
-                    <Button variant="outline" className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white">
-                      Login
-                    </Button>
-                  </Link>
-                </>
-              ) : (
-                <UserProfileDropdown />
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
+      <NavigationBar />
 
       {/* Hero Section */}
       <section className="py-20 px-4">

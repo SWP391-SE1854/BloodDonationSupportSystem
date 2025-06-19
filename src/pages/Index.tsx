@@ -4,6 +4,7 @@ import { Heart, Users, MapPin, Phone, Mail, Clock, Menu, X } from "lucide-react"
 import { UserProfileDropdown } from "@/components/UserProfileDropdown";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
+import NavigationBar from "@/components/NavigationBar";
 
 const Index = () => {
   const { isAuthenticated } = useAuth();
@@ -16,134 +17,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-red-50">
-      {/* Navigation */}
-      <nav className="bg-white/90 backdrop-blur-md shadow-lg sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            {/* Logo */}
-            <Link to="/" className="flex items-center space-x-3 group">
-              <div className="p-2 bg-red-100 rounded-full group-hover:bg-red-200 transition-colors duration-300">
-                <Heart className="h-8 w-8 text-red-500" />
-              </div>
-              <span className="text-2xl font-bold text-gray-800 group-hover:text-red-500 transition-colors duration-300">
-                Blood Care
-              </span>
-            </Link>
-
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-8">
-              <Link 
-                to="/" 
-                className="text-gray-700 hover:text-red-500 transition-colors duration-300 font-medium"
-                aria-label="Go to home page"
-              >
-                Home
-              </Link>
-              <Link 
-                to="/blog" 
-                className="text-gray-700 hover:text-red-500 transition-colors duration-300 font-medium"
-                aria-label="Go to blog page"
-              >
-                Blog
-              </Link>
-              <Link 
-                to="/about" 
-                className="text-gray-700 hover:text-red-500 transition-colors duration-300 font-medium"
-                aria-label="Go to about us page"
-              >
-                About Us
-              </Link>
-              <Link 
-                to="/blood-request" 
-                className="text-gray-700 hover:text-red-500 transition-colors duration-300 font-medium"
-                aria-label="Go to blood request page"
-              >
-                Blood Request
-              </Link>
-              {!isAuthenticated ? (
-                <>
-                  <Link to="/register">
-                    <Button className="bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                      Register Now
-                    </Button>
-                  </Link>
-                  <Link to="/login">
-                    <Button variant="outline" className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white font-medium px-6 py-2 transition-all duration-300">
-                      Login
-                    </Button>
-                  </Link>
-                </>
-              ) : (
-                <UserProfileDropdown />
-              )}
-            </div>
-
-            {/* Mobile menu button */}
-            <button
-              className="lg:hidden p-2 rounded-md text-gray-700 hover:text-red-500 hover:bg-red-50 transition-colors duration-300"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label="Toggle navigation menu"
-              aria-expanded={isMenuOpen}
-            >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
-          </div>
-
-          {/* Mobile Navigation */}
-          {isMenuOpen && (
-            <div className="lg:hidden py-4 border-t border-gray-200 bg-white/95 backdrop-blur-md">
-              <div className="flex flex-col space-y-4">
-                <Link 
-                  to="/" 
-                  className="text-gray-700 hover:text-red-500 transition-colors duration-300 font-medium px-4 py-2"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Home
-                </Link>
-                <Link 
-                  to="/blog" 
-                  className="text-gray-700 hover:text-red-500 transition-colors duration-300 font-medium px-4 py-2"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Blog
-                </Link>
-                <Link 
-                  to="/about" 
-                  className="text-gray-700 hover:text-red-500 transition-colors duration-300 font-medium px-4 py-2"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  About Us
-                </Link>
-                <Link 
-                  to="/blood-request" 
-                  className="text-gray-700 hover:text-red-500 transition-colors duration-300 font-medium px-4 py-2"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Blood Request
-                </Link>
-                {!isAuthenticated ? (
-                  <div className="flex flex-col space-y-2 px-4">
-                    <Link to="/register" onClick={() => setIsMenuOpen(false)}>
-                      <Button className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2">
-                        Register Now
-                      </Button>
-                    </Link>
-                    <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-                      <Button variant="outline" className="w-full border-red-500 text-red-500 hover:bg-red-500 hover:text-white font-medium py-2">
-                        Login
-                      </Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="px-4">
-                    <UserProfileDropdown />
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </nav>
+      <NavigationBar />
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">

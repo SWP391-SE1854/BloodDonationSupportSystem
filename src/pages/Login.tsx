@@ -11,6 +11,7 @@ import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { API_BASE_URL } from '@/config/api';
 import { loginSchema } from '@/lib/validations';
 import { jwtDecode } from 'jwt-decode';
+import NavigationBar from "@/components/NavigationBar";
 
 const Login = () => {
   const { toast } = useToast();
@@ -200,25 +201,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-red-50 flex items-center justify-center py-8 px-4">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm shadow-sm z-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center space-x-2">
-              <Heart className="h-8 w-8 text-red-500" />
-              <span className="text-2xl font-bold text-gray-800">Blood Care</span>
-            </Link>
-            <div className="flex items-center space-x-4">
-              <Link to="/" className="text-gray-700 hover:text-red-500 transition-colors">Home</Link>
-              <Link to="/register">
-                <Button variant="outline" className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white">
-                  Register Now
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <NavigationBar fixed />
 
       <div className="w-full max-w-md mt-16">
         <Card className="shadow-2xl border-0">
