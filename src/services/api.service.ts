@@ -1,14 +1,16 @@
 import axios from 'axios';
 import { environment } from '../config/environment';
 import { auth } from '@/config/firebase';
+import { API_BASE_URL } from '@/config/api';
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: environment.apiUrl,
-  withCredentials: true,
+  baseURL: API_BASE_URL, // Use API_BASE_URL from config
+  withCredentials: false, // Changed to false for CORS
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json'
+    'Accept': 'application/json',
+    'Access-Control-Allow-Origin': '*' // Attempt to add CORS headers
   },
 });
 

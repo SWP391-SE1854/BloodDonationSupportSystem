@@ -7,17 +7,19 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import UserService, { UserProfile, UpdateUserProfile } from '@/services/user.service';
 import { profileUpdateSchema } from '@/lib/validations';
+import { useNavigate } from 'react-router-dom';
+import { ZodError, ZodIssue } from 'zod';
 
 interface MemberProfileProps {
-  user: any;
-  onUpdateUser: (userData: any) => void;
+  user: UserProfile | null;
+  onUpdateUser: (userData: UserProfile) => void;
 }
 
 const MemberProfile = ({ user, onUpdateUser }: MemberProfileProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -27,6 +29,7 @@ const MemberProfile = ({ user, onUpdateUser }: MemberProfileProps) => {
     district: '',
     dob: '',
   });
+  const navigate = useNavigate();
 
   // Fetch profile data on component mount
   useEffect(() => {
@@ -72,11 +75,13 @@ const MemberProfile = ({ user, onUpdateUser }: MemberProfileProps) => {
       profileUpdateSchema.parse(formData);
       setErrors({});
       return true;
-    } catch (error: any) {
-      const newErrors: { [key: string]: string } = {};
-      error.errors?.forEach((err: any) => {
-        newErrors[err.path[0]] = err.message;
-      });
+    } catch (error: unknown) {
+      const newErrors: Record<string, string> = {};
+      if (error instanceof ZodError) {
+        error.errors.forEach((err: ZodIssue) => {
+          newErrors[err.path[0]] = err.message;
+        });
+      }
       setErrors(newErrors);
       return false;
     }
@@ -171,36 +176,39 @@ const MemberProfile = ({ user, onUpdateUser }: MemberProfileProps) => {
           <h1 className="text-3xl font-bold text-gray-900">Member Profile</h1>
           <p className="text-gray-600 mt-2">Manage your personal information</p>
         </div>
+        <div className="flex gap-2">
+          <Button onClick={() => navigate('/')} variant="outline" className="border-gray-300 text-gray-700">Home</Button>
         {!isEditing ? (
-          <Button
+            <Button
             onClick={() => setIsEditing(true)}
-            className="bg-red-600 hover:bg-red-700"
-            disabled={isLoading}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={isLoading}
           >
-            <Edit3 className="h-4 w-4 mr-2" />
-            Edit Profile
-          </Button>
+              <Edit3 className="h-4 w-4 mr-2" />
+              Edit Profile
+            </Button>
         ) : (
           <div className="flex space-x-2">
-            <Button
+              <Button
               onClick={handleSave}
-              className="bg-green-600 hover:bg-green-700"
-              disabled={isLoading}
+                className="bg-green-600 hover:bg-green-700"
+                disabled={isLoading}
             >
-              <Save className="h-4 w-4 mr-2" />
-              {isLoading ? "Saving..." : "Save"}
-            </Button>
-            <Button
+                <Save className="h-4 w-4 mr-2" />
+                {isLoading ? "Saving..." : "Save"}
+              </Button>
+              <Button
               onClick={handleCancel}
-              variant="outline"
-              className="border-red-200 text-red-600 hover:bg-red-50"
-              disabled={isLoading}
+                variant="outline"
+                className="border-red-200 text-red-600 hover:bg-red-50"
+                disabled={isLoading}
             >
-              <X className="h-4 w-4 mr-2" />
-              Cancel
-            </Button>
+                <X className="h-4 w-4 mr-2" />
+                Cancel
+              </Button>
           </div>
         )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

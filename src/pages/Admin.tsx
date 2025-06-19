@@ -40,17 +40,17 @@ const Admin = () => {
       setLoading(true);
       const allUsers = await AdminService.getAllUsers();
       setUsers(allUsers);
-    } catch (error) {
+      } catch (error) {
       console.error("Error fetching users:", error);
       toast({
         title: "Error",
         description: "Failed to fetch users",
         variant: "destructive"
       });
-    } finally {
-      setLoading(false);
-    }
-  };
+      } finally {
+        setLoading(false);
+      }
+    };
 
   const handleLogout = async () => {
     navigate("/login");
@@ -157,9 +157,9 @@ const Admin = () => {
               <Button variant="outline" onClick={() => navigate('/')}>
                 Back to Home
               </Button>
-              <Button variant="ghost" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4" />
-              </Button>
+                <Button variant="ghost" size="sm" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4" />
+                </Button>
             </div>
           </div>
         </div>
@@ -171,59 +171,59 @@ const Admin = () => {
           <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
+                  <Input
                 placeholder="Search users by name or email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
-              />
+                  />
             </div>
           </div>
-          <Select value={filterRole} onValueChange={setFilterRole}>
+                  <Select value={filterRole} onValueChange={setFilterRole}>
             <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Filter by role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Roles</SelectItem>
+                      <SelectValue placeholder="Filter by role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Roles</SelectItem>
               <SelectItem value="admin">Admin</SelectItem>
               <SelectItem value="staff">Staff</SelectItem>
               <SelectItem value="member">Member</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+                    </SelectContent>
+                  </Select>
+                </div>
 
         {/* Users List */}
         <div className="grid gap-6">
           {filteredUsers.map((user) => (
             <Card key={user.user_id}>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="bg-purple-100 p-3 rounded-full">
                       <UserIcon className="h-6 w-6 text-purple-600" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold">{user.name}</h3>
+                              <h3 className="text-lg font-semibold">{user.name}</h3>
                       <div className="flex items-center space-x-4 text-sm text-gray-600">
-                        <div className="flex items-center space-x-1">
+                              <div className="flex items-center space-x-1">
                           <Mail className="h-4 w-4" />
-                          <span>{user.email}</span>
-                        </div>
-                        {user.phone && (
-                          <div className="flex items-center space-x-1">
+                                <span>{user.email}</span>
+                              </div>
+                              {user.phone && (
+                                <div className="flex items-center space-x-1">
                             <Phone className="h-4 w-4" />
-                            <span>{user.phone}</span>
-                          </div>
-                        )}
+                                  <span>{user.phone}</span>
+                                </div>
+                              )}
                         {user.city && (
-                          <div className="flex items-center space-x-1">
+                                <div className="flex items-center space-x-1">
                             <MapPin className="h-4 w-4" />
                             <span>{user.city}, {user.district}</span>
+                                </div>
+                              )}
+                              </div>
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
                   <div className="flex items-center space-x-3">
                     <Badge className={getRoleColor(user.role)}>
                       {user.role}
@@ -234,8 +234,8 @@ const Admin = () => {
                       onClick={() => handleEditUser(user)}
                     >
                       <Edit className="h-4 w-4 mr-2" />
-                      Edit
-                    </Button>
+                              Edit
+                            </Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -243,53 +243,53 @@ const Admin = () => {
                       className="text-red-600 border-red-200 hover:bg-red-50"
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </Button>
-                  </div>
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
 
         {filteredUsers.length === 0 && (
           <div className="text-center py-12">
             <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
             <p className="text-gray-600">Try adjusting your search or filter criteria.</p>
-          </div>
-        )}
-      </div>
+                            </div>
+                            )}
+                          </div>
 
       {/* Edit User Modal */}
       {isEditing && editingUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <Card className="w-full max-w-md">
-            <CardHeader>
+                <CardHeader>
               <CardTitle>Edit User</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+                </CardHeader>
+                <CardContent className="space-y-4">
               <div>
                 <label className="text-sm font-medium">Name</label>
                 <Input
                   value={editingUser.name}
                   onChange={(e) => setEditingUser({...editingUser, name: e.target.value})}
                 />
-              </div>
+                    </div>
               <div>
                 <label className="text-sm font-medium">Email</label>
                 <Input
                   value={editingUser.email}
                   onChange={(e) => setEditingUser({...editingUser, email: e.target.value})}
                 />
-              </div>
+                  </div>
               <div>
                 <label className="text-sm font-medium">Phone</label>
                 <Input
                   value={editingUser.phone}
                   onChange={(e) => setEditingUser({...editingUser, phone: e.target.value})}
                 />
-              </div>
+                    </div>
               <div>
                 <label className="text-sm font-medium">Role</label>
                 <Select 
@@ -305,14 +305,14 @@ const Admin = () => {
                     <SelectItem value="member">Member</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
+                  </div>
               <div className="flex space-x-2 pt-4">
                 <Button 
                   onClick={() => handleUpdateUser(editingUser)}
                   className="flex-1"
                 >
                   Save Changes
-                </Button>
+                    </Button>
                 <Button 
                   variant="outline" 
                   onClick={() => {
@@ -322,11 +322,11 @@ const Admin = () => {
                   className="flex-1"
                 >
                   Cancel
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
       )}
     </div>
   );

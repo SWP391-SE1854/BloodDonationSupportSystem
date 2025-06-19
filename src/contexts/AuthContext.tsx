@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { auth } from '@/config/firebase';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, User as FirebaseUser, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import api from '@/services/api.service';
 import { jwtDecode } from 'jwt-decode';
 import { AxiosError } from 'axios';
@@ -17,24 +17,24 @@ interface JwtPayload {
 }
 
 interface User {
-  email: string | null;
-  displayName: string | null;
-  uid: string;
-  name?: string;
+  id?: string;
+  email: string;
+  displayName?: string;
   role?: string;
-  photoURL?: string | null;
+  uid?: string;
 }
 
 interface RegisterData {
   name: string;
   email: string;
-  phoneNumber: string;
+  phoneNumber?: string;
+  phone?: string;
   address: string;
   city: string;
   district: string;
   password: string;
   dateOfBirth: string;
-  token: string;
+  token?: string;
 }
 
 interface AuthContextType {
@@ -43,9 +43,18 @@ interface AuthContextType {
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   register: (data: RegisterData) => Promise<void>;
+  loginWithFirebase: (token: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -53,146 +62,163 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const getRoleFromToken = () => {
-    const token = localStorage.getItem('token');
-    if (!token) return null;
-    try {
-      const decoded = jwtDecode<JwtPayload>(token);
-      return decoded.role;
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error('Failed to decode token:', error.message);
-      }
-      return null;
-    }
-  };
-
   useEffect(() => {
-    let mounted = true;
+    // Check if user is already authenticated via token
+    const storedToken = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
     
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (!mounted) return;
-      
-      if (firebaseUser) {
-        try {
-          // Get the stored token
-          const token = localStorage.getItem('token');
-          if (!token) {
-            // If no token, we need to register/login first
-            setUser({
-              email: firebaseUser.email,
-              displayName: firebaseUser.displayName,
-              uid: firebaseUser.uid
-            });
-            setIsLoading(false);
-            return;
-          }
-
-          // Get role from token
-          const role = getRoleFromToken();
-          if (!role) {
-            // If no role in token, we need to login first
-            setUser({
-              email: firebaseUser.email,
-              displayName: firebaseUser.displayName,
-              uid: firebaseUser.uid
-            });
-            setIsLoading(false);
-            return;
-          }
-          
-          // Only fetch user profile if we have both a Firebase user and a valid token with role
-          const response = await api.get(API_ENDPOINTS.USER.PROFILE);
-          const userData = response.data;
-          
+    if (storedToken && storedUser) {
+      try {
+        // Check if token is expired
+        const decoded = jwtDecode<JwtPayload>(storedToken);
+        const isExpired = decoded.exp * 1000 < Date.now();
+        
+        if (!isExpired) {
+          const parsedUser = JSON.parse(storedUser);
           setUser({
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            uid: firebaseUser.uid,
-            name: userData.name || firebaseUser.displayName,
-            role: role || userData.role
+            id: decoded.sub,
+            email: decoded.email || parsedUser.email,
+            displayName: parsedUser.displayName,
+            role: decoded.role || parsedUser.role
           });
-
-          // If admin, navigate to admin dashboard
-          if (role === 'Admin' && window.location.pathname !== '/admin') {
-            navigate('/admin');
-          }
-        } catch (error: unknown) {
-          console.error('Failed to fetch user data:', error);
-          // If we get a 401 or 404, clear the token and let the user login again
-          if (error instanceof AxiosError && (error.response?.status === 401 || error.response?.status === 404)) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('firebaseToken');
-          }
-          setUser({
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            uid: firebaseUser.uid
-          });
+        } else {
+          // Token is expired, clean up
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
         }
-      } else {
-        setUser(null);
+      } catch (error) {
+        console.error('Error parsing stored auth data:', error);
         localStorage.removeItem('token');
-        localStorage.removeItem('firebaseToken');
+        localStorage.removeItem('user');
       }
+    }
+    
+    // Always listen to Firebase auth state changes
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // User is signed in with Firebase
+        const firebaseToken = localStorage.getItem('firebaseToken');
+        const systemToken = localStorage.getItem('token');
+        
+        // If we have a Firebase token but no system token, try to exchange it
+        if (firebaseToken && !systemToken) {
+          try {
+            const response = await api.post(API_ENDPOINTS.AUTH.FIREBASE_LOGIN, null, {
+              headers: {
+                'Authorization': `Bearer ${firebaseToken}`
+              }
+            });
+            
+            if (response.data.token) {
+              localStorage.setItem('token', response.data.token);
+              
+              // Parse token and update user data
+              const decoded = jwtDecode<JwtPayload>(response.data.token);
+              
+              const userData: User = {
+                id: decoded.sub,
+                email: decoded.email || firebaseUser.email || '',
+                displayName: firebaseUser.displayName || '',
+                role: decoded.role || 'Member'
+              };
+              
+              localStorage.setItem('user', JSON.stringify(userData));
+              setUser(userData);
+            }
+          } catch (error) {
+            console.error('Failed to exchange Firebase token:', error);
+          }
+        }
+      }
+      
       setIsLoading(false);
     });
 
     return () => {
-      mounted = false;
       unsubscribe();
     };
   }, []);
 
   const register = async (data: RegisterData) => {
+    // This function now only handles backend registration.
+    // The calling component is responsible for Firebase user creation.
     try {
-      // Format the data to match backend RegisterRequest model
+      let formattedDate;
+      try {
+        const date = new Date(data.dateOfBirth);
+        formattedDate = date.toISOString();
+      } catch (dateError) {
+        console.error('Date parsing error:', dateError);
+        formattedDate = new Date().toISOString();
+      }
+      
       const registerData = {
         Name: data.name,
         Email: data.email,
         Password: data.password,
-        Phone: data.phoneNumber,
-        Dob: new Date(data.dateOfBirth), // Convert string to Date
+        Phone: data.phone || data.phoneNumber,
+        Dob: formattedDate,
         City: data.city,
         District: data.district,
         Address: data.address
       };
       
-      console.log('Sending registration data:', registerData);
+      console.log('Sending registration data to backend:', registerData);
       
-      // Register with backend using the correct endpoint
-      const response = await api.post(API_ENDPOINTS.AUTH.REGISTER, registerData);
-      
-      console.log('Registration response:', response);
-      
-      if (response.status === 201 || response.status === 200) { // Accept both 201 and 200 as success
-        toast({
-          title: "Success",
-          description: "Registration successful! Please login to continue.",
-        });
+      await api.post(API_ENDPOINTS.AUTH.REGISTER, registerData);
+      // On success, just resolve. The caller will handle the next steps.
 
-        // Always navigate to login after successful registration
-        navigate('/login');
+    } catch (error) {
+      console.error('Backend registration in AuthContext failed:', error);
+      // Re-throw the error to be handled by the calling component
+      throw error;
+    }
+  };
+
+  const loginWithFirebase = async (firebaseToken: string) => {
+    localStorage.setItem('firebaseToken', firebaseToken);
+    try {
+      const response = await api.post(API_ENDPOINTS.AUTH.FIREBASE_LOGIN, null, {
+        headers: {
+          'Authorization': `Bearer ${firebaseToken}`
+        }
+      });
+      
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        
+        const decoded = jwtDecode<JwtPayload>(response.data.token);
+        const firebaseUser = auth.currentUser;
+        
+        const userData: User = {
+          id: decoded.sub,
+          email: decoded.email || (firebaseUser?.email || ''),
+          displayName: firebaseUser?.displayName || '',
+          role: decoded.role || 'Member'
+        };
+        
+        localStorage.setItem('user', JSON.stringify(userData));
+        setUser(userData);
+        
+        if (decoded.role === 'Admin') {
+          navigate('/admin/profile');
+        } else if (decoded.role === 'Staff') {
+          navigate('/staff/profile');
+        } else {
+          navigate('/member/profile');
+        }
+        
+        toast({
+          title: "Login Successful",
+          description: `Welcome ${userData.displayName || 'back'}!`,
+        });
       } else {
-        throw new Error("Registration failed");
+        throw new Error("Backend did not return a token.");
       }
     } catch (error) {
-      console.error('Registration failed:', error);
-      if (error instanceof AxiosError) {
-        console.error('Registration error details:', {
-          status: error.response?.status,
-          data: error.response?.data,
-          message: error.message
-        });
-        
-        // Show more specific error message from backend if available
-        const errorMessage = error.response?.data?.message || error.message;
-        toast({
-          title: "Registration Failed",
-          description: errorMessage,
-          variant: "destructive"
-        });
-      }
+      // Per user request, remove fallback logic and UI notifications.
+      console.error('Firebase login/token exchange failed:', error);
+      // Re-throw the error so the calling component knows it failed.
       throw error;
     }
   };
@@ -224,6 +250,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     logout,
     register,
+    loginWithFirebase,
     isAuthenticated: !!user
   }), [user, isLoading]);
 
@@ -237,11 +264,3 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     </AuthContext.Provider>
   );
 }
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-} 

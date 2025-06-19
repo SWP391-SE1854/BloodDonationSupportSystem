@@ -5,71 +5,71 @@ export const API_TIMEOUT = 30000;
 export const API_ENDPOINTS = {
   // Auth endpoints
   AUTH: {
-    LOGIN: `${API_BASE_URL}/auth/login`,
-    REGISTER: `${API_BASE_URL}/auth/register`,
-    FIREBASE_LOGIN: `${API_BASE_URL}/auth/firebase-login`,
-    VERIFY_EMAIL: `${API_BASE_URL}/auth/verify-email`,
-    RESET_PASSWORD: `${API_BASE_URL}/auth/reset-password`,
-    REFRESH_TOKEN: `${API_BASE_URL}/auth/refresh-token`,
+    LOGIN: `/auth/login`,
+    REGISTER: `/auth/register`,
+    FIREBASE_LOGIN: `/auth/firebase-login`,
+    VERIFY_EMAIL: `/auth/verify-email`,
+    RESET_PASSWORD: `/auth/reset-password`,
+    REFRESH_TOKEN: `/auth/refresh-token`,
   },
   
   // User endpoints based on the C# controller
   USER: {
     // Member endpoints - using the actual C# controller structure
-    GET_MEMBER_PROFILE: `${API_BASE_URL}/user/member`,
-    UPDATE_MEMBER_PROFILE: (id: number) => `${API_BASE_URL}/user/member/${id}`,
+    GET_MEMBER_PROFILE: `/user/member`,
+    UPDATE_MEMBER_PROFILE: (id: number) => `/user/member/${id}`,
     
     // Staff endpoints
-    GET_STAFF_PROFILE: `${API_BASE_URL}/user/staff`,
-    UPDATE_STAFF_PROFILE: `${API_BASE_URL}/user/staff`,
-    GET_ALL_MEMBERS: `${API_BASE_URL}/user/staff/all`,
+    GET_STAFF_PROFILE: `/user/staff`,
+    UPDATE_STAFF_PROFILE: `/user/staff`,
+    GET_ALL_MEMBERS: `/user/staff/all`,
     
     // Admin endpoints
-    GET_ALL_USERS: `${API_BASE_URL}/user/admin/all`,
-    GET_USER_BY_ID: (id: number) => `${API_BASE_URL}/user/admin/${id}`,
-    UPDATE_USER: (id: number) => `${API_BASE_URL}/user/admin/${id}`,
-    DELETE_USER: (id: number) => `${API_BASE_URL}/user/admin/${id}`,
+    GET_ALL_USERS: `/user/admin/all`,
+    GET_USER_BY_ID: (id: number) => `/user/admin/${id}`,
+    UPDATE_USER: (id: number) => `/user/admin/${id}`,
+    DELETE_USER: (id: number) => `/user/admin/${id}`,
   },
   
   // Donation endpoints
   DONATION: {
-    LIST: `${API_BASE_URL}/donations`,
-    CREATE: `${API_BASE_URL}/donations`,
-    DETAILS: (id: string) => `${API_BASE_URL}/donations/${id}`,
-    UPDATE: (id: string) => `${API_BASE_URL}/donations/${id}`,
-    DELETE: (id: string) => `${API_BASE_URL}/donations/${id}`,
+    LIST: `/donations`,
+    CREATE: `/donations`,
+    DETAILS: (id: string) => `/donations/${id}`,
+    UPDATE: (id: string) => `/donations/${id}`,
+    DELETE: (id: string) => `/donations/${id}`,
   },
   
   // Blood request endpoints
   BLOOD_REQUEST: {
-    LIST: `${API_BASE_URL}/blood-requests`,
-    CREATE: `${API_BASE_URL}/blood-requests`,
-    DETAILS: (id: string) => `${API_BASE_URL}/blood-requests/${id}`,
-    UPDATE: (id: string) => `${API_BASE_URL}/blood-requests/${id}`,
-    DELETE: (id: string) => `${API_BASE_URL}/blood-requests/${id}`,
+    LIST: `/blood-requests`,
+    CREATE: `/blood-requests`,
+    DETAILS: (id: string) => `/blood-requests/${id}`,
+    UPDATE: (id: string) => `/blood-requests/${id}`,
+    DELETE: (id: string) => `/blood-requests/${id}`,
   },
   
   // Location endpoints
   LOCATION: {
-    LIST: `${API_BASE_URL}/locations`,
-    CREATE: `${API_BASE_URL}/locations`,
-    DETAILS: (id: string) => `${API_BASE_URL}/locations/${id}`,
-    UPDATE: (id: string) => `${API_BASE_URL}/locations/${id}`,
-    DELETE: (id: string) => `${API_BASE_URL}/locations/${id}`,
+    LIST: `/locations`,
+    CREATE: `/locations`,
+    DETAILS: (id: string) => `/locations/${id}`,
+    UPDATE: (id: string) => `/locations/${id}`,
+    DELETE: (id: string) => `/locations/${id}`,
   },
   
   // Blood type endpoints
   BLOOD_TYPE: {
-    LIST: `${API_BASE_URL}/blood-types`,
+    LIST: `/blood-types`,
   },
   
   // Statistics endpoints
   STATISTICS: {
-    DASHBOARD: `${API_BASE_URL}/statistics/dashboard`,
-    DONATIONS: `${API_BASE_URL}/statistics/donations`,
-    REQUESTS: `${API_BASE_URL}/statistics/requests`,
+    DASHBOARD: `/statistics/dashboard`,
+    DONATIONS: `/statistics/donations`,
+    REQUESTS: `/statistics/requests`,
   },
-  
+
   // Blood Bank endpoints
   GET_BLOOD_BANKS: '/bloodbank',
   GET_BLOOD_BANK_BY_ID: (id: number) => `/bloodbank/${id}`,
