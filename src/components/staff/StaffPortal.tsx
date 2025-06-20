@@ -1,50 +1,29 @@
-import React, { useState } from 'react';
-import StaffLayout from './StaffLayout';
-import StaffDashboard from './StaffDashboard';
-import StaffProfile from './StaffProfile';
-import UserManagement from '@/pages/admin/UserManagement'; // Assuming staff can also manage users
-import BlogManagement from '@/pages/admin/BlogManagement';   // Assuming staff can also manage blogs
-import StaffBloodRequest from './StaffBloodRequest'; // Import the new component
-import { useAuth } from '@/contexts/AuthContext';
+import { Routes, Route, Outlet } from "react-router-dom";
+import StaffLayout from "./StaffLayout";
+import StaffDashboard from "./StaffDashboard";
+import StaffProfile from "./StaffProfile";
+import UserManagement from "@/pages/admin/UserManagement";
+import BlogManagement from "@/pages/admin/BlogManagement";
+import { useAuth } from "@/contexts/AuthContext";
+import MemberDonationHistory from "../member/MemberDonationHistory";
 
 const StaffPortal = () => {
-  const [currentPage, setCurrentPage] = useState('dashboard');
   const { user, logout } = useAuth();
-
-  const handleNavigate = (page: string) => {
-    setCurrentPage(page);
-  };
-
-  const renderCurrentPage = () => {
-    switch (currentPage) {
-      case 'dashboard':
-        return <StaffDashboard />;
-      case 'profile':
-        return <StaffProfile />;
-      case 'users':
-        return <UserManagement />;
-      case 'blog':
-        return <BlogManagement />;
-      case 'blood-requests':
-        return <StaffBloodRequest />;
-      // Add other staff pages here
-      default:
-        return <StaffDashboard />;
-    }
-  };
 
   if (!user) {
     return <div>Loading...</div>; // Or a redirect to login
   }
 
   return (
-    <StaffLayout
-      currentPage={currentPage}
-      onNavigate={handleNavigate}
-      onLogout={logout}
-      userName={user.displayName || user.email}
-    >
-      {renderCurrentPage()}
+    <StaffLayout onLogout={logout} userName={user.email || ""}>
+      <Routes>
+        <Route path="dashboard" element={<StaffDashboard />} />
+        <Route path="profile" element={<StaffProfile />} />
+        <Route path="users" element={<UserManagement />} />
+        <Route path="blog" element={<BlogManagement />} />
+        <Route path="donations" element={<MemberDonationHistory />} />
+        <Route index element={<StaffDashboard />} />
+      </Routes>
     </StaffLayout>
   );
 };

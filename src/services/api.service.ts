@@ -17,7 +17,13 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   async (config) => {
-    // Get the JWT token from localStorage
+    // Do not overwrite the Authorization header if it's already set.
+    // This is crucial for the firebase-login flow which sets its own header.
+    if (config.headers.Authorization) {
+      return config;
+    }
+    
+    // For all other requests, get the JWT token from localStorage and attach it.
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

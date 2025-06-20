@@ -22,10 +22,8 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   // Check role-based access if allowedRoles is provided
-  if (allowedRoles) {
-    if (!user || !user.role || !allowedRoles.includes(user.role)) {
-      return <Navigate to="/" />;
-    }
+  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/" />;
   }
 
   return <>{children}</>;

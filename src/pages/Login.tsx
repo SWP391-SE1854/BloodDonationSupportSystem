@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { auth, googleProvider } from "@/config/firebase";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { API_ENDPOINTS } from '@/services/api.config';
-import { API_BASE_URL } from '@/config/api';
+import api from '@/services/api.service';
 import { loginSchema } from '@/lib/validations';
 import { jwtDecode } from 'jwt-decode';
 import { ZodError, ZodIssue } from 'zod';
@@ -152,23 +152,24 @@ const Login = () => {
     }
   };
 
+  const handleClearSession = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('firebaseToken');
+    toast({ title: 'Session Cleared', description: 'Your session has been cleared. Please log in again.' });
+    // We can't use navigate here because the context might be unstable
+    window.location.reload();
+  };
+
   const handleResetPassword = async () => {
     setResetLoading(true);
     try {
-      // Use the correct endpoint based on the API docs
-      const response = await fetch(`${API_ENDPOINTS.AUTH.RESET_PASSWORD}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(resetEmail),
+      await api.post(API_ENDPOINTS.AUTH.RESET_PASSWORD, resetEmail, {
+        headers: { 'Content-Type': 'application/json' },
       });
-      
-      if (response.ok) {
         toast({ title: "Reset Email Sent", description: "Check your email for reset instructions." });
         setShowReset(false);
         setResetEmail("");
-      } else {
-        toast({ title: "Error", description: "Failed to send reset email.", variant: "destructive" });
-      }
     } catch (error) {
       toast({ title: "Error", description: "Failed to send reset email.", variant: "destructive" });
     } finally {
@@ -251,7 +252,7 @@ const Login = () => {
                   <p className="text-red-500 text-sm mt-1">{errors.password}</p>
                 )}
                 <div className="flex items-center justify-between">
-                  <div></div>
+                  <Button type="button" variant="link" onClick={handleClearSession} className="text-xs p-0 h-auto">Clear Session</Button>
                   <button
                     type="button"
                     className="text-xs text-red-500 hover:underline focus:outline-none"

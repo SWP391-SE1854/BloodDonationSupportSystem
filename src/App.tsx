@@ -21,6 +21,8 @@ import MemberPortal from "./components/member/MemberPortal";
 import BlogManagement from "./pages/admin/BlogManagement";
 import StaffPortal from "./components/staff/StaffPortal";
 import UserManagement from "./pages/admin/UserManagement";
+import TempAdmin from "./pages/admin/TempAdmin";
+import TempStaff from "./pages/staff/TempStaff";
 
 const queryClient = new QueryClient();
 
@@ -58,8 +60,8 @@ const App = () => (
             <Route
               path="/staff/*"
               element={
-                <ProtectedRoute allowedRoles={["Staff", "Admin"]}>
-                  <StaffPortal />
+                <ProtectedRoute allowedRoles={["staff", "admin"]}>
+                  <TempStaff />
                 </ProtectedRoute>
               }
             />
@@ -67,7 +69,7 @@ const App = () => (
               path="/admin"
               element={
                 <ProtectedRoute allowedRoles={["admin"]}>
-                  <Admin />
+                  <TempAdmin />
                 </ProtectedRoute>
               }
             />

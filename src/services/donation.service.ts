@@ -12,6 +12,15 @@ export interface Donation {
   status: string;
 }
 
+export interface DonationHistory {
+  id: number;
+  user_id: number;
+  donation_date: string;
+  location: string;
+  quantity: number;
+  notes: string;
+}
+
 export interface CreateDonationRequest {
   unit_id: number;
   donation_date: string;
@@ -48,6 +57,16 @@ export class DonationService {
       return response.data;
     } catch (error) {
       console.error(`Error fetching donations for user id ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  static async getMemberDonationHistory(): Promise<DonationHistory[]> {
+    try {
+      const response = await api.get(API_ENDPOINTS.DONATION_HISTORY.GET_MEMBER_HISTORY);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching member donation history:', error);
       throw error;
     }
   }

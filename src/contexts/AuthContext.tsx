@@ -9,7 +9,8 @@ import { AxiosError } from 'axios';
 import { API_ENDPOINTS } from "@/services/api.config";
 
 interface JwtPayload {
-  role: string;
+  role?: string;
+  "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"?: string;
   sub: string;
   email: string;
   exp: number;
@@ -96,41 +97,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Always listen to Firebase auth state changes
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // User is signed in with Firebase
-        const firebaseToken = localStorage.getItem('firebaseToken');
-        const systemToken = localStorage.getItem('token');
-        
-        // If we have a Firebase token but no system token, try to exchange it
-        if (firebaseToken && !systemToken) {
-          try {
-            const response = await api.post(API_ENDPOINTS.AUTH.FIREBASE_LOGIN, null, {
-              headers: {
-                'Authorization': `Bearer ${firebaseToken}`
-              }
-            });
-            
-            if (response.data.token) {
-              localStorage.setItem('token', response.data.token);
-              
-              // Parse token and update user data
-              const decoded = jwtDecode<JwtPayload>(response.data.token);
-              
-              const userData: User = {
-                id: decoded.sub,
-                email: decoded.email || firebaseUser.email || '',
-                displayName: firebaseUser.displayName || '',
-                role: decoded.role || 'Member'
-              };
-              
-              localStorage.setItem('user', JSON.stringify(userData));
-              setUser(userData);
+        // If we have a stored user from a previous session, use that.
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            try {
+                setUser(JSON.parse(storedUser));
+            } catch {
+                // If parsing fails, clear the bad data
+                localStorage.removeItem('user');
             }
-          } catch (error) {
-            console.error('Failed to exchange Firebase token:', error);
-      }
         }
       }
-      
       setIsLoading(false);
     });
 
@@ -178,6 +155,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loginWithFirebase = async (firebaseToken: string) => {
     localStorage.setItem('firebaseToken', firebaseToken);
     try {
+      const decodedFirebaseToken: { aud?: string } = jwtDecode(firebaseToken);
+      console.log("Attempting to exchange Firebase token. Decoded payload:", decodedFirebaseToken);
+      console.log("Ensure the 'aud' value above matches your Firebase Project ID in the backend configuration.");
+
       const response = await api.post(API_ENDPOINTS.AUTH.FIREBASE_LOGIN, null, {
         headers: {
           'Authorization': `Bearer ${firebaseToken}`
@@ -188,22 +169,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('token', response.data.token);
         
         const decoded = jwtDecode<JwtPayload>(response.data.token);
+        console.log("Decoded JWT token from backend:", decoded);
+
         const firebaseUser = auth.currentUser;
+        
+        // Check for role in standard and .NET claim formats
+        const role = decoded.role || decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || 'Member';
+        console.log("Extracted role:", role);
         
         const userData: User = {
           id: decoded.sub,
           email: decoded.email || (firebaseUser?.email || ''),
           displayName: firebaseUser?.displayName || '',
-          role: decoded.role || 'Member'
+          role: role
         };
         
         localStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);
         
-        if (decoded.role === 'Admin') {
-          navigate('/admin/profile');
-        } else if (decoded.role === 'Staff') {
-          navigate('/staff/profile');
+        if (role === 'Admin') {
+          navigate('/admin');
+        } else if (role === 'Staff') {
+          navigate('/staff');
         } else {
           navigate('/member/profile');
         }

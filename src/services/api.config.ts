@@ -9,7 +9,7 @@ export const API_ENDPOINTS = {
     REGISTER: `/auth/register`,
     FIREBASE_LOGIN: `/auth/firebase-login`,
     VERIFY_EMAIL: `/auth/verify-email`,
-    RESET_PASSWORD: `/auth/reset-password`,
+    RESET_PASSWORD: `/auth/send-reset-password`,
     REFRESH_TOKEN: `/auth/refresh-token`,
   },
   
@@ -45,6 +45,11 @@ export const API_ENDPOINTS = {
     CREATE_MEMBER_REQUEST: '/donation/member',
     GET_ALL: '/donation/all',
     GET_BY_USER_ID: (userId: number) => `/donation/users?userId=${userId}`,
+  },
+  
+  // Donation History endpoints
+  DONATION_HISTORY: {
+    GET_MEMBER_HISTORY: '/donation-history/member',
   },
   
   // Blood Request endpoints
