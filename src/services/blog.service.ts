@@ -1,82 +1,71 @@
-import axios, { AxiosError } from 'axios';
-import { API_BASE_URL } from '@/config/api';
-import type { BlogPost } from '@/types/api';
+import api from './api.service';
+import { API_ENDPOINTS } from './api.config';
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Add auth token to requests
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-export interface CreateBlogPostRequest {
+export interface BlogPost {
+  id: number;
+  user_id: number;
+  date: string;
   title: string;
   content: string;
-  imageUrl?: string;
+  authorName?: string;
 }
 
-export const blogService = {
-  async getAllPosts(): Promise<BlogPost[]> {
+export interface CreateBlogPost {
+  user_id: number;
+  date: string;
+  title: string;
+  content: string;
+}
+
+export class BlogService {
+  static async getAllBlogPosts(): Promise<BlogPost[]> {
     try {
-      const response = await api.get('/blog/all');
+      const response = await api.get(API_ENDPOINTS.BLOG_POST.GET_ALL);
       return response.data;
     } catch (error) {
-      console.error('Failed to fetch blog posts:', error);
-      throw new Error('Failed to fetch blog posts');
-    }
-  },
-
-  async getPostById(id: number): Promise<BlogPost> {
-    try {
-      const response = await api.get(`/blog/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error('Failed to fetch blog post:', error);
-      throw new Error('Failed to fetch blog post');
-    }
-  },
-
-  async createPost(data: CreateBlogPostRequest): Promise<BlogPost> {
-    try {
-      const response = await api.post('/blog', data);
-      return response.data;
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        console.error('Failed to create blog post:', {
-          status: error.response?.status,
-          data: error.response?.data,
-          message: error.message
-        });
-      }
-      throw new Error('Failed to create blog post');
-    }
-  },
-
-  async updatePost(id: number, data: CreateBlogPostRequest): Promise<BlogPost> {
-    try {
-      const response = await api.put(`/blog/${id}`, data);
-      return response.data;
-    } catch (error) {
-      console.error('Failed to update blog post:', error);
-      throw new Error('Failed to update blog post');
-    }
-  },
-
-  async deletePost(id: number): Promise<void> {
-    try {
-      await api.delete(`/blog?id=${id}`);
-    } catch (error) {
-      console.error('Failed to delete blog post:', error);
-      throw new Error('Failed to delete blog post');
+      console.error('Error fetching all blog posts:', error);
+      throw error;
     }
   }
-}; 
+
+  static async getBlogPostById(id: number): Promise<BlogPost> {
+    try {
+      const response = await api.get(API_ENDPOINTS.BLOG_POST.GET_BY_ID(id));
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching blog post with id ${id}:`, error);
+      throw error;
+    }
+  }
+
+  static async createBlogPost(data: CreateBlogPost): Promise<BlogPost> {
+    try {
+      const response = await api.post(API_ENDPOINTS.BLOG_POST.CREATE, data);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating blog post:', error);
+      throw error;
+    }
+  }
+
+  static async updateBlogPost(id: number, data: Partial<CreateBlogPost>): Promise<BlogPost> {
+    try {
+      const response = await api.put(API_ENDPOINTS.BLOG_POST.UPDATE(id), data);
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating blog post with id ${id}:`, error);
+      throw error;
+    }
+  }
+
+  static async deleteBlogPost(id: number): Promise<void> {
+    try {
+      await api.delete(API_ENDPOINTS.BLOG_POST.DELETE(id));
+    } catch (error) {
+      console.error(`Error deleting blog post with id ${id}:`, error);
+      throw error;
+    }
+  }
+}
+
+export default BlogService; 

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Heart, Mail, Lock, User, Phone, MapPin, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,8 +6,16 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+interface User {
+  user_id: number;
+  name: string;
+  email: string;
+  phone: string;
+  role: string;
+}
+
 interface AuthFormProps {
-  onLogin: (userData: any) => void;
+  onLogin: (userData: User) => void;
 }
 
 const AuthForm = ({ onLogin }: AuthFormProps) => {

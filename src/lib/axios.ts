@@ -1,9 +1,9 @@
 import axios from 'axios';
-import { API_TIMEOUT } from '../config/api';
+import { API_BASE_URL, API_TIMEOUT } from '../config/api';
 
 // Create axios instance with default config
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:5081/api',
+  baseURL: API_BASE_URL,
   timeout: API_TIMEOUT,
   withCredentials: true,
   headers: {

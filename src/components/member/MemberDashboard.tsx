@@ -1,9 +1,12 @@
-
 import React from 'react';
 import { Heart, Calendar, FileText, Activity, Users, Bell } from 'lucide-react';
 
+interface User {
+  name: string;
+}
+
 interface MemberDashboardProps {
-  user: any;
+  user: User;
   onNavigate: (page: string) => void;
 }
 

@@ -7,7 +7,7 @@ import fs from "fs";
 export default defineConfig({
   server: {
     host: "localhost",
-    port: 5173,
+    port: 8080,
     strictPort: true,
     cors: true,
     proxy: {
@@ -18,7 +18,7 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, ''),
         configure: (proxy) => {
           proxy.on('proxyReq', (proxyReq) => {
-            proxyReq.setHeader('Origin', 'http://localhost:5173');
+            proxyReq.setHeader('Origin', 'http://localhost:8080');
             proxyReq.setHeader('Access-Control-Request-Method', 'GET,POST,PUT,DELETE,OPTIONS');
             proxyReq.setHeader('Access-Control-Request-Headers', 'Content-Type,Authorization');
           });

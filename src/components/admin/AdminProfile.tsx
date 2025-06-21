@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import AdminService, { UserProfile, UpdateUserProfile } from '@/services/admin.service';
 import { profileUpdateSchema } from '@/lib/validations';
+import { ZodError, ZodIssue } from 'zod';
 
 const AdminProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -65,12 +66,16 @@ const AdminProfile = () => {
       profileUpdateSchema.parse(formData);
       setErrors({});
       return true;
-    } catch (error: any) {
-      const newErrors: { [key: string]: string } = {};
-      error.errors?.forEach((err: any) => {
-        newErrors[err.path[0]] = err.message;
-      });
-      setErrors(newErrors);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const newErrors: { [key: string]: string } = {};
+        error.errors.forEach((err: ZodIssue) => {
+          if (err.path[0]) {
+            newErrors[err.path[0]] = err.message;
+          }
+        });
+        setErrors(newErrors);
+      }
       return false;
     }
   };

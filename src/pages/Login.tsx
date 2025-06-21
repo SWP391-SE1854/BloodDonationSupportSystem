@@ -8,20 +8,39 @@ import { Heart, Mail, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { auth, googleProvider } from "@/config/firebase";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
-import { API_BASE_URL } from '@/config/api';
+import { API_ENDPOINTS } from '@/services/api.config';
+import api from '@/services/api.service';
 import { loginSchema } from '@/lib/validations';
 import { jwtDecode } from 'jwt-decode';
-import NavigationBar from "@/components/NavigationBar";
+import { ZodError, ZodIssue } from 'zod';
+import { useAuth } from "@/contexts/AuthContext";
+
+interface JwtPayload {
+  role?: string;
+  sub?: string;
+  email?: string;
+  exp: number;
+  iss: string;
+  aud: string;
+  // Standard .NET claims
+  "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"?: string;
+  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"?: string;
+  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"?: string;
+}
 
 const Login = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { loginWithFirebase } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: ""
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [showReset, setShowReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -36,13 +55,54 @@ const Login = () => {
       loginSchema.parse(formData);
       setErrors({});
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       const newErrors: { [key: string]: string } = {};
-      error.errors?.forEach((err: any) => {
-        newErrors[err.path[0]] = err.message;
-      });
+      if (error instanceof ZodError) {
+        error.errors.forEach((err: ZodIssue) => {
+          newErrors[err.path[0]] = err.message;
+        });
+      }
       setErrors(newErrors);
       return false;
+    }
+  };
+
+  // Helper function to get role from JWT token
+  const getRoleFromToken = (token: string): string => {
+    try {
+      const decoded = jwtDecode<JwtPayload>(token);
+      
+      // Check for role in standard format
+      if (decoded.role) {
+        return decoded.role;
+      }
+      
+      // Check for role in .NET claim format
+      if (decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]) {
+        return decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+      }
+      
+      // Default role if none found
+      return 'Member';
+    } catch (e) {
+      console.error('Failed to decode JWT token:', e);
+      return 'Member'; // Default to member if we can't decode
+    }
+  };
+
+  // Helper function to redirect based on role
+  const redirectBasedOnRole = (role: string) => {
+    console.log('Redirecting based on role:', role);
+    
+    if (role === 'Admin') {
+      console.log('Redirecting to admin profile');
+      navigate('/admin/profile');
+    } else if (role === 'Staff') {
+      console.log('Redirecting to staff profile');
+      navigate('/staff/profile');
+    } else {
+      console.log('Redirecting to member profile');
+      navigate('/member/profile');
     }
   };
 
@@ -51,69 +111,13 @@ const Login = () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
-      const token = await user.getIdToken();
-      console.log("Google login successful - Firebase Token:", token);
-      console.log("API URL being used:", API_BASE_URL);
-
-      const response = await fetch(`${API_BASE_URL}/auth/firebase-login`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      });
-
-      const data = await response.json();
-      console.log("System token:", data.token);
-      
-      // Store the JWT token
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-      }
-
-      // Decode the JWT token to get the role
-      let role = '';
-      if (data.token) {
-        try {
-          const decoded = jwtDecode<{ 
-            "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
-            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier": string;
-            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress": string;
-            exp: number;
-            iss: string;
-            aud: string;
-          }>(data.token);
-          role = decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
-          console.log('JWT Token decoded:', decoded);
-          console.log('Extracted role:', role);
-        } catch (e) {
-          console.error('Failed to decode JWT token:', e);
-        }
-      }
-
-      // Store user data
-      localStorage.setItem('user', JSON.stringify({
-        email: user.email,
-        displayName: user.displayName,
-        uid: user.uid
-      }));
-      
-      // Redirect based on role
-      console.log('Redirecting based on role:', role);
-      if (role === 'Admin') {
-        console.log('Redirecting to admin dashboard');
-        navigate('/admin/dashboard');
-      } else if (role === 'Staff') {
-        console.log('Redirecting to staff profile');
-        navigate('/staff/profile');
-      } else {
-        console.log('Redirecting to member profile');
-        navigate('/member/profile');
-      }
+      const firebaseToken = await user.getIdToken();
+      await loginWithFirebase(firebaseToken);
     } catch (error) {
       console.error('Login failed:', error);
       toast({
-        title: "Error",
-        description: "Failed to login with Google",
+        title: "Login Failed",
+        description: error instanceof Error ? error.message : "Failed to login with Google",
         variant: "destructive",
       });
     } finally {
@@ -126,72 +130,21 @@ const Login = () => {
     if (!validateForm()) {
       return;
     }
+    
     setIsLoading(true);
     try {
+      // Login with Firebase
       const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
       const firebaseToken = await user.getIdToken();
-      console.log("Login successful - Firebase Token:", firebaseToken);
-
-      const response = await fetch(`${API_BASE_URL}/auth/firebase-login`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${firebaseToken}`
-        }
-      });
-
-      const data = await response.json();
-      console.log("System token:", data.token);
-
-      // Store the JWT token
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-      }
-
-      // Decode the JWT token to get the role
-      let role = '';
-      if (data.token) {
-        try {
-          const decoded = jwtDecode<{ 
-            "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
-            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier": string;
-            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress": string;
-            exp: number;
-            iss: string;
-            aud: string;
-          }>(data.token);
-          role = decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
-          console.log('JWT Token decoded:', decoded);
-          console.log('Extracted role:', role);
-        } catch (e) {
-          console.error('Failed to decode JWT token:', e);
-        }
-      }
-
-      // Store user data
-      localStorage.setItem('user', JSON.stringify({
-        email: user.email,
-        displayName: user.displayName,
-        uid: user.uid
-      }));
       
-      // Redirect based on role
-      console.log('Redirecting based on role:', role);
-      if (role === 'Admin') {
-        console.log('Redirecting to admin dashboard');
-        navigate('/admin/dashboard');
-      } else if (role === 'Staff') {
-        console.log('Redirecting to staff profile');
-        navigate('/staff/profile');
-      } else {
-        console.log('Redirecting to member profile');
-        navigate('/member/profile');
-      }
+      await loginWithFirebase(firebaseToken);
+
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('Firebase login failed:', error);
       toast({
-        title: "Error",
-        description: "Invalid email or password",
+        title: "Login Failed",
+        description: "Invalid email or password. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -199,9 +152,52 @@ const Login = () => {
     }
   };
 
+  const handleClearSession = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('firebaseToken');
+    toast({ title: 'Session Cleared', description: 'Your session has been cleared. Please log in again.' });
+    // We can't use navigate here because the context might be unstable
+    window.location.reload();
+  };
+
+  const handleResetPassword = async () => {
+    setResetLoading(true);
+    try {
+      await api.post(API_ENDPOINTS.AUTH.RESET_PASSWORD, resetEmail, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+        toast({ title: "Reset Email Sent", description: "Check your email for reset instructions." });
+        setShowReset(false);
+        setResetEmail("");
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to send reset email.", variant: "destructive" });
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-red-50 flex items-center justify-center py-8 px-4">
-      <NavigationBar fixed />
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm shadow-sm z-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Link to="/" className="flex items-center space-x-2">
+              <Heart className="h-8 w-8 text-red-500" />
+              <span className="text-2xl font-bold text-gray-800">Blood Care</span>
+            </Link>
+            <div className="flex items-center space-x-4">
+              <Link to="/" className="text-gray-700 hover:text-red-500 transition-colors">Home</Link>
+              <Link to="/register">
+                <Button variant="outline" className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white">
+                  Register Now
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
 
       <div className="w-full max-w-md mt-16">
         <Card className="shadow-2xl border-0">
@@ -254,6 +250,35 @@ const Login = () => {
                 />
                 {errors.password && (
                   <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                )}
+                <div className="flex items-center justify-between">
+                  <Button type="button" variant="link" onClick={handleClearSession} className="text-xs p-0 h-auto">Clear Session</Button>
+                  <button
+                    type="button"
+                    className="text-xs text-red-500 hover:underline focus:outline-none"
+                    onClick={() => setShowReset((v) => !v)}
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+                {showReset && (
+                  <div className="mt-2 space-y-2">
+                    <Input
+                      type="email"
+                      placeholder="Enter your email"
+                      value={resetEmail}
+                      onChange={e => setResetEmail(e.target.value)}
+                      disabled={resetLoading}
+                    />
+                    <Button
+                      type="button"
+                      className="w-full"
+                      onClick={handleResetPassword}
+                      disabled={resetLoading || !resetEmail}
+                    >
+                      {resetLoading ? "Sending..." : "Send Reset Email"}
+                    </Button>
+                  </div>
                 )}
               </div>
 

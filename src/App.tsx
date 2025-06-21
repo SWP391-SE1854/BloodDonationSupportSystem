@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Home from './pages/Home';
 import Index from './pages/Index';
@@ -18,6 +18,11 @@ import Staff from "./pages/Staff";
 import Admin from "./pages/Admin";
 import AdminProfile from "./components/admin/AdminProfile";
 import MemberPortal from "./components/member/MemberPortal";
+import BlogManagement from "./pages/admin/BlogManagement";
+import StaffPortal from "./components/staff/StaffPortal";
+import UserManagement from "./pages/admin/UserManagement";
+import TempAdmin from "./pages/admin/TempAdmin";
+import TempStaff from "./pages/staff/TempStaff";
 
 const queryClient = new QueryClient();
 
@@ -47,16 +52,16 @@ const App = () => (
               path="/member/*"
               element={
                 <ProtectedRoute>
-                  <MemberPortal user={{}} onLogout={() => {}} />
+                  <MemberPortal />
                 </ProtectedRoute>
               }
             />
             <Route path="/blog" element={<Blog />} />
             <Route
-              path="/staff"
+              path="/staff/*"
               element={
                 <ProtectedRoute allowedRoles={["staff", "admin"]}>
-                  <Staff />
+                  <TempStaff />
                 </ProtectedRoute>
               }
             />
@@ -64,7 +69,15 @@ const App = () => (
               path="/admin"
               element={
                 <ProtectedRoute allowedRoles={["admin"]}>
-                  <Admin />
+                  <TempAdmin />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <UserManagement />
                 </ProtectedRoute>
               }
             />
@@ -81,6 +94,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <AdminProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/blog"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <BlogManagement />
                 </ProtectedRoute>
               }
             />
