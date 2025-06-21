@@ -2,9 +2,10 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { auth } from '@/config/firebase';
-import { onAuthStateChanged} from 'firebase/auth';
+import { onAuthStateChanged, User as FirebaseUser, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import api from '@/services/api.service';
 import { jwtDecode } from 'jwt-decode';
+import { AxiosError } from 'axios';
 import { API_ENDPOINTS } from "@/services/api.config";
 
 interface JwtPayload {
@@ -187,9 +188,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(userData);
         
         if (role === 'Admin') {
-          navigate('/admin');
+          navigate('/admin/profile');
         } else if (role === 'Staff') {
-          navigate('/staff');
+          navigate('/staff/profile');
         } else {
           navigate('/member/profile');
         }

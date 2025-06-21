@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -140,11 +140,11 @@ const Login = () => {
       
       await loginWithFirebase(firebaseToken);
 
-    } catch (error) {
-      console.error('Firebase login failed:', error);
+    } catch (error: any) {
+      console.error('Login failed:', error);
       toast({
         title: "Login Failed",
-        description: "Invalid email or password. Please try again.",
+        description: error?.message || "Invalid email or password. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -251,12 +251,20 @@ const Login = () => {
                 {errors.password && (
                   <p className="text-red-500 text-sm mt-1">{errors.password}</p>
                 )}
-                <div className="flex items-center justify-between">
-                  <Button type="button" variant="link" onClick={handleClearSession} className="text-xs p-0 h-auto">Clear Session</Button>
+                <div className="flex items-center justify-between mt-2">
                   <button
                     type="button"
-                    className="text-xs text-red-500 hover:underline focus:outline-none"
+                    onClick={handleClearSession}
+                    className="text-xs font-medium text-red-500 hover:underline transition-colors focus:outline-none"
+                    style={{ fontFamily: 'inherit' }}
+                  >
+                    Clear Session
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setShowReset((v) => !v)}
+                    className="text-xs font-medium text-red-500 hover:underline transition-colors focus:outline-none"
+                    style={{ fontFamily: 'inherit' }}
                   >
                     Forgot Password?
                   </button>
