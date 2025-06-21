@@ -13,10 +13,11 @@ import { registerSchema } from "@/lib/validations";
 import { z } from "zod";
 import { useNavigate } from "react-router-dom";
 import NavigationBar from "@/components/NavigationBar";
+import { authService } from "@/services/auth.service";
 
 const Register = () => {
   const { toast } = useToast();
-  const { register, loginWithFirebase } = useAuth();
+  const { register } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showAllErrors, setShowAllErrors] = useState(false);
   const [formData, setFormData] = useState({
@@ -151,9 +152,8 @@ const Register = () => {
       // Get Firebase token for login
       const token = await user.getIdToken();
       
-      // Use Firebase login instead of registration for Google users
-      // This will create the user in backend if they don't exist
-      await loginWithFirebase(token);
+      // Use AuthService loginWithFirebase directly
+      await authService.loginWithFirebase(token);
       
       // Store user data
       localStorage.setItem('user', JSON.stringify({
@@ -193,7 +193,7 @@ const Register = () => {
       await register({
         name: formData.name,
         email: formData.email,
-        phone: formData.phone,
+        phoneNumber: formData.phone,
         address: formData.address,
         city: formData.city,
         district: formData.district,

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { auth } from '@/config/firebase';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged} from 'firebase/auth';
 import api from '@/services/api.service';
 import { jwtDecode } from 'jwt-decode';
 import { AxiosError } from 'axios';
@@ -34,7 +34,7 @@ interface RegisterData {
   district: string;
   password: string;
   dateOfBirth: string;
-  token: string;
+  token?: string;
 }
 
 interface AuthContextType {
@@ -102,7 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           
           // Only fetch user profile if we have both a Firebase user and a valid token with role
-          const response = await api.get(API_ENDPOINTS.USER.PROFILE);
+          const response = await api.get(API_ENDPOINTS.USER.GET_MEMBER_PROFILE);
           const userData = response.data;
           
           setUser({
