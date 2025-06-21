@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { User, Mail, Phone, MapPin, Calendar, Edit3, Save, X } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,9 +6,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 
+interface UserProfile {
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  district?: string;
+  dob?: string;
+}
+
 interface ProfileProps {
-  user: any;
-  onUpdateUser: (userData: any) => void;
+  user: UserProfile;
+  onUpdateUser: (userData: UserProfile) => void;
 }
 
 const Profile = ({ user, onUpdateUser }: ProfileProps) => {

@@ -5,71 +5,83 @@ export const API_TIMEOUT = 30000;
 export const API_ENDPOINTS = {
   // Auth endpoints
   AUTH: {
-    LOGIN: `${API_BASE_URL}/auth/login`,
-    REGISTER: `${API_BASE_URL}/auth/register`,
-    FIREBASE_LOGIN: `${API_BASE_URL}/auth/firebase-login`,
-    VERIFY_EMAIL: `${API_BASE_URL}/auth/verify-email`,
-    RESET_PASSWORD: `${API_BASE_URL}/auth/reset-password`,
-    REFRESH_TOKEN: `${API_BASE_URL}/auth/refresh-token`,
+    LOGIN: `/auth/login`,
+    REGISTER: `/auth/register`,
+    FIREBASE_LOGIN: `/auth/firebase-login`,
+    VERIFY_EMAIL: `/auth/verify-email`,
+    RESET_PASSWORD: `/auth/send-reset-password`,
+    REFRESH_TOKEN: `/auth/refresh-token`,
   },
   
   // User endpoints based on the C# controller
   USER: {
     // Member endpoints - using the actual C# controller structure
-    GET_MEMBER_PROFILE: `${API_BASE_URL}/user/member`,
-    UPDATE_MEMBER_PROFILE: (id: number) => `${API_BASE_URL}/user/member/${id}`,
+    GET_MEMBER_PROFILE: `/user/member`,
+    UPDATE_MEMBER_PROFILE: (id: number) => `/user/member/${id}`,
     
     // Staff endpoints
-    GET_STAFF_PROFILE: `${API_BASE_URL}/user/staff`,
-    UPDATE_STAFF_PROFILE: `${API_BASE_URL}/user/staff`,
-    GET_ALL_MEMBERS: `${API_BASE_URL}/user/staff/all`,
+    GET_STAFF_PROFILE: `/user/staff`,
+    UPDATE_STAFF_PROFILE: `/user/staff`,
+    GET_ALL_MEMBERS: `/user/staff/all`,
     
     // Admin endpoints
-    GET_ALL_USERS: `${API_BASE_URL}/user/admin/all`,
-    GET_USER_BY_ID: (id: number) => `${API_BASE_URL}/user/admin/${id}`,
-    UPDATE_USER: (id: number) => `${API_BASE_URL}/user/admin/${id}`,
-    DELETE_USER: (id: number) => `${API_BASE_URL}/user/admin/${id}`,
+    GET_ALL_USERS: `/user/admin/all`,
+    GET_USER_BY_ID: (id: number) => `/user/admin/${id}`,
+    UPDATE_USER: (id: number) => `/user/admin/${id}`,
+    DELETE_USER: (id: number) => `/user/admin/${id}`,
   },
   
+  // Blog Post endpoints
+  BLOG_POST: {
+    GET_ALL: '/blogpost/all',
+    GET_BY_ID: (id: number) => `/blogpost/${id}`,
+    CREATE: '/blogpost/new',
+    UPDATE: (id: number) => `/blogpost/update/${id}`,
+    DELETE: (id: number) => `/blogpost/delete/${id}`,
+  },
+
   // Donation endpoints
   DONATION: {
-    LIST: `${API_BASE_URL}/donations`,
-    CREATE: `${API_BASE_URL}/donations`,
-    DETAILS: (id: string) => `${API_BASE_URL}/donations/${id}`,
-    UPDATE: (id: string) => `${API_BASE_URL}/donations/${id}`,
-    DELETE: (id: string) => `${API_BASE_URL}/donations/${id}`,
+    CREATE_MEMBER_REQUEST: '/donation/member',
+    GET_ALL: '/donation/all',
+    GET_BY_USER_ID: (userId: number) => `/donation/users?userId=${userId}`,
   },
   
-  // Blood request endpoints
+  // Donation History endpoints
+  DONATION_HISTORY: {
+    GET_MEMBER_HISTORY: '/donation-history/member',
+  },
+  
+  // Blood Request endpoints
   BLOOD_REQUEST: {
-    LIST: `${API_BASE_URL}/blood-requests`,
-    CREATE: `${API_BASE_URL}/blood-requests`,
-    DETAILS: (id: string) => `${API_BASE_URL}/blood-requests/${id}`,
-    UPDATE: (id: string) => `${API_BASE_URL}/blood-requests/${id}`,
-    DELETE: (id: string) => `${API_BASE_URL}/blood-requests/${id}`,
+    GET_ALL: '/bloodrequest/all',
+    GET_BY_ID: (id: number) => `/bloodrequest/${id}`,
+    CREATE: '/bloodrequest/new',
+    UPDATE: (id: number) => `/bloodrequest/update/${id}`,
+    DELETE: (id: number) => `/bloodrequest/delete/${id}`,
   },
   
   // Location endpoints
   LOCATION: {
-    LIST: `${API_BASE_URL}/locations`,
-    CREATE: `${API_BASE_URL}/locations`,
-    DETAILS: (id: string) => `${API_BASE_URL}/locations/${id}`,
-    UPDATE: (id: string) => `${API_BASE_URL}/locations/${id}`,
-    DELETE: (id: string) => `${API_BASE_URL}/locations/${id}`,
+    LIST: `/locations`,
+    CREATE: `/locations`,
+    DETAILS: (id: string) => `/locations/${id}`,
+    UPDATE: (id: string) => `/locations/${id}`,
+    DELETE: (id: string) => `/locations/${id}`,
   },
   
   // Blood type endpoints
   BLOOD_TYPE: {
-    LIST: `${API_BASE_URL}/blood-types`,
+    LIST: `/blood-types`,
   },
   
   // Statistics endpoints
   STATISTICS: {
-    DASHBOARD: `${API_BASE_URL}/statistics/dashboard`,
-    DONATIONS: `${API_BASE_URL}/statistics/donations`,
-    REQUESTS: `${API_BASE_URL}/statistics/requests`,
+    DASHBOARD: `/statistics/dashboard`,
+    DONATIONS: `/statistics/donations`,
+    REQUESTS: `/statistics/requests`,
   },
-  
+
   // Blood Bank endpoints
   GET_BLOOD_BANKS: '/bloodbank',
   GET_BLOOD_BANK_BY_ID: (id: number) => `/bloodbank/${id}`,
@@ -77,32 +89,12 @@ export const API_ENDPOINTS = {
   UPDATE_BLOOD_BANK: (id: number) => `/bloodbank/${id}`,
   DELETE_BLOOD_BANK: (id: number) => `/bloodbank/${id}`,
 
-  // Blood Request endpoints
-  GET_ALL_BLOOD_REQUESTS: '/bloodrequest/all',
-  GET_BLOOD_REQUEST_BY_ID: (id: string) => `/bloodrequest/${id}`,
-  CREATE_BLOOD_REQUEST: '/bloodrequest/new',
-  UPDATE_BLOOD_REQUEST: (id: string) => `/bloodrequest/update/${id}`,
-  DELETE_BLOOD_REQUEST: (id: string) => `/bloodrequest/delete/${id}`,
-
   // Campaign endpoints
   GET_CAMPAIGNS: '/campaign',
   GET_CAMPAIGN_BY_ID: (id: number) => `/campaign/${id}`,
   CREATE_CAMPAIGN: '/campaign',
   UPDATE_CAMPAIGN: (id: number) => `/campaign/${id}`,
   DELETE_CAMPAIGN: (id: number) => `/campaign/${id}`,
-
-  // Donation History endpoints
-  GET_DONATION_HISTORIES: '/donationhistory',
-  GET_DONATION_HISTORY_BY_ID: (id: number) => `/donationhistory/${id}`,
-  CREATE_DONATION_HISTORY: '/donationhistory',
-  UPDATE_DONATION_HISTORY: (id: number) => `/donationhistory/${id}`,
-  DELETE_DONATION_HISTORY: (id: number) => `/donationhistory/${id}`,
-
-  // Donation endpoints
-  GET_ALL_DONATIONS: '/donation/all',
-  GET_USER_DONATIONS: '/donation/user',
-  GET_DONATIONS_BY_USER_ID: (userId: string) => `/donation/user/${userId}`,
-  CREATE_DONATION: '/donation/member',
 
   // Health Record endpoints
   GET_ALL_HEALTH_RECORDS: '/healthrecord/all',

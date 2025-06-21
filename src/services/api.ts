@@ -41,11 +41,11 @@ const handleResponse = <T>(response: AxiosResponse<ApiResponse<T>>): ApiResponse
 // Auth API
 export const authApi = {
   login: async (email: string, password: string): Promise<ApiResponse<{ token: string; user: User }>> => {
-    const response = await apiClient.post<ApiResponse<{ token: string; user: User }>>('/auth/login', { email, password });
+    const response = await apiClient.post<ApiResponse<{ token: string; user: User }>>('/api/auth/login', { email, password });
     return handleResponse(response);
   },
   register: async (userData: Partial<User>): Promise<ApiResponse<User>> => {
-    const response = await apiClient.post<ApiResponse<User>>('/auth/register', userData);
+    const response = await apiClient.post<ApiResponse<User>>('/api/auth/register', userData);
     return handleResponse(response);
   },
   logout: async (): Promise<void> => {
