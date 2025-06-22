@@ -107,4 +107,16 @@ export const API_ENDPOINTS = {
   SEND_NOTIFICATION: '/notification/send',
   GET_USER_NOTIFICATIONS: '/notification/member',
   MARK_NOTIFICATION_AS_READ: (id: string) => `/notification/member/${id}/read`,
+
+  DONATIONS: {
+    MEMBER_HISTORY: '/donations/member',
+    REQUEST_DONATION: '/donations/request'
+  },
+  BLOOD_REQUESTS: {
+    GET_ALL: '/bloodrequest/all',
+    CREATE: '/bloodrequest/new',
+    GET_BY_ID: (id: number) => `/bloodrequest/${id}`,
+    UPDATE: (id: number) => `/bloodrequest/update/${id}`,
+    DELETE: (id: number) => `/bloodrequest/delete/${id}`
+  }
 }; 

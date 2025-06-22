@@ -188,9 +188,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(userData);
         
         if (role === 'Admin') {
-          navigate('/admin/profile');
+          navigate('/admin');
         } else if (role === 'Staff') {
-          navigate('/staff/profile');
+          navigate('/member');
         } else {
           navigate('/member/profile');
         }
