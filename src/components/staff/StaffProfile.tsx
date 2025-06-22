@@ -31,7 +31,9 @@ const StaffProfile = () => {
   const fetchProfileData = async () => {
     try {
       setIsLoading(true);
+      console.log('Fetching staff profile data...');
       const data = await UserService.getStaffProfile();
+      console.log('Staff profile data received:', data);
       setProfileData(data);
       setFormData({
         name: data.name || '',
@@ -42,11 +44,28 @@ const StaffProfile = () => {
         district: data.district || '',
         dob: data.dob ? new Date(data.dob).toISOString().split('T')[0] : '',
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching staff profile data:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        url: error.config?.url
+      });
+      
+      // Show more specific error message
+      let errorMessage = "Failed to load profile data.";
+      if (error.response?.status === 404) {
+        errorMessage = "Staff profile endpoint not found. Please contact administrator.";
+      } else if (error.response?.status === 401) {
+        errorMessage = "You are not authorized to access staff profile.";
+      } else if (error.message === 'Network Error') {
+        errorMessage = "Unable to connect to server. Please check your internet connection.";
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to load profile data.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

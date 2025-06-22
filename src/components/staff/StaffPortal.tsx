@@ -2,10 +2,9 @@ import { Routes, Route, Outlet } from "react-router-dom";
 import StaffLayout from "./StaffLayout";
 import StaffDashboard from "./StaffDashboard";
 import StaffProfile from "./StaffProfile";
-import UserManagement from "@/pages/admin/UserManagement";
 import BlogManagement from "@/pages/admin/BlogManagement";
 import { useAuth } from "@/contexts/AuthContext";
-import MemberDonationHistory from "../member/MemberDonationHistory";
+import StaffDonationManagement from "./StaffDonationManagement";
 
 const StaffPortal = () => {
   const { user, logout } = useAuth();
@@ -19,9 +18,8 @@ const StaffPortal = () => {
       <Routes>
         <Route path="dashboard" element={<StaffDashboard />} />
         <Route path="profile" element={<StaffProfile />} />
-        <Route path="users" element={<UserManagement />} />
         <Route path="blog" element={<BlogManagement />} />
-        <Route path="donations" element={<MemberDonationHistory />} />
+        <Route path="donations" element={<StaffDonationManagement />} />
         <Route index element={<StaffDashboard />} />
       </Routes>
     </StaffLayout>

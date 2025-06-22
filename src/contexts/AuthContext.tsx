@@ -176,6 +176,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Check for role in standard and .NET claim formats
         const role = decoded.role || decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || 'Member';
         console.log("Extracted role:", role);
+        console.log("Role comparison - role === 'Staff':", role === 'Staff');
+        console.log("Role comparison - role === 'staff':", role === 'staff');
+        console.log("Role comparison - role.toLowerCase() === 'staff':", role.toLowerCase() === 'staff');
         
         const userData: User = {
           id: decoded.sub,
@@ -187,12 +190,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);
         
+        console.log("About to navigate based on role:", role);
         if (role === 'Admin') {
+          console.log("Navigating to admin profile");
           navigate('/admin/profile');
         } else if (role === 'Staff') {
-          navigate('/staff/profile');
+          console.log("Navigating to staff portal");
+          navigate('/staff');
         } else {
-          navigate('/member/profile');
+          console.log("Navigating to member profile");
+          navigate('/member');
         }
         
         toast({

@@ -110,22 +110,66 @@ export class UserService {
   // Get staff profile
   static async getStaffProfile(): Promise<UserProfile> {
     try {
+      console.log('Calling staff profile endpoint:', API_ENDPOINTS.USER.GET_STAFF_PROFILE);
       const response = await api.get(API_ENDPOINTS.USER.GET_STAFF_PROFILE);
+      console.log('Staff profile response:', response.data);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching staff profile:', error);
-      throw error;
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        url: error.config?.url
+      });
+      
+      // Fallback: try to use member profile endpoint if staff endpoint fails
+      console.log('Staff profile endpoint failed, trying member profile as fallback...');
+      try {
+        const fallbackResponse = await api.get(API_ENDPOINTS.USER.GET_MEMBER_PROFILE);
+        console.log('Fallback member profile response:', fallbackResponse.data);
+        return fallbackResponse.data;
+      } catch (fallbackError: any) {
+        console.error('Fallback also failed:', fallbackError);
+        throw error; // Throw the original error
+      }
     }
   }
 
   // Update staff profile
   static async updateStaffProfile(profileData: UpdateUserProfile): Promise<UserProfile> {
     try {
+      console.log('Calling staff profile update endpoint:', API_ENDPOINTS.USER.UPDATE_STAFF_PROFILE);
       const response = await api.put(API_ENDPOINTS.USER.UPDATE_STAFF_PROFILE, profileData);
+      console.log('Staff profile update response:', response.data);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating staff profile:', error);
-      throw error;
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        url: error.config?.url
+      });
+      
+      // Fallback: try to use member profile update endpoint if staff endpoint fails
+      console.log('Staff profile update endpoint failed, trying member profile update as fallback...');
+      try {
+        let userId: number;
+        try {
+          userId = this.getUserIdFromToken();
+        } catch (tokenError) {
+          console.log('Failed to get user ID from token, trying profile data:', tokenError);
+          userId = await this.getUserIdFromProfile();
+        }
+        
+        const fallbackResponse = await api.put(API_ENDPOINTS.USER.UPDATE_MEMBER_PROFILE(userId), profileData);
+        console.log('Fallback member profile update response:', fallbackResponse.data);
+        return fallbackResponse.data;
+      } catch (fallbackError: any) {
+        console.error('Fallback also failed:', fallbackError);
+        throw error; // Throw the original error
+      }
     }
   }
 

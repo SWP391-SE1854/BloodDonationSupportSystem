@@ -22,7 +22,13 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   // Check role-based access if allowedRoles is provided
-  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+  if (allowedRoles && user && user.role && !allowedRoles.includes(user.role)) {
+    console.log("Role-based access denied:", {
+      userRole: user.role,
+      allowedRoles: allowedRoles,
+      userRoleLower: user.role.toLowerCase(),
+      allowedRolesLower: allowedRoles.map(r => r.toLowerCase())
+    });
     return <Navigate to="/" />;
   }
 

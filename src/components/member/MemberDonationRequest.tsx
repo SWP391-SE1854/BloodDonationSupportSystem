@@ -36,6 +36,8 @@ const MemberDonationRequest = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate required fields
     if (!donationDate || !donationTime || !location || !bloodType || !quantity) {
       toast({
         title: "Incomplete Information",
@@ -45,28 +47,55 @@ const MemberDonationRequest = () => {
       return;
     }
 
-    setIsSubmitting(true);
-
+    // Validate donation date is not in the past
     const [hours, minutes] = donationTime.split(':').map(Number);
     const combinedDateTime = new Date(donationDate);
     combinedDateTime.setHours(hours);
     combinedDateTime.setMinutes(minutes);
+    
+    if (combinedDateTime < new Date()) {
+      toast({
+        title: "Invalid Date/Time",
+        description: "Donation date and time cannot be in the past.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate quantity
+    const quantityNum = Number(quantity);
+    if (quantityNum <= 0 || quantityNum > 1000) {
+      toast({
+        title: "Invalid Quantity",
+        description: "Quantity must be between 1 and 1000 ml.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
-      await DonationService.createMemberDonationRequest({
-        unit_id: 1, // Placeholder
+      const donationData = {
+        unit_id: 1, // Default unit ID - you may want to make this configurable
         donation_date: combinedDateTime.toISOString(),
         location: location,
         blood_type: bloodType,
-        quantity: Number(quantity),
-        status: "Pending"
-      });
+        quantity: quantityNum,
+        status: "Pending",
+        notes: note || undefined // Include notes if provided
+      };
+
+      console.log('Submitting donation request:', donationData);
+      
+      await DonationService.createMemberDonationRequest(donationData);
 
       toast({
         title: 'Request Submitted!',
         description: 'Your donation request has been sent successfully.',
       });
 
+      // Reset form
       setDonationDate(undefined);
       setDonationTime('');
       setLocation('');
@@ -74,10 +103,24 @@ const MemberDonationRequest = () => {
       setQuantity('');
       setNote('');
 
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Donation request submission failed:', error);
+      
+      let errorMessage = 'There was an error submitting your request. Please try again.';
+      
+      if (error.response?.data?.Message) {
+        errorMessage = error.response.data.Message;
+      } else if (error.response?.status === 401) {
+        errorMessage = 'You are not authorized to create donation requests. Please log in again.';
+      } else if (error.response?.status === 400) {
+        errorMessage = 'Invalid request data. Please check your information and try again.';
+      } else if (error.message === 'Network Error') {
+        errorMessage = 'Unable to connect to the server. Please check your internet connection.';
+      }
+      
       toast({
         title: 'Submission Failed',
-        description: 'There was an error submitting your request. Please try again.',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -123,6 +166,7 @@ const MemberDonationRequest = () => {
                         selected={donationDate}
                         onSelect={setDonationDate}
                         initialFocus
+                        disabled={(date) => date < new Date()}
                       />
                     </PopoverContent>
                   </Popover>

@@ -13,7 +13,6 @@ const StaffLayout = ({ children, onLogout, userName }: StaffLayoutProps) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/staff/dashboard' },
     { id: 'profile', label: 'Profile', icon: User, path: '/staff/profile' },
-    { id: 'users', label: 'User Management', icon: Users, path: '/staff/users' },
     { id: 'blog', label: 'Blog Posts', icon: Newspaper, path: '/staff/blog' },
     { id: 'donations', label: 'Donations', icon: Droplet, path: '/staff/donations' },
   ];
@@ -37,7 +36,8 @@ const StaffLayout = ({ children, onLogout, userName }: StaffLayoutProps) => {
         <nav className="p-4 space-y-2 flex-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+            const isActive = location.pathname === item.path || 
+                           (item.id === 'dashboard' && location.pathname === '/staff');
             return (
               <Link
                 key={item.id}

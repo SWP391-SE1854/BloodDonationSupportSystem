@@ -2,14 +2,15 @@ import api from './api.service';
 import { API_ENDPOINTS } from './api.config';
 
 export interface Donation {
-  id: number;
-  user_id: number;
+  id?: number;
+  user_id?: number;
   unit_id: number;
   donation_date: string;
   location: string;
   blood_type: string;
   quantity: number;
   status: string;
+  notes?: string;
 }
 
 export interface DonationHistory {
@@ -28,15 +29,22 @@ export interface CreateDonationRequest {
   blood_type: string;
   quantity: number;
   status: string;
+  notes?: string;
 }
 
 export class DonationService {
   static async createMemberDonationRequest(data: CreateDonationRequest): Promise<Donation> {
     try {
+      console.log('Creating donation request with data:', data);
       const response = await api.post(API_ENDPOINTS.DONATION.CREATE_MEMBER_REQUEST, data);
+      console.log('Donation request created successfully:', response.data);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating member donation request:', error);
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+      }
       throw error;
     }
   }
