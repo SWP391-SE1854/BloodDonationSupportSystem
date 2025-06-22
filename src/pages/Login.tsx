@@ -96,10 +96,10 @@ const Login = () => {
     
     if (role === 'Admin') {
       console.log('Redirecting to admin profile');
-      navigate('/admin/profile');
+      navigate('/admin/AdminProfile');
     } else if (role === 'Staff') {
       console.log('Redirecting to staff profile');
-      navigate('/staff/profile');
+      navigate('/staff/StaffProfile');
     } else {
       console.log('Redirecting to member profile');
       navigate('/member/profile');
@@ -140,25 +140,16 @@ const Login = () => {
       
       await loginWithFirebase(firebaseToken);
 
-    } catch (error: any) {
-      console.error('Login failed:', error);
+    } catch (error) {
+      console.error('Firebase login failed:', error);
       toast({
         title: "Login Failed",
-        description: error?.message || "Invalid email or password. Please try again.",
+        description: "Invalid email or password. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleClearSession = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('firebaseToken');
-    toast({ title: 'Session Cleared', description: 'Your session has been cleared. Please log in again.' });
-    // We can't use navigate here because the context might be unstable
-    window.location.reload();
   };
 
   const handleResetPassword = async () => {
@@ -251,20 +242,12 @@ const Login = () => {
                 {errors.password && (
                   <p className="text-red-500 text-sm mt-1">{errors.password}</p>
                 )}
-                <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center justify-between">
+                  <div></div>
                   <button
                     type="button"
-                    onClick={handleClearSession}
-                    className="text-xs font-medium text-red-500 hover:underline transition-colors focus:outline-none"
-                    style={{ fontFamily: 'inherit' }}
-                  >
-                    Clear Session
-                  </button>
-                  <button
-                    type="button"
+                    className="text-xs text-red-500 hover:underline focus:outline-none"
                     onClick={() => setShowReset((v) => !v)}
-                    className="text-xs font-medium text-red-500 hover:underline transition-colors focus:outline-none"
-                    style={{ fontFamily: 'inherit' }}
                   >
                     Forgot Password?
                   </button>

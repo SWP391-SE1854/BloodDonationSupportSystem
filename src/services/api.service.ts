@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { environment } from '../config/environment';
 import { auth } from '@/config/firebase';
 import { API_BASE_URL } from '@/config/api';
@@ -48,5 +48,12 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export const publicApi: AxiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
 export default api; 

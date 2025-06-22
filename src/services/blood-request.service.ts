@@ -1,81 +1,66 @@
-import api from './api.service';
+import api, { publicApi } from './api.service';
 import { API_ENDPOINTS } from './api.config';
 
+// Based on user-provided payload
+interface NestedLocation {
+  location_id: number;
+  latitude: number;
+  longitude: number;
+}
+
+interface User {
+  user_id: number;
+  name: string;
+  email: string;
+  phone: string;
+  dob: string;
+  role: string;
+  address: string;
+  city: string;
+  district: string;
+  location_id: number;
+  location: NestedLocation;
+}
+
 export interface BloodRequest {
-  id: number;
+  request_id: number;
   user_id: number;
   blood_id: number;
+  emergency_status: boolean;
   request_date: string;
-  emergency_status: boolean;
   location_id: number;
+  user?: User; 
+  location?: NestedLocation;
 }
 
-export interface CreateBloodRequest {
-  user_id: number;
-  blood_id: number;
-  emergency_status: boolean;
-  location_id: number;
-}
+// This is the data we collect from the form
+export type BloodRequestFormData = Pick<BloodRequest, 'user_id' | 'blood_id' | 'emergency_status' | 'location_id'>;
 
-export interface UpdateBloodRequestRequest {
-  units?: number;
-  urgency?: string;
-  status?: string;
-  hospitalName?: string;
-  location?: string;
-  contactNumber?: string;
-  additionalNotes?: string;
-}
+// The service will now expect the full object for creation
+export const createBloodRequest = async (data: BloodRequest): Promise<BloodRequest> => {
+    const response = await api.post(API_ENDPOINTS.BLOOD_REQUESTS.CREATE, data);
+    return response.data;
+};
 
-export class BloodRequestService {
-  static async getAllBloodRequests(): Promise<BloodRequest[]> {
-    try {
-      const response = await api.get(API_ENDPOINTS.BLOOD_REQUEST.GET_ALL);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching all blood requests:', error);
-      throw error;
-    }
-  }
+// Update can also use the full object, though we only send a subset of fields
+export type UpdateBloodRequestData = Omit<BloodRequest, 'request_date' | 'user' | 'location'>;
 
-  static async getBloodRequestById(id: number): Promise<BloodRequest> {
-    try {
-      const response = await api.get(API_ENDPOINTS.BLOOD_REQUEST.GET_BY_ID(id));
-      return response.data;
-    } catch (error) {
-      console.error(`Error fetching blood request with id ${id}:`, error);
-      throw error;
-    }
-  }
 
-  static async createBloodRequest(data: CreateBloodRequest): Promise<BloodRequest> {
-    try {
-      const response = await api.post(API_ENDPOINTS.BLOOD_REQUEST.CREATE, data);
-      return response.data;
-    } catch (error) {
-      console.error('Error creating blood request:', error);
-      throw error;
-    }
-  }
+export const getAllBloodRequests = async (): Promise<BloodRequest[]> => {
+    const response = await publicApi.get(API_ENDPOINTS.BLOOD_REQUESTS.GET_ALL);
+    return response.data;
+};
 
-  static async updateBloodRequest(id: number, data: Partial<CreateBloodRequest>): Promise<BloodRequest> {
-    try {
-      const response = await api.put(API_ENDPOINTS.BLOOD_REQUEST.UPDATE(id), data);
-      return response.data;
-    } catch (error) {
-      console.error(`Error updating blood request with id ${id}:`, error);
-      throw error;
-    }
-  }
+export const getBloodRequestById = async (id: number): Promise<BloodRequest> => {
+    const response = await publicApi.get(API_ENDPOINTS.BLOOD_REQUESTS.GET_BY_ID(id));
+    return response.data;
+};
 
-  static async deleteBloodRequest(id: number): Promise<void> {
-    try {
-      await api.delete(API_ENDPOINTS.BLOOD_REQUEST.DELETE(id));
-    } catch (error) {
-      console.error(`Error deleting blood request with id ${id}:`, error);
-      throw error;
-    }
-  }
-}
+export const updateBloodRequest = async (id: number, data: UpdateBloodRequestData): Promise<BloodRequest> => {
+    const response = await api.put(API_ENDPOINTS.BLOOD_REQUESTS.UPDATE(id), data);
+    return response.data;
+};
 
-export default BloodRequestService; 
+export const deleteBloodRequest = async (id: number): Promise<void> => {
+    await api.delete(API_ENDPOINTS.BLOOD_REQUESTS.DELETE(id));
+}; 

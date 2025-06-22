@@ -23,6 +23,7 @@ import StaffPortal from "./components/staff/StaffPortal";
 import UserManagement from "./pages/admin/UserManagement";
 import TempAdmin from "./pages/admin/TempAdmin";
 import TempStaff from "./pages/staff/TempStaff";
+import BloodRequestManagement from './pages/staff/BloodRequestManagement';
 
 const queryClient = new QueryClient();
 
@@ -39,7 +40,10 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
             <Route path="/about" element={<AboutUs />} />
-            <Route path="/blood-request" element={<BloodRequest />} />
+            <Route
+              path="/blood-request"
+              element={<BloodRequestManagement />}
+            />
             <Route
               path="/profile"
               element={
@@ -51,7 +55,7 @@ const App = () => (
             <Route
               path="/member/*"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['Member']}>
                   <MemberPortal />
                 </ProtectedRoute>
               }
@@ -68,7 +72,7 @@ const App = () => (
             <Route
               path="/admin"
               element={
-                <ProtectedRoute allowedRoles={["admin"]}>
+                <ProtectedRoute allowedRoles={['Admin']}>
                   <TempAdmin />
                 </ProtectedRoute>
               }
@@ -76,7 +80,7 @@ const App = () => (
             <Route
               path="/admin/users"
               element={
-                <ProtectedRoute allowedRoles={["admin"]}>
+                <ProtectedRoute allowedRoles={['Admin']}>
                   <UserManagement />
                 </ProtectedRoute>
               }
@@ -84,7 +88,7 @@ const App = () => (
             <Route
               path="/admin/dashboard"
               element={
-                <ProtectedRoute allowedRoles={["admin"]}>
+                <ProtectedRoute allowedRoles={['Admin']}>
                   <Admin />
                 </ProtectedRoute>
               }
@@ -92,7 +96,7 @@ const App = () => (
             <Route
               path="/admin/profile"
               element={
-                <ProtectedRoute allowedRoles={["admin"]}>
+                <ProtectedRoute allowedRoles={['Admin']}>
                   <AdminProfile />
                 </ProtectedRoute>
               }
@@ -100,7 +104,7 @@ const App = () => (
             <Route
               path="/admin/blog"
               element={
-                <ProtectedRoute allowedRoles={["admin"]}>
+                <ProtectedRoute allowedRoles={['Admin']}>
                   <BlogManagement />
                 </ProtectedRoute>
               }
