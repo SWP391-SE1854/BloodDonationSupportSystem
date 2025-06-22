@@ -1,4 +1,4 @@
-import { Routes, Route, Outlet } from "react-router-dom";
+import React, { useState } from 'react';
 import StaffLayout from "./StaffLayout";
 import StaffDashboard from "./StaffDashboard";
 import StaffProfile from "./StaffProfile";
@@ -7,21 +7,44 @@ import { useAuth } from "@/contexts/AuthContext";
 import StaffDonationManagement from "./StaffDonationManagement";
 
 const StaffPortal = () => {
+  const [currentPage, setCurrentPage] = useState('dashboard');
   const { user, logout } = useAuth();
 
+  const handleNavigate = (page: string) => {
+    setCurrentPage(page);
+  };
+
+  const renderCurrentPage = () => {
+    if (!user) {
+      return <div>Loading user data...</div>;
+    }
+
+    switch (currentPage) {
+      case 'dashboard':
+        return <StaffDashboard />;
+      case 'profile':
+        return <StaffProfile />;
+      case 'blog':
+        return <BlogManagement />;
+      case 'donations':
+        return <StaffDonationManagement />;
+      default:
+        return <StaffDashboard />;
+    }
+  };
+
   if (!user) {
-    return <div>Loading...</div>; // Or a redirect to login
+    return <div>Loading...</div>;
   }
 
   return (
-    <StaffLayout onLogout={logout} userName={user.email || ""}>
-      <Routes>
-        <Route path="dashboard" element={<StaffDashboard />} />
-        <Route path="profile" element={<StaffProfile />} />
-        <Route path="blog" element={<BlogManagement />} />
-        <Route path="donations" element={<StaffDonationManagement />} />
-        <Route index element={<StaffDashboard />} />
-      </Routes>
+    <StaffLayout
+      currentPage={currentPage}
+      onNavigate={handleNavigate}
+      onLogout={logout}
+      userName={user.displayName || user.email || ""}
+    >
+      {renderCurrentPage()}
     </StaffLayout>
   );
 };

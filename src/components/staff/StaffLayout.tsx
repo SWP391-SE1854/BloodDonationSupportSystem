@@ -1,5 +1,5 @@
 import React from 'react';
-import { HeartPulse, User, LogOut, Home, Droplets } from 'lucide-react';
+import { HeartPulse, User, LogOut, Home, Droplets, Newspaper, Droplet } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface StaffLayoutProps {
@@ -42,8 +42,12 @@ const StaffLayout = ({ children, currentPage, onNavigate, onLogout, userName }: 
 
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path || 
-                           (item.id === 'dashboard' && location.pathname === '/staff');
+            const isActive = currentPage === item.id;
+            const buttonClass = `w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+              isActive
+                ? 'bg-purple-100 text-purple-700 border border-purple-200'
+                : 'text-gray-600 hover:bg-gray-100'
+            }`;
             return (
               <button
                 key={item.id}
