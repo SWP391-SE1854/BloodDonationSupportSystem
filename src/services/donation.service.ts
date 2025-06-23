@@ -1,49 +1,35 @@
 import api from './api.service';
 import { API_ENDPOINTS } from './api.config';
+import axios from 'axios';
 
 export interface Donation {
-  id?: number;
-  user_id?: number;
-  unit_id: number;
+  donation_id: number;
+  user_id: number;
+  unit_id: number | null;
   donation_date: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  component: 'Whole Blood' | 'Platelets' | 'Plasma' | 'Red Cells';
   location: string;
-  blood_type: string;
   quantity: number;
-  status: string;
   notes?: string;
 }
 
-export interface DonationHistory {
-  id: number;
-  user_id: number;
+export interface CreateDonationPayload {
   donation_date: string;
   location: string;
+  component: string;
   quantity: number;
-  notes: string;
-}
-
-export interface CreateDonationRequest {
-  unit_id: number;
-  donation_date: string;
-  location: string;
-  blood_type: string;
-  quantity: number;
-  status: string;
   notes?: string;
 }
 
 export class DonationService {
-  static async createMemberDonationRequest(data: CreateDonationRequest): Promise<Donation> {
+  static async createMemberDonation(payload: CreateDonationPayload): Promise<Donation> {
     try {
-      console.log('Creating donation request with data:', data);
-      const response = await api.post(API_ENDPOINTS.DONATION.CREATE_MEMBER_REQUEST, data);
-      console.log('Donation request created successfully:', response.data);
+      const response = await api.post<Donation>(API_ENDPOINTS.DONATION.CREATE_MEMBER_REQUEST, payload);
       return response.data;
-    } catch (error: any) {
-      console.error('Error creating member donation request:', error);
-      if (error.response) {
-        console.error('Response data:', error.response.data);
-        console.error('Response status:', error.response.status);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Error creating member donation request:', error.message);
       }
       throw error;
     }
@@ -51,30 +37,48 @@ export class DonationService {
 
   static async getAllDonations(): Promise<Donation[]> {
     try {
-      const response = await api.get(API_ENDPOINTS.DONATION.GET_ALL);
+      const response = await api.get<Donation[]>(API_ENDPOINTS.DONATION.GET_ALL);
       return response.data;
     } catch (error) {
-      console.error('Error fetching all donations:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Error fetching all donations:', error.message);
+      }
       throw error;
     }
   }
 
   static async getDonationsByUserId(userId: number): Promise<Donation[]> {
     try {
-      const response = await api.get(API_ENDPOINTS.DONATION.GET_BY_USER_ID(userId));
+      const response = await api.get<Donation[]>(API_ENDPOINTS.DONATION.GET_BY_USER_ID(userId));
       return response.data;
     } catch (error) {
-      console.error(`Error fetching donations for user id ${userId}:`, error);
+      if (axios.isAxiosError(error)) {
+        console.error(`Error fetching donations for user id ${userId}:`, error.message);
+      }
       throw error;
     }
   }
 
-  static async getMemberDonationHistory(): Promise<DonationHistory[]> {
+  static async updateDonationStatus(donationId: number, status: 'Approved' | 'Rejected'): Promise<Donation> {
     try {
-      const response = await api.get(API_ENDPOINTS.DONATION_HISTORY.GET_MEMBER_HISTORY);
+      const response = await api.patch<Donation>(API_ENDPOINTS.DONATION.UPDATE_STATUS(donationId), { status });
       return response.data;
     } catch (error) {
-      console.error('Error fetching member donation history:', error);
+      if (axios.isAxiosError(error)) {
+        console.error(`Error updating status for donation ${donationId}:`, error.message);
+      }
+      throw error;
+    }
+  }
+
+  static async updateDonation(donation: Donation): Promise<Donation> {
+    try {
+      const response = await api.put<Donation>(API_ENDPOINTS.DONATION.UPDATE(donation.donation_id), donation);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error(`Error updating donation ${donation.donation_id}:`, error.message);
+      }
       throw error;
     }
   }

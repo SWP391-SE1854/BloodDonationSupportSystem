@@ -1,29 +1,8 @@
 import api from './api.service';
 import { API_ENDPOINTS } from './api.config';
 import { jwtDecode } from 'jwt-decode';
-
-export interface UserProfile {
-  user_id: number;
-  name: string;
-  email: string;
-  phone: string;
-  dob: string;
-  role: string;
-  city: string;
-  district: string;
-  address: string;
-}
-
-export interface UpdateUserProfile {
-  name?: string;
-  email?: string;
-  phone?: string;
-  dob?: string;
-  address?: string;
-  city?: string;
-  district?: string;
-  role?: string;
-}
+import { UserProfile, UpdateUserProfile } from './user.service';
+import axios from 'axios';
 
 export interface DashboardStats {
   totalUsers: number;
@@ -86,10 +65,12 @@ export class AdminService {
   // Get all users (admin only)
   static async getAllUsers(): Promise<UserProfile[]> {
     try {
-      const response = await api.get(API_ENDPOINTS.USER.GET_ALL_USERS);
+      const response = await api.get<UserProfile[]>(API_ENDPOINTS.USER.GET_ALL_USERS);
       return response.data;
     } catch (error) {
-      console.error('Error fetching all users:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Error fetching all users:', error.message);
+      }
       throw error;
     }
   }
@@ -97,10 +78,12 @@ export class AdminService {
   // Get user by ID (admin only)
   static async getUserById(id: number): Promise<UserProfile> {
     try {
-      const response = await api.get(API_ENDPOINTS.USER.GET_USER_BY_ID(id));
+      const response = await api.get<UserProfile>(API_ENDPOINTS.USER.GET_USER_BY_ID(id));
       return response.data;
     } catch (error) {
-      console.error('Error fetching user by ID:', error);
+      if (axios.isAxiosError(error)) {
+        console.error(`Error fetching user ${id}:`, error.message);
+      }
       throw error;
     }
   }
@@ -108,10 +91,12 @@ export class AdminService {
   // Update user (admin only)
   static async updateUser(id: number, profileData: UpdateUserProfile): Promise<UserProfile> {
     try {
-      const response = await api.put(API_ENDPOINTS.USER.UPDATE_USER(id), profileData);
+      const response = await api.put<UserProfile>(API_ENDPOINTS.USER.UPDATE_USER(id), profileData);
       return response.data;
     } catch (error) {
-      console.error('Error updating user:', error);
+      if (axios.isAxiosError(error)) {
+        console.error(`Error updating user ${id}:`, error.message);
+      }
       throw error;
     }
   }
@@ -121,7 +106,9 @@ export class AdminService {
     try {
       await api.delete(API_ENDPOINTS.USER.DELETE_USER(id));
     } catch (error) {
-      console.error('Error deleting user:', error);
+      if (axios.isAxiosError(error)) {
+        console.error(`Error deleting user ${id}:`, error.message);
+      }
       throw error;
     }
   }

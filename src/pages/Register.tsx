@@ -200,7 +200,14 @@ const Register = () => {
         password: formData.password,
         dateOfBirth: formData.dateOfBirth
       });
-      // Navigation is handled by the register function in AuthContext
+      
+      toast({
+        title: "Success",
+        description: "Your account has been created successfully. Please log in.",
+      });
+
+      navigate('/login');
+      
     } catch (error: unknown) {
       console.error('Registration failed:', error);
       const errorMessage = error instanceof Error ? error.message : "An error occurred during registration";

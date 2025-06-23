@@ -1,7 +1,7 @@
 import React from 'react';
-import { Heart, User, LogOut, Home, Calendar, FileText, Activity } from 'lucide-react';
+import { User, LogOut, Edit } from 'lucide-react';
 
-interface MemberLayoutProps {
+interface ProfileLayoutProps {
   children: React.ReactNode;
   currentPage: string;
   onNavigate: (page: string) => void;
@@ -9,27 +9,23 @@ interface MemberLayoutProps {
   userName: string;
 }
 
-const MemberLayout = ({ children, currentPage, onNavigate, onLogout, userName }: MemberLayoutProps) => {
+const ProfileLayout = ({ children, currentPage, onNavigate, onLogout, userName }: ProfileLayoutProps) => {
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home },
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'donation-request', label: 'Donate', icon: Heart },
-    { id: 'health-records', label: 'Health Records', icon: Activity },
-    { id: 'donation-history', label: 'History', icon: FileText },
+    { id: 'profile', label: 'View Profile', icon: User },
+    { id: 'edit-profile', label: 'Edit Profile', icon: Edit },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-white flex">
-      {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg border-r border-red-100 flex flex-col">
-        <div className="p-6 border-b border-red-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex">
+      <div className="w-64 bg-white shadow-lg border-r border-blue-100 flex flex-col">
+        <div className="p-6 border-b border-blue-100">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-red-100 rounded-lg">
-              <Heart className="h-6 w-6 text-red-600" />
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <User className="h-6 w-6 text-blue-600" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-800">Blood Donation</h1>
-              <p className="text-sm text-gray-500">Member Portal</p>
+              <h1 className="text-xl font-bold text-gray-800">Your Profile</h1>
+              <p className="text-sm text-gray-500">Manage your account</p>
             </div>
           </div>
         </div>
@@ -43,7 +39,7 @@ const MemberLayout = ({ children, currentPage, onNavigate, onLogout, userName }:
                 onClick={() => onNavigate(item.id)}
                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                   currentPage === item.id
-                    ? 'bg-red-100 text-red-700 border border-red-200'
+                    ? 'bg-blue-100 text-blue-700 border border-blue-200'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -54,8 +50,7 @@ const MemberLayout = ({ children, currentPage, onNavigate, onLogout, userName }:
           })}
         </nav>
 
-        {/* User info and logout at bottom */}
-        <div className="p-4 border-t border-red-100">
+        <div className="p-4 border-t border-blue-100">
           <div className="text-center mb-3 p-2 bg-gray-50 rounded-lg">
             <p className="text-xs text-gray-500">Logged in as</p>
             <p className="text-sm font-medium text-gray-700 truncate">{userName}</p>
@@ -70,7 +65,6 @@ const MemberLayout = ({ children, currentPage, onNavigate, onLogout, userName }:
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 p-8">
         {children}
       </div>
@@ -78,4 +72,4 @@ const MemberLayout = ({ children, currentPage, onNavigate, onLogout, userName }:
   );
 };
 
-export default MemberLayout;
+export default ProfileLayout; 

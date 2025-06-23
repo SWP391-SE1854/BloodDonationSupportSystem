@@ -15,4 +15,4 @@ console.log('API Configuration:', {
   baseUrl: API_BASE_URL,
   useProxy: USE_PROXY,
   timeout: API_TIMEOUT
-}); 
+});   

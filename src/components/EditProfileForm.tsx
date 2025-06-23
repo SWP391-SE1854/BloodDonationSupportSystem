@@ -1,16 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import api from "@/services/api.service";
 import { API_ENDPOINTS } from "@/services/api.config";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface EditProfileFormProps {
   isOpen: boolean;
   onClose: () => void;
   profileData: {
+    user_id: number;
     name: string;
     email: string;
     phone: string;
@@ -18,6 +21,7 @@ interface EditProfileFormProps {
     city: string | null;
     district: string | null;
     address: string | null;
+    role: string;
   };
   onProfileUpdated: () => void;
 }
@@ -30,14 +34,12 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({
 }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    name: profileData.name || "",
-    phone: profileData.phone || "",
-    city: profileData.city || "",
-    district: profileData.district || "",
-    address: profileData.address || "",
-    dob: profileData.dob || "",
-  });
+  const [formData, setFormData] = useState({ ...profileData });
+  const currentUserRole = useUserRole();
+
+  useEffect(() => {
+    setFormData({ ...profileData });
+  }, [profileData]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -48,7 +50,20 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({
     setIsLoading(true);
 
     try {
-      await api.put(API_ENDPOINTS.USER.UPDATE_PROFILE, formData);
+      let endpoint: string;
+      const { user_id, role } = formData;
+
+      if (role === 'Member') {
+        endpoint = API_ENDPOINTS.USER.UPDATE_MEMBER_PROFILE(user_id);
+      } else if (role === 'Staff') {
+        endpoint = API_ENDPOINTS.USER.UPDATE_STAFF_PROFILE;
+      } else if (role === 'Admin') {
+        endpoint = API_ENDPOINTS.USER.UPDATE_USER(user_id);
+      } else {
+        throw new Error("Invalid user role for update");
+      }
+
+      await api.put(endpoint, formData);
       
       toast({
         title: "Success",
@@ -99,7 +114,7 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({
             <Label htmlFor="city">City</Label>
             <Input
               id="city"
-              value={formData.city}
+              value={formData.city || ''}
               onChange={(e) => handleInputChange("city", e.target.value)}
             />
           </div>
@@ -108,7 +123,7 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({
             <Label htmlFor="district">District</Label>
             <Input
               id="district"
-              value={formData.district}
+              value={formData.district || ''}
               onChange={(e) => handleInputChange("district", e.target.value)}
             />
           </div>
@@ -117,7 +132,7 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({
             <Label htmlFor="address">Address</Label>
             <Input
               id="address"
-              value={formData.address}
+              value={formData.address || ''}
               onChange={(e) => handleInputChange("address", e.target.value)}
             />
           </div>
@@ -127,10 +142,26 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({
             <Input
               id="dob"
               type="date"
-              value={formData.dob}
+              value={formData.dob ? formData.dob.split('T')[0] : ''}
               onChange={(e) => handleInputChange("dob", e.target.value)}
             />
           </div>
+
+          {currentUserRole === 'Admin' && (
+            <div className="space-y-2">
+              <Label htmlFor="role">Role</Label>
+              <Select value={formData.role} onValueChange={(value) => handleInputChange("role", value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Member">Member</SelectItem>
+                  <SelectItem value="Staff">Staff</SelectItem>
+                  <SelectItem value="Admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>

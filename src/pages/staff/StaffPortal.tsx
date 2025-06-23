@@ -5,6 +5,10 @@ import StaffProfile from "./StaffProfile";
 import BlogManagement from "@/pages/admin/BlogManagement";
 import { useAuth } from "@/contexts/AuthContext";
 import StaffDonationManagement from "./StaffDonationManagement";
+import BloodRequestManagement from './BloodRequestManagement';
+import DonationHistoryViewer from '../admin/DonationHistoryViewer';
+import HealthRecordViewer from '../admin/HealthRecordViewer';
+import BloodInventoryManagement from './BloodInventoryManagement';
 
 const StaffPortal = () => {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -28,6 +32,14 @@ const StaffPortal = () => {
         return <BlogManagement />;
       case 'donations':
         return <StaffDonationManagement />;
+      case 'requests':
+        return <BloodRequestManagement />;
+      case 'history':
+        return <DonationHistoryViewer />;
+      case 'health-records':
+        return <HealthRecordViewer />;
+      case 'inventory':
+        return <BloodInventoryManagement />;
       default:
         return <StaffDashboard />;
     }

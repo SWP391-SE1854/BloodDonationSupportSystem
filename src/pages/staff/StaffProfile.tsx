@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { User, Mail, Phone, MapPin, Calendar, Edit3, Save, X } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import UserService, { UserProfile, UpdateUserProfile } from '@/services/user.service';
+import { StaffService } from '@/services/staff.service';
+import { UserProfile, UpdateUserProfile } from '@/services/user.service';
 import { profileUpdateSchema } from '@/lib/validations';
 import { ZodError, ZodIssue } from 'zod';
 
@@ -16,7 +17,6 @@ const StaffProfile = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
     phone: '',
     address: '',
     city: '',
@@ -24,54 +24,33 @@ const StaffProfile = () => {
     dob: '',
   });
 
-  useEffect(() => {
-    fetchProfileData();
-  }, []);
-
-  const fetchProfileData = async () => {
-    try {
+  const fetchProfileData = useCallback(async () => {
       setIsLoading(true);
-      console.log('Fetching staff profile data...');
-      const data = await UserService.getStaffProfile();
-      console.log('Staff profile data received:', data);
+    try {
+      const data = await StaffService.getStaffProfile();
       setProfileData(data);
       setFormData({
         name: data.name || '',
-        email: data.email || '',
         phone: data.phone || '',
         address: data.address || '',
         city: data.city || '',
         district: data.district || '',
         dob: data.dob ? new Date(data.dob).toISOString().split('T')[0] : '',
       });
-    } catch (error: any) {
-      console.error('Error fetching staff profile data:', error);
-      console.error('Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        url: error.config?.url
-      });
-      
-      // Show more specific error message
-      let errorMessage = "Failed to load profile data.";
-      if (error.response?.status === 404) {
-        errorMessage = "Staff profile endpoint not found. Please contact administrator.";
-      } else if (error.response?.status === 401) {
-        errorMessage = "You are not authorized to access staff profile.";
-      } else if (error.message === 'Network Error') {
-        errorMessage = "Unable to connect to server. Please check your internet connection.";
-      }
-      
+    } catch (error) {
       toast({
         title: "Error",
-        description: errorMessage,
+        description: "Failed to load profile data.",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchProfileData();
+  }, [fetchProfileData]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -102,16 +81,7 @@ const StaffProfile = () => {
 
     try {
       setIsLoading(true);
-      const updateData: UpdateUserProfile = {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        address: formData.address,
-        city: formData.city,
-        district: formData.district,
-        dob: formData.dob,
-      };
-      const updatedProfile = await UserService.updateStaffProfile(updateData);
+      const updatedProfile = await StaffService.updateStaffProfile(formData);
       setProfileData(updatedProfile);
       setIsEditing(false);
       toast({
@@ -119,7 +89,6 @@ const StaffProfile = () => {
         description: "Your profile has been successfully updated.",
       });
     } catch (error) {
-      console.error('Error updating profile:', error);
       toast({
         title: "Error",
         description: "Failed to update profile.",
@@ -134,7 +103,6 @@ const StaffProfile = () => {
     if (profileData) {
       setFormData({
         name: profileData.name || '',
-        email: profileData.email || '',
         phone: profileData.phone || '',
         address: profileData.address || '',
         city: profileData.city || '',
@@ -190,8 +158,7 @@ const StaffProfile = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  {isEditing ? <Input id="email" type="email" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)} /> : <p className="p-2 bg-gray-100 rounded-md">{profileData.email}</p>}
-                   {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
+                  <p className="p-2 bg-gray-100 rounded-md">{profileData.email}</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone</Label>
@@ -200,7 +167,7 @@ const StaffProfile = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="dob">Date of Birth</Label>
-                  {isEditing ? <Input id="dob" type="date" value={formData.dob} onChange={(e) => handleInputChange('dob', e.target.value)} /> : <p className="p-2 bg-gray-100 rounded-md">{profileData.dob}</p>}
+                  {isEditing ? <Input id="dob" type="date" value={formData.dob} onChange={(e) => handleInputChange('dob', e.target.value)} /> : <p className="p-2 bg-gray-100 rounded-md">{profileData.dob ? new Date(profileData.dob).toLocaleDateString() : ''}</p>}
                    {errors.dob && <p className="text-red-500 text-xs">{errors.dob}</p>}
                 </div>
                  <div className="space-y-2">

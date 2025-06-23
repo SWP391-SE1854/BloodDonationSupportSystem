@@ -8,8 +8,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import api from "@/services/api.service";
 import { useToast } from "@/hooks/use-toast";
 import { auth } from "@/config/firebase";
-import EditProfileForm from "../components/EditProfileForm";
+import EditProfileForm from "@/components/EditProfileForm";
 import { API_ENDPOINTS } from "@/services/api.config";
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface ProfileData {
   user_id: number;
@@ -35,35 +36,29 @@ const Profile = () => {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [donationHistory, setDonationHistory] = useState<DonationHistory[]>([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const role = useUserRole();
 
   const fetchProfileData = async () => {
+    if (!role) return;
     try {
-      const firebaseUser = auth.currentUser;
-      if (!firebaseUser) {
-        throw new Error("No authenticated user found");
+      let endpoint = '';
+      if (role === 'Member') {
+        endpoint = API_ENDPOINTS.USER.GET_MEMBER_PROFILE;
+      } else if (role === 'Staff' || role === 'Admin') {
+        endpoint = API_ENDPOINTS.USER.GET_STAFF_PROFILE;
       }
-
-      const profileResponse = await api.get(API_ENDPOINTS.USER.PROFILE);
-      console.log("API Response:", profileResponse.data);
-      setProfileData(profileResponse.data);
       
-      try {
-        const historyResponse = await api.get(API_ENDPOINTS.DONATION.LIST);
-        setDonationHistory(historyResponse.data);
-      } catch (historyError) {
-        console.error('Failed to fetch donation history:', historyError);
-        setDonationHistory([]);
+      if (endpoint) {
+        const response = await api.get(endpoint);
+        setProfileData(response.data);
       }
     } catch (error) {
-      console.error('Failed to fetch profile data:', error);
-      if (error instanceof Error) {
-        console.error('Error message:', error.message);
-        console.error('Error details:', error);
-      }
+      console.error("Failed to fetch profile data:", error);
       toast({
         title: "Error",
-        description: "Failed to load profile data",
-        variant: "destructive"
+        description: "Could not fetch profile data.",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -71,8 +66,17 @@ const Profile = () => {
   };
 
   useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
     fetchProfileData();
-  }, [user?.role]);
+      } else {
+        setUser(null);
+        setProfileData(null);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -80,6 +84,11 @@ const Profile = () => {
     } catch (error) {
       console.error('Logout failed:', error);
     }
+  };
+
+  const handleProfileUpdated = () => {
+    setIsEditing(false);
+    fetchProfileData();
   };
 
   if (isLoading) {
@@ -93,7 +102,7 @@ const Profile = () => {
     );
   }
 
-  if (!profileData) {
+  if (!user || !profileData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white flex items-center justify-center">
         <div className="text-center">
@@ -126,17 +135,15 @@ const Profile = () => {
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-4">
                     <Avatar className="h-16 w-16">
-                      <AvatarImage src={user?.photoURL || "/placeholder.svg"} />
-                      <AvatarFallback className="bg-gray-200">
-                        <User className="h-8 w-8 text-gray-600" />
-                      </AvatarFallback>
+                      <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
+                      <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <h2 className="text-2xl font-bold">{profileData.name}</h2>
-                      <p className="text-muted-foreground">{profileData.email}</p>
+                      <h2 className="text-2xl font-bold">{profileData.name || user.displayName}</h2>
+                      <p className="text-muted-foreground">{user.email}</p>
                     </div>
                   </div>
-                  <Button className="gradient-bg" onClick={() => setIsEditModalOpen(true)}>
+                  <Button className="gradient-bg" onClick={() => setIsEditing(true)}>
                     Edit Profile
                   </Button>
                 </div>
@@ -152,11 +159,11 @@ const Profile = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex justify-between">
                     <span className="font-medium">Full Name</span>
-                    <span className="text-muted-foreground">{profileData.name}</span>
+                    <span className="text-muted-foreground">{profileData.name || user.displayName}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">Email</span>
-                    <span className="text-muted-foreground">{profileData.email}</span>
+                    <span className="text-muted-foreground">{user.email}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">Address</span>
@@ -172,7 +179,7 @@ const Profile = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">Date of Birth</span>
-                    <span className="text-muted-foreground">{profileData.dob || "Not provided"}</span>
+                    <span className="text-muted-foreground">{profileData.dob ? new Date(profileData.dob).toLocaleDateString() : "Not provided"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">Phone Number</span>
@@ -260,12 +267,14 @@ const Profile = () => {
       </div>
 
       {/* Edit Profile Modal */}
+      {isEditing && (
       <EditProfileForm
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
+          isOpen={isEditing}
+          onClose={() => setIsEditing(false)}
         profileData={profileData}
-        onProfileUpdated={fetchProfileData}
+          onProfileUpdated={handleProfileUpdated}
       />
+      )}
     </div>
   );
 };

@@ -72,6 +72,16 @@ export interface BloodInventory {
   lastUpdated: string;
 }
 
+// This is the new, correct data structure for blood inventory
+export interface BloodInventoryUnit {
+  unit_id: number;
+  donation_id: number;
+  blood_type: number; // This is a foreign key ID
+  status: 'Available' | 'Reserved' | 'Expired' | 'Used';
+  quantity: number; // in ml
+  expiration_date: string; // ISO 8601 format
+}
+
 export interface DashboardStats {
   pendingRequests: number;
   availableDonors: number;

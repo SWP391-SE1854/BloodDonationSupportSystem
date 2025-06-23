@@ -1,6 +1,5 @@
 import React from 'react';
-import { HeartPulse, User, LogOut, Home, Droplets, Newspaper, Droplet } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { HeartPulse, User, LogOut, Home, Droplet, Newspaper, History, LayoutDashboard, ClipboardList, Heart, FlaskConical } from 'lucide-react';
 
 interface StaffLayoutProps {
   children: React.ReactNode;
@@ -12,10 +11,12 @@ interface StaffLayoutProps {
 
 const StaffLayout = ({ children, currentPage, onNavigate, onLogout, userName }: StaffLayoutProps) => {
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/staff/dashboard' },
-    { id: 'profile', label: 'Profile', icon: User, path: '/staff/profile' },
-    { id: 'blog', label: 'Blog Posts', icon: Newspaper, path: '/staff/blog' },
-    { id: 'donations', label: 'Donations', icon: Droplet, path: '/staff/donations' },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'donations', label: 'Donation Management', icon: Droplet },
+    { id: 'requests', label: 'Blood Requests', icon: ClipboardList },
+    { id: 'history', label: 'Donation History', icon: Heart },
+    { id: 'inventory', label: 'Blood Inventory', icon: FlaskConical },
+    { id: 'profile', label: 'Profile', icon: User },
   ];
 
   return (
@@ -35,24 +36,17 @@ const StaffLayout = ({ children, currentPage, onNavigate, onLogout, userName }: 
         </div>
 
         <nav className="p-4 space-y-2 flex-1">
-          <Link to="/blood-request" className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors text-gray-600 hover:bg-gray-100`}>
-            <HeartPulse className="h-5 w-5" />
-            <span className="font-medium">Blood Requests</span>
-          </Link>
-
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = currentPage === item.id;
-            const buttonClass = `w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-              isActive
-                ? 'bg-purple-100 text-purple-700 border border-purple-200'
-                : 'text-gray-600 hover:bg-gray-100'
-            }`;
             return (
               <button
                 key={item.id}
                 onClick={() => onNavigate(item.id)}
-                className={buttonClass}
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                  currentPage === item.id
+                    ? 'bg-purple-100 text-purple-700 border border-purple-200'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
               >
                 <Icon className="h-5 w-5" />
                 <span className="font-medium">{item.label}</span>

@@ -10,19 +10,14 @@ import Index from './pages/Index';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import NotFound from "./pages/NotFound";
-import Profile from "./pages/Profile";
+import ProfilePortal from "./pages/profile/ProfilePortal";
 import Blog from "./pages/Blog";
 import AboutUs from "./pages/AboutUs";
-import BloodRequest from "./pages/BloodRequest";
-import Staff from "./pages/Staff";
-import Admin from "./pages/Admin";
-import AdminProfile from "./components/admin/AdminProfile";
-import MemberPortal from "./components/member/MemberPortal";
+import AdminPortal from "./pages/admin/AdminPortal";
+import MemberPortal from "./pages/member/MemberPortal";
 import BlogManagement from "./pages/admin/BlogManagement";
-import StaffPortal from "./components/staff/StaffPortal";
+import StaffPortal from "./pages/staff/StaffPortal";
 import UserManagement from "./pages/admin/UserManagement";
-import TempAdmin from "./pages/admin/TempAdmin";
-import TempStaff from "./pages/staff/TempStaff";
 import BloodRequestManagement from './pages/staff/BloodRequestManagement';
 
 const queryClient = new QueryClient();
@@ -41,14 +36,10 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/about" element={<AboutUs />} />
             <Route
-              path="/blood-request"
-              element={<BloodRequestManagement />}
-            />
-            <Route
-              path="/profile"
+              path="/profile/*"
               element={
                 <ProtectedRoute>
-                  <Profile />
+                  <ProfilePortal />
                 </ProtectedRoute>
               }
             />
@@ -70,10 +61,10 @@ const App = () => (
               }
             />
             <Route
-              path="/admin"
+              path="/admin/*"
               element={
                 <ProtectedRoute allowedRoles={['Admin']}>
-                  <TempAdmin />
+                  <AdminPortal />
                 </ProtectedRoute>
               }
             />
@@ -82,30 +73,6 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['Admin']}>
                   <UserManagement />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/dashboard"
-              element={
-                <ProtectedRoute allowedRoles={['Admin']}>
-                  <Admin />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/profile"
-              element={
-                <ProtectedRoute allowedRoles={['Admin']}>
-                  <AdminProfile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/blog"
-              element={
-                <ProtectedRoute allowedRoles={['Admin']}>
-                  <BlogManagement />
                 </ProtectedRoute>
               }
             />
