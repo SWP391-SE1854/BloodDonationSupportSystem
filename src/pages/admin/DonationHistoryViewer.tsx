@@ -4,8 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { AdminService } from '@/services/admin.service';
-import { UserProfile } from '@/services/user.service';
+import { AdminService, UserProfile } from '@/services/admin.service';
 import DonationHistoryService, { DonationHistoryRecord } from '@/services/donation-history.service';
 import { useUserRole } from '@/hooks/useUserRole';
 

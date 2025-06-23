@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { HealthRecord, HealthRecordService } from '@/services/health-record.service';
@@ -11,26 +11,8 @@ import axios from 'axios';
 const MemberHealthRecords = () => {
   const { toast } = useToast();
   const [healthRecord, setHealthRecord] = useState<HealthRecord | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
-
-  const fetchRecord = async () => {
-    try {
-      const record = await HealthRecordService.getMyRecord();
-      setHealthRecord(record);
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status !== 404) {
-        toast({ title: 'Error', description: 'Failed to fetch health record.' });
-      }
-      setHealthRecord(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchRecord();
-  }, []);
 
   const handleSave = async (data: Partial<HealthRecord>) => {
     try {
