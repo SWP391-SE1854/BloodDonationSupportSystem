@@ -79,10 +79,10 @@ namespace BloodDonationSystem
                 options.MinimumSameSitePolicy = SameSiteMode.Lax;
             });
 
-            FirebaseApp.Create(new AppOptions
-            {
-                Credential = GoogleCredential.FromFile("Configs/serviceAccountKey.json")
-            });
+            //FirebaseApp.Create(new AppOptions
+            //{
+            //    Credential = GoogleCredential.FromFile("Configs/serviceAccountKey.json")
+            //});
 
             builder.Services.AddCors(options =>
             {

@@ -57,6 +57,24 @@ namespace BloodDonationSystem.Presentation.Controllers.DonationController
             return Ok(newDonation);
         }
 
-       
+        [Authorize(Policy = "StaffOnly")]
+        [HttpPut("staff")]
+        public async Task<IActionResult> UpdateDonationStatusById([FromBody] Donation updateDonation)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                return Unauthorized(new { Message = "Token không hợp lệ hoặc thiếu thông tin." });
+
+            var existingDonation = await _donationRepository.GetByIdAsync(updateDonation.donation_id);
+            if (existingDonation == null)
+                return NotFound(new { Message = "Không tìm thấy donation!" });
+
+            existingDonation.quantity = updateDonation.quantity;
+           
+
+            await _donationRepository.UpdateAsync(existingDonation);
+            return Ok(existingDonation);
+        }
+
     }
 }
