@@ -14,6 +14,7 @@ import { loginSchema } from '@/lib/validations';
 import { jwtDecode } from 'jwt-decode';
 import { ZodError, ZodIssue } from 'zod';
 import { useAuth } from "@/contexts/AuthContext";
+import axios from 'axios';
 
 interface JwtPayload {
   role?: string;
@@ -102,7 +103,7 @@ const Login = () => {
       navigate('/staff/StaffProfile');
     } else {
       console.log('Redirecting to member profile');
-      navigate('/member/profile');
+        navigate('/member/profile');
     }
   };
 
@@ -140,13 +141,13 @@ const Login = () => {
       
       await loginWithFirebase(firebaseToken);
 
-    } catch (error: any) {
-      console.error('Login failed:', error);
-      toast({
-        title: "Login Failed",
-        description: error?.message || "Invalid email or password. Please try again.",
-        variant: "destructive",
-      });
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        toast({ title: 'Login Error', description: 'Invalid credentials or user not found.' });
+      } else {
+        toast({ title: 'Error', description: 'An unexpected error occurred during login.' });
+      }
+      console.error('Login error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -166,15 +167,6 @@ const Login = () => {
     } finally {
       setResetLoading(false);
     }
-  };
-
-  const handleClearSession = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('firebaseToken');
-    toast({ title: 'Session Cleared', description: 'Your session has been cleared. Please log in again.' });
-    // We can't use navigate here because the context might be unstable
-    window.location.reload();
   };
 
   return (
@@ -251,20 +243,12 @@ const Login = () => {
                 {errors.password && (
                   <p className="text-red-500 text-sm mt-1">{errors.password}</p>
                 )}
-                <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center justify-between">
+                  <div></div>
                   <button
                     type="button"
-                    onClick={handleClearSession}
-                    className="text-xs font-medium text-red-500 hover:underline transition-colors focus:outline-none"
-                    style={{ fontFamily: 'inherit' }}
-                  >
-                    Clear Session
-                  </button>
-                  <button
-                    type="button"
+                    className="text-xs text-red-500 hover:underline focus:outline-none"
                     onClick={() => setShowReset((v) => !v)}
-                    className="text-xs font-medium text-red-500 hover:underline transition-colors focus:outline-none"
-                    style={{ fontFamily: 'inherit' }}
                   >
                     Forgot Password?
                   </button>

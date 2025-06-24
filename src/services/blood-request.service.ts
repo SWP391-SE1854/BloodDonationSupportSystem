@@ -26,10 +26,10 @@ interface User {
 export interface BloodRequest {
   request_id: number;
   user_id: number;
-  blood_id: number; // This is the blood type ID
+  blood_id: string | null;
   emergency_status: boolean;
   request_date: string;
-  location_id: number;
+  location_id: number | null;
   user?: User; 
   location?: NestedLocation;
 }

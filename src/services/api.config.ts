@@ -45,7 +45,7 @@ export const API_ENDPOINTS = {
     CREATE_MEMBER_REQUEST: '/donation/member',
     GET_ALL: '/donation/all',
     GET_BY_USER_ID: (userId: number) => `/donation/users?userId=${userId}`,
-    UPDATE: (id: number) => `/donation/update/${id}`,
+    UPDATE: (id: number) => `/donation/staff/${id}`,
   },
   
   // Donation History endpoints
@@ -68,8 +68,9 @@ export const API_ENDPOINTS = {
   
   // Location endpoints
   LOCATION: {
-    LIST: `/locations`,
-    CREATE: `/locations`,
+    GET_ALL: '/location/all',
+    CREATE: '/location/new',
+    UPDATE_MEMBER: '/location/member/update',
     DETAILS: (id: string) => `/locations/${id}`,
     UPDATE: (id: string) => `/locations/${id}`,
     DELETE: (id: string) => `/locations/${id}`,

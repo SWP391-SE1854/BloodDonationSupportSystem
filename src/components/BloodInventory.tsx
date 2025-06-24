@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { inventoryApi } from '@/services/api';
+import { BloodInventoryService } from '@/services/blood-inventory.service';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -15,14 +15,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 
 const bloodTypes = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
-const bloodTypeMap = bloodTypes.reduce((acc, type, index) => {
-    acc[index + 1] = type;
-    return acc;
-}, {} as Record<number, string>);
-
 
 const InventoryForm = ({ unit, onSave, onClose }: { unit: Partial<BloodInventoryUnit> | null, onSave: (data: Partial<BloodInventoryUnit>) => void, onClose: () => void }) => {
-    const [formData, setFormData] = useState(unit || {});
+    const [formData, setFormData] = useState(unit || { 
+        blood_type: 'A+', 
+        donation_date: new Date().toISOString().substring(0, 10)
+    });
 
     const handleChange = (field: keyof BloodInventoryUnit, value: string | number | boolean) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -50,13 +48,13 @@ const InventoryForm = ({ unit, onSave, onClose }: { unit: Partial<BloodInventory
             </div>
             <div className="space-y-1">
                 <Label>Blood Type</Label>
-                <Select value={String(formData.blood_type || '')} onValueChange={val => handleChange('blood_type', parseInt(val))}>
+                <Select value={formData.blood_type || ''} onValueChange={val => handleChange('blood_type', val)}>
                     <SelectTrigger>
                         <SelectValue placeholder="Select blood type" />
                     </SelectTrigger>
                     <SelectContent>
-                        {Object.entries(bloodTypeMap).map(([id, type]) => (
-                            <SelectItem key={id} value={id}>{type}</SelectItem>
+                        {bloodTypes.map((type) => (
+                            <SelectItem key={type} value={type}>{type}</SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
@@ -95,18 +93,7 @@ const BloodInventory = () => {
 
     const { data: inventory, isLoading, isError, error } = useQuery<BloodInventoryUnit[], Error>({
         queryKey: ['bloodInventory'],
-        queryFn: async () => {
-             const response = await inventoryApi.getAll();
-             if (response.success && Array.isArray(response.data)) {
-                return response.data;
-            }
-            // If response.data is not an array, return an empty array or handle error
-            if (response.success && !Array.isArray(response.data)) {
-                console.warn("API returned non-array data for inventory:", response.data);
-                return []; 
-            }
-             throw new Error(response.message || 'Failed to fetch inventory');
-        },
+        queryFn: BloodInventoryService.getAll,
     });
 
     const mutationOptions = {
@@ -121,7 +108,7 @@ const BloodInventory = () => {
     };
 
     const createMutation = useMutation({
-        mutationFn: (newData: Partial<BloodInventoryUnit>) => inventoryApi.create(newData),
+        mutationFn: (newData: Partial<BloodInventoryUnit>) => BloodInventoryService.create(newData),
         ...mutationOptions,
         onSuccess: () => {
             mutationOptions.onSuccess();
@@ -130,7 +117,7 @@ const BloodInventory = () => {
     });
 
     const updateMutation = useMutation({
-        mutationFn: (updateData: Partial<BloodInventoryUnit>) => inventoryApi.update(updateData.unit_id!, updateData),
+        mutationFn: (updateData: Partial<BloodInventoryUnit>) => BloodInventoryService.update(updateData.unit_id!, updateData),
         ...mutationOptions,
         onSuccess: () => {
             mutationOptions.onSuccess();
@@ -139,7 +126,7 @@ const BloodInventory = () => {
     });
     
     const deleteMutation = useMutation({
-        mutationFn: (id: number) => inventoryApi.delete(id),
+        mutationFn: (id: number) => BloodInventoryService.delete(id),
         ...mutationOptions,
         onSuccess: () => {
             mutationOptions.onSuccess();
@@ -198,7 +185,7 @@ const BloodInventory = () => {
                                 <TableRow key={unit.unit_id}>
                                     <TableCell>{unit.unit_id}</TableCell>
                                     <TableCell>{unit.donation_id}</TableCell>
-                                    <TableCell>{bloodTypeMap[unit.blood_type] || 'Unknown'}</TableCell>
+                                    <TableCell>{unit.blood_type}</TableCell>
                                     <TableCell>{unit.quantity}ml</TableCell>
                                     <TableCell>
                                         <Badge variant={unit.status === 'Available' ? 'default' : 'secondary'}>{unit.status}</Badge>

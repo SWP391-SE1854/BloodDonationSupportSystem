@@ -7,7 +7,7 @@ export interface Donation {
   user_id: number;
   unit_id: number | null;
   donation_date: string;
-  status: 'Pending' | 'Approved' | 'Rejected';
+  status: 'Pending' | 'Approved' | 'Rejected' | 'Completed';
   component: 'Whole Blood' | 'Platelets' | 'Plasma' | 'Red Cells';
   location: string;
   quantity: number;
@@ -54,18 +54,6 @@ export class DonationService {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error(`Error fetching donations for user id ${userId}:`, error.message);
-      }
-      throw error;
-    }
-  }
-
-  static async updateDonationStatus(donationId: number, status: 'Approved' | 'Rejected'): Promise<Donation> {
-    try {
-      const response = await api.patch<Donation>(API_ENDPOINTS.DONATION.UPDATE_STATUS(donationId), { status });
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error(`Error updating status for donation ${donationId}:`, error.message);
       }
       throw error;
     }

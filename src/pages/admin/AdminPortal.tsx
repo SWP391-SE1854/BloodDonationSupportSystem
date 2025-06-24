@@ -23,6 +23,8 @@ const AdminPortal = () => {
     switch (currentPage) {
       case 'dashboard':
         return <AdminDashboard />;
+      case 'profile':
+        return <AdminProfile />;
       case 'users':
         return <UserManagement />;
       case 'blog':
@@ -37,8 +39,6 @@ const AdminPortal = () => {
         return <HealthRecordViewer />;
       case 'inventory':
         return <BloodInventoryManagement />;
-      case 'profile':
-        return <AdminProfile />;
       default:
         return <AdminDashboard />;
     }

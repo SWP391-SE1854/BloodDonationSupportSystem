@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -13,12 +13,6 @@ import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useAuth } from '@/contexts/AuthContext';
 import BloodTypeSelect from '@/components/BloodTypeSelect';
-
-const bloodTypes = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
-const bloodTypeMap = bloodTypes.reduce((acc, type, index) => {
-    acc[index + 1] = type;
-    return acc;
-}, {} as Record<number, string>);
 
 const BloodRequestManagement = () => {
     const { toast } = useToast();
@@ -32,6 +26,7 @@ const BloodRequestManagement = () => {
     const { data: requests, isLoading } = useQuery<BloodRequest[], Error>({
         queryKey: ['bloodRequests'],
         queryFn: BloodRequestService.getAllBloodRequests,
+        select: (data) => Array.isArray(data) ? data : [],
     });
 
     const mutationOptions = {
@@ -114,7 +109,7 @@ const BloodRequestManagement = () => {
                             <TableRow key={request.request_id}>
                                 <TableCell>{request.request_id}</TableCell>
                                 <TableCell>{request.user_id}</TableCell>
-                                <TableCell>{bloodTypeMap[request.blood_id] || 'Unknown'}</TableCell>
+                                <TableCell>{request.blood_id || 'N/A'}</TableCell>
                                 <TableCell>{request.location_id}</TableCell>
                                 <TableCell>{request.emergency_status ? 'Yes' : 'No'}</TableCell>
                                 <TableCell>{new Date(request.request_date).toLocaleDateString()}</TableCell>
@@ -166,8 +161,8 @@ const RequestForm = ({ isOpen, setIsOpen, request, onSave }: RequestFormProps) =
         } else {
             setFormData({
                 user_id: 0,
-                blood_id: 1,
-                location_id: 0,
+                blood_id: 'A+',
+                location_id: null,
                 emergency_status: false,
             });
         }
@@ -175,8 +170,8 @@ const RequestForm = ({ isOpen, setIsOpen, request, onSave }: RequestFormProps) =
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.user_id || !formData.blood_id || !formData.location_id) {
-            alert("Please fill in all required fields.");
+        if (!formData.user_id || !formData.blood_id) {
+            alert("Please fill in all required fields (User ID and Blood Type).");
             return;
         }
         onSave(formData, request?.request_id);
@@ -187,6 +182,9 @@ const RequestForm = ({ isOpen, setIsOpen, request, onSave }: RequestFormProps) =
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>{request ? 'Edit' : 'Create'} Blood Request</DialogTitle>
+                    <DialogDescription>
+                        Fill in the details below to create or update a blood request.
+                    </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4 pt-4">
                     <div className="space-y-1">
@@ -195,11 +193,16 @@ const RequestForm = ({ isOpen, setIsOpen, request, onSave }: RequestFormProps) =
                     </div>
                     <div className="space-y-1">
                         <Label>Blood Type Needed</Label>
-                        <BloodTypeSelect value={String(formData.blood_id || '')} onChange={val => setFormData({ ...formData, blood_id: parseInt(val) })} />
+                        <BloodTypeSelect value={formData.blood_id || ''} onChange={val => setFormData({ ...formData, blood_id: val })} />
                     </div>
                      <div className="space-y-1">
-                        <Label htmlFor="location_id">Location ID (Hospital/Clinic)</Label>
-                        <Input id="location_id" type="number" value={formData.location_id || 0} onChange={e => setFormData({ ...formData, location_id: parseInt(e.target.value) })} required />
+                        <Label htmlFor="location_id">Location ID (Optional)</Label>
+                        <Input 
+                            id="location_id" 
+                            type="number" 
+                            value={formData.location_id ?? ''} 
+                            onChange={e => setFormData({ ...formData, location_id: e.target.value ? parseInt(e.target.value) : null })} 
+                        />
                     </div>
                     <div className="flex items-center space-x-2 pt-2">
                         <Switch id="emergency_status" checked={formData.emergency_status} onCheckedChange={checked => setFormData({ ...formData, emergency_status: checked })} />

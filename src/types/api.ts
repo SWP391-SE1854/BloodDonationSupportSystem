@@ -76,7 +76,7 @@ export interface BloodInventory {
 export interface BloodInventoryUnit {
   unit_id: number;
   donation_id: number;
-  blood_type: number; // This is a foreign key ID
+  blood_type: string; // This is a foreign key ID
   status: 'Available' | 'Reserved' | 'Expired' | 'Used';
   quantity: number; // in ml
   expiration_date: string; // ISO 8601 format

@@ -65,8 +65,22 @@ export class AdminService {
   // Get all users (admin only)
   static async getAllUsers(): Promise<UserProfile[]> {
     try {
-      const response = await api.get<UserProfile[]>(API_ENDPOINTS.USER.GET_ALL_USERS);
-      return response.data;
+      const response = await api.get(API_ENDPOINTS.USER.GET_ALL_USERS);
+      const data = response.data;
+
+      // Handle ASP.NET Core's PreserveReferencesHandling serialization output
+      if (data && data.$values && Array.isArray(data.$values)) {
+        return data.$values;
+      }
+
+      // Handle the case where the API returns a standard array
+      if (Array.isArray(data)) {
+        return data;
+      }
+      
+      // If the format is unexpected, log an error and return an empty array
+      console.error("Unexpected response format from getAllUsers:", data);
+      return [];
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error('Error fetching all users:', error.message);

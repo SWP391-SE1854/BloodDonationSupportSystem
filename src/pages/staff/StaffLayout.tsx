@@ -14,7 +14,6 @@ const StaffLayout = ({ children, currentPage, onNavigate, onLogout, userName }: 
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'donations', label: 'Donation Management', icon: Droplet },
     { id: 'requests', label: 'Blood Requests', icon: ClipboardList },
-    { id: 'history', label: 'Donation History', icon: Heart },
     { id: 'inventory', label: 'Blood Inventory', icon: FlaskConical },
     { id: 'profile', label: 'Profile', icon: User },
   ];
