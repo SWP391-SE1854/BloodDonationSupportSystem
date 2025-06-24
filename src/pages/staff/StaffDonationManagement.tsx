@@ -9,6 +9,8 @@ import HealthRecordService from '@/services/health-record.service';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
 
+type ServerResponse = Donation[] | { $values: Donation[] };
+
 const StaffDonationManagement = () => {
     const [donations, setDonations] = useState<Donation[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -17,8 +19,16 @@ const StaffDonationManagement = () => {
     const loadDonations = useCallback(async () => {
         setIsLoading(true);
         try {
-            const data = await DonationService.getAllDonations();
-            setDonations(Array.isArray(data) ? data : []);
+            const data = await DonationService.getDonationsByStatus('Pending') as ServerResponse;
+            console.log('Fetched donation data:', data);
+            
+            if (data && '$values' in data) {
+                setDonations(Array.isArray(data.$values) ? data.$values : []);
+            } else if (Array.isArray(data)) {
+                setDonations(data);
+            } else {
+                setDonations([]);
+            }
         } catch (error) {
             console.error("Failed to fetch donations:", error);
             toast({

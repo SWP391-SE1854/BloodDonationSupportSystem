@@ -70,6 +70,20 @@ export class DonationService {
       throw error;
     }
   }
+
+  static async getDonationsByStatus(status?: string): Promise<Donation[]> {
+    try {
+      const response = await api.get<Donation[]>(API_ENDPOINTS.DONATION.GET_BY_STATUS, {
+        params: { status }
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Error fetching donations by status:', error.message);
+      }
+      throw error;
+    }
+  }
 }
 
 export default DonationService; 

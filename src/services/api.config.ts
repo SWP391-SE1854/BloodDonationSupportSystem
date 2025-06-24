@@ -44,6 +44,7 @@ export const API_ENDPOINTS = {
   DONATION: {
     CREATE_MEMBER_REQUEST: '/donation/member',
     GET_ALL: '/donation/all',
+    GET_BY_STATUS: '/donation/status',
     GET_BY_USER_ID: (userId: number) => `/donation/users?userId=${userId}`,
     UPDATE: (id: number) => `/donation/staff/${id}`,
   },
