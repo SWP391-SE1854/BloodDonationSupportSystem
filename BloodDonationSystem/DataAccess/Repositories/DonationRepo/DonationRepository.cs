@@ -50,5 +50,11 @@ namespace BloodDonationSystem.DataAccess.Repositories.DonationRepo
             await _context.SaveChangesAsync();
             return true;
         }
+        public async Task<List<Donation>> GetByStatusAsync(string status)
+        {
+            return await _context.Set<Donation>()
+                .Where(d => d.status == status)
+                .ToListAsync();
+        }
     }
 }

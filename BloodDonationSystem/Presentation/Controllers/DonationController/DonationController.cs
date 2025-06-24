@@ -35,13 +35,22 @@ namespace BloodDonationSystem.Presentation.Controllers.DonationController
         {
             var donation = await _donationRepository.GetByIdAsync(userId);
             if (donation == null)
+                return NotFound(new { Message = "Không tìm thấy yêu cầu có status này." });
+
+            return Ok(donation);
+        }
+
+        [Authorize(Policy = "AdminOrStaff")]
+        [HttpGet("status")]
+        public async Task<IActionResult> GetDonationByStatus(string donation_status)
+        {
+            var donation = await _donationRepository.GetByStatusAsync(donation_status);
+            if (donation == null)
                 return NotFound(new { Message = "Không tìm thấy yêu cầu của người dùng này." });
 
             return Ok(donation);
         }
-        
 
-      
 
         // MEMBER: Tạo yêu cầu mới (chỉ tạo cho chính mình)
         [Authorize(Policy = "MemberOnly")]

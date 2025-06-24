@@ -9,5 +9,7 @@ namespace BloodDonationSystem.DataAccess.Repositories.DonationRepo
         Task<Donation> AddAsync(Donation donation);
         Task<bool> UpdateAsync(Donation donation);
         Task<bool> DeleteAsync(int donationId);
+
+        Task<List<Donation>> GetByStatusAsync(string status);
     }
 }
