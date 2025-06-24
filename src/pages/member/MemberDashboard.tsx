@@ -7,6 +7,19 @@ import { DonationHistoryService, DonationHistoryRecord } from '@/services/donati
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, differenceInDays } from 'date-fns';
 
+const bloodTypes = [
+    { id: "1", name: "A+" }, { id: "2", name: "A-" }, { id: "3", name: "B+" },
+    { id: "4", name: "B-" }, { id: "5", name: "AB+" }, { id: "6", name: "AB-" },
+    { id: "7", name: "O+" }, { id: "8", name: "O-" }
+];
+
+const getBloodTypeName = (id: string | number) => {
+    const bloodType = bloodTypes.find(bt => bt.id === id.toString());
+    return bloodType ? bloodType.name : 'N/A';
+};
+
+type HistoryServerResponse = DonationHistoryRecord[] | { $values: DonationHistoryRecord[] };
+
 interface MemberDashboardProps {
   onNavigate: (page: string) => void;
 }
@@ -20,12 +33,14 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [healthData, historyData] = await Promise.all([
-          HealthRecordService.getMyRecord(),
-          DonationHistoryService.getMemberHistory()
-        ]);
-        setHealthRecord(healthData);
-        setHistory(historyData);
+        const historyData = await DonationHistoryService.getMemberHistory() as HistoryServerResponse;
+        if (historyData && '$values' in historyData) {
+          setHistory(Array.isArray(historyData.$values) ? historyData.$values : []);
+        } else if (Array.isArray(historyData)) {
+          setHistory(historyData);
+        } else {
+          setHistory([]);
+        }
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       } finally {
@@ -39,7 +54,7 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
 
   const memberStats = [
     { title: 'Total Donations', value: healthRecord?.donation_count ?? 'N/A', icon: Heart, color: 'text-red-600', bgColor: 'bg-red-100' },
-    { title: 'Blood Type', value: healthRecord?.blood_type ?? 'N/A', icon: Droplet, color: 'text-blue-600', bgColor: 'bg-blue-100' },
+    { title: 'Blood Type', value: healthRecord ? getBloodTypeName(healthRecord.blood_type) : 'N/A', icon: Droplet, color: 'text-blue-600', bgColor: 'bg-blue-100' },
     { title: 'Next Eligible', value: nextEligibleDays > 0 ? `${nextEligibleDays} days` : 'Now', icon: Calendar, color: 'text-green-600', bgColor: 'bg-green-100' },
     { title: 'Notifications', value: '3', icon: Bell, color: 'text-purple-600', bgColor: 'bg-purple-100' },
   ];

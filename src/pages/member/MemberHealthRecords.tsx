@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { HealthRecord, HealthRecordService } from '@/services/health-record.service';
@@ -8,11 +8,49 @@ import { CheckCircle, PlusCircle, Calendar } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import axios from 'axios';
 
+// Data from BloodTypeSelect component
+const bloodTypes = [
+    { id: "1", name: "A+" }, { id: "2", name: "A-" }, { id: "3", name: "B+" },
+    { id: "4", name: "B-" }, { id: "5", name: "AB+" }, { id: "6", name: "AB-" },
+    { id: "7", name: "O+" }, { id: "8", name: "O-" }
+];
+
+const getBloodTypeName = (id: string | number) => {
+    const bloodType = bloodTypes.find(bt => bt.id === id.toString());
+    return bloodType ? bloodType.name : 'N/A';
+};
+
+type HealthRecordResponse = HealthRecord | { $values: HealthRecord[] };
+
 const MemberHealthRecords = () => {
   const { toast } = useToast();
   const [healthRecord, setHealthRecord] = useState<HealthRecord | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchRecord = async () => {
+      setIsLoading(true);
+      try {
+        const data = await HealthRecordService.getMyRecord() as HealthRecordResponse;
+        if (data && '$values' in data && Array.isArray(data.$values)) {
+          // Handle the case where the server wraps the response
+          setHealthRecord(data.$values[0] || null);
+        } else if (data && !('$values' in data)) {
+          // Handle a direct object response
+          setHealthRecord(data as HealthRecord);
+        }
+      } catch (error) {
+        if (axios.isAxiosError(error) && error.response?.status !== 404) {
+          toast({ title: 'Error', description: 'Failed to fetch health record.', variant: 'destructive'});
+        }
+        // A 404 error is expected if the user has no record, so we don't show a toast for it.
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchRecord();
+  }, [toast]);
 
   const handleSave = async (data: Partial<HealthRecord>) => {
     try {
@@ -78,7 +116,7 @@ const MemberHealthRecords = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <InfoCard title="Blood Type" value={healthRecord.blood_type || 'N/A'} />
+        <InfoCard title="Blood Type" value={getBloodTypeName(healthRecord.blood_type)} />
         <InfoCard title="Weight" value={`${healthRecord.weight} kg`} />
         <InfoCard title="Height" value={`${healthRecord.height} cm`} />
         <InfoCard title="Allergies" value={healthRecord.allergies || 'None'} />
