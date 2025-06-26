@@ -2,12 +2,11 @@ import React, { useState } from 'react';
 import StaffLayout from "./StaffLayout";
 import StaffDashboard from "./StaffDashboard";
 import StaffProfile from "./StaffProfile";
-import BlogManagement from "@/pages/admin/BlogManagement";
 import { useAuth } from "@/contexts/AuthContext";
 import StaffDonationManagement from "./StaffDonationManagement";
 import BloodRequestManagement from './BloodRequestManagement';
-import DonationHistoryViewer from '../admin/DonationHistoryViewer';
-import HealthRecordViewer from '../admin/HealthRecordViewer';
+import DonationHistoryViewer from './DonationHistoryViewer';
+import HealthRecordViewer from './HealthRecordViewer';
 import BloodInventoryManagement from './BloodInventoryManagement';
 
 const StaffPortal = () => {
@@ -28,15 +27,13 @@ const StaffPortal = () => {
         return <StaffDashboard />;
       case 'profile':
         return <StaffProfile />;
-      case 'blog':
-        return <BlogManagement />;
       case 'donations':
         return <StaffDonationManagement />;
       case 'requests':
         return <BloodRequestManagement />;
       case 'history':
         return <DonationHistoryViewer />;
-      case 'health-records':
+      case 'records':
         return <HealthRecordViewer />;
       case 'inventory':
         return <BloodInventoryManagement />;

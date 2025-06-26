@@ -5,11 +5,6 @@ import BlogManagement from './BlogManagement';
 import AdminDashboard from './AdminDashboard';
 import AdminProfile from './AdminProfile';
 import { useAuth } from '@/contexts/AuthContext';
-import StaffDonationManagement from '../staff/StaffDonationManagement';
-import DonationHistoryViewer from './DonationHistoryViewer';
-import HealthRecordViewer from './HealthRecordViewer';
-import BloodRequestManagement from '../staff/BloodRequestManagement';
-import BloodInventoryManagement from './BloodInventoryManagement';
 
 const AdminPortal = () => {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -29,16 +24,6 @@ const AdminPortal = () => {
         return <UserManagement />;
       case 'blog':
         return <BlogManagement />;
-      case 'donations':
-        return <StaffDonationManagement />;
-      case 'blood-requests':
-        return <BloodRequestManagement />;
-      case 'history':
-        return <DonationHistoryViewer />;
-      case 'health-records':
-        return <HealthRecordViewer />;
-      case 'inventory':
-        return <BloodInventoryManagement />;
       default:
         return <AdminDashboard />;
     }

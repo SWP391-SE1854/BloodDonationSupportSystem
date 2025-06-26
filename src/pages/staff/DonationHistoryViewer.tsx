@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Search, Trash2 } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { AdminService, UserProfile } from '@/services/admin.service';
+import { AdminService } from '@/services/admin.service';
+import { StaffService } from '@/services/staff.service';
+import { UserProfile } from '@/services/user.service';
 import DonationHistoryService, { DonationHistoryRecord } from '@/services/donation-history.service';
 import { useUserRole } from '@/hooks/useUserRole';
+
+type UserResponse = UserProfile[] | { $values: UserProfile[] };
 
 const DonationHistoryViewer = () => {
   const { toast } = useToast();
@@ -20,14 +23,31 @@ const DonationHistoryViewer = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const allUsers = await AdminService.getAllUsers();
-        setUsers(allUsers);
+        let allUsers: UserResponse;
+        if (currentUserRole === 'Admin') {
+          allUsers = await AdminService.getAllUsers();
+        } else if (currentUserRole === 'Staff') {
+          allUsers = await StaffService.getAllMembers();
+        } else {
+          allUsers = [];
+        }
+        
+        if (allUsers && !Array.isArray(allUsers) && '$values' in allUsers) {
+          setUsers(allUsers.$values);
+        } else if (Array.isArray(allUsers)) {
+          setUsers(allUsers);
+        } else {
+          setUsers([]);
+        }
       } catch (error) {
         toast({ title: "Error", description: "Could not fetch users." });
+        setUsers([]);
       }
     };
-    fetchUsers();
-  }, [toast]);
+    if (currentUserRole) {
+      fetchUsers();
+    }
+  }, [currentUserRole, toast]);
 
   const handleUserSelect = async (user: UserProfile) => {
     setSelectedUser(user);
@@ -40,17 +60,6 @@ const DonationHistoryViewer = () => {
       setHistory([]);
     } finally {
       setIsLoadingHistory(false);
-    }
-  };
-
-  const handleDelete = async (recordId: number) => {
-    if (!window.confirm("Are you sure you want to delete this history record?")) return;
-    try {
-      await DonationHistoryService.deleteHistoryRecord(recordId);
-      setHistory(prev => prev.filter(rec => rec.donation_id !== recordId));
-      toast({ title: "Success", description: "Record deleted." });
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to delete record." });
     }
   };
 
@@ -110,11 +119,6 @@ const DonationHistoryViewer = () => {
                           <p><strong>Component:</strong> {record.component}</p>
                           <p><strong>Status:</strong> {record.status}</p>
                         </div>
-                        {currentUserRole === 'Admin' && (
-                          <Button variant="destructive" size="sm" onClick={() => handleDelete(record.donation_id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
                       </div>
                     ))}
                   </div>
