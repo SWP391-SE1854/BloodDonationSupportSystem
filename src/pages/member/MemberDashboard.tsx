@@ -32,8 +32,13 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       try {
-        const historyData = await DonationHistoryService.getMemberHistory() as HistoryServerResponse;
+        const historyPromise = DonationHistoryService.getMemberHistory() as Promise<HistoryServerResponse>;
+        const healthRecordPromise = HealthRecordService.getMyRecord();
+
+        const [historyData, recordData] = await Promise.all([historyPromise, healthRecordPromise]);
+
         if (historyData && '$values' in historyData) {
           setHistory(Array.isArray(historyData.$values) ? historyData.$values : []);
         } else if (Array.isArray(historyData)) {
@@ -41,8 +46,14 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
         } else {
           setHistory([]);
         }
+
+        if (recordData) {
+          setHealthRecord(recordData);
+        }
+
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
+        // It's okay if one fails, we can still show the other data
       } finally {
         setIsLoading(false);
       }
@@ -50,7 +61,7 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
     fetchData();
   }, []);
   
-  const nextEligibleDays = healthRecord?.last_donation ? 90 - differenceInDays(new Date(), new Date(healthRecord.last_donation)) : 0;
+  const nextEligibleDays = healthRecord?.last_donation ? Math.max(0, 90 - differenceInDays(new Date(), new Date(healthRecord.last_donation))) : 0;
 
   const memberStats = [
     { title: 'Total Donations', value: healthRecord?.donation_count ?? 'N/A', icon: Heart, color: 'text-red-600', bgColor: 'bg-red-100' },

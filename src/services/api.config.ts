@@ -1,5 +1,3 @@
-import { API_BASE_URL } from '@/config/api';
-
 export const API_TIMEOUT = 30000;
 
 export const API_ENDPOINTS = {
@@ -37,7 +35,7 @@ export const API_ENDPOINTS = {
     GET_BY_ID: (id: number) => `/blog/${id}`,
     CREATE: '/blog',
     UPDATE: (id: number) => `/blog/${id}`,
-    DELETE: (id: number) => `/blog?id=${id}`,
+    DELETE: (id: number) => `/blog/${id}`,
   },
 
   // Donation endpoints
@@ -45,8 +43,7 @@ export const API_ENDPOINTS = {
     CREATE_MEMBER_REQUEST: '/donation/member',
     GET_ALL: '/donation/all',
     GET_BY_STATUS: '/donation/status',
-    GET_BY_USER_ID: (userId: number) => `/donation/users?userId=${userId}`,
-    UPDATE: (id: number) => `/donation/staff/${id}`,
+    UPDATE: (id: number) => `/donation/staff/update/${id}`,
   },
   
   // Donation History endpoints
@@ -103,15 +100,18 @@ export const API_ENDPOINTS = {
     GET_USER_HEALTH_RECORD: '/healthrecord/view',
     CREATE_HEALTH_RECORD: '/healthrecord/member',
     UPDATE_MY_RECORD: '/healthrecord/member',
-  GET_ALL_HEALTH_RECORDS: '/healthrecord/all',
-  GET_HEALTH_RECORD_BY_USER_ID: (userId: string) => `/healthrecord/user/${userId}`,
-  UPDATE_HEALTH_RECORD: (id: string) => `/healthrecord/${id}`,
+    GET_ALL_HEALTH_RECORDS: '/healthrecord/all',
+    GET_HEALTH_RECORD_BY_USER_ID: (userId: string) => `/healthrecord/user/${userId}`,
+    UPDATE_HEALTH_RECORD: (id: string) => `/healthrecord/${id}`,
   },
 
   // Notification endpoints
   SEND_NOTIFICATION: '/notification/send',
   GET_USER_NOTIFICATIONS: '/notification/member',
   MARK_NOTIFICATION_AS_READ: (id: string) => `/notification/member/${id}/read`,
+  GET_ALL_ADMIN: '/notification/admin/all',
+  DELETE_ADMIN: (id: number) => `/notification/admin/${id}`,
+  CREATE_STAFF: '/notification/staff',
 
   DONATIONS: {
     MEMBER_HISTORY: '/donations/member',
@@ -122,7 +122,7 @@ export const API_ENDPOINTS = {
     GET_ALL: '/blood-inventory/all',
     GET_BY_ID: (id: number) => `/blood-inventory/${id}`,
     CREATE: '/blood-inventory/add-blood',
-    UPDATE: (id: number) => `/blood-inventory/update-blood?id=${id}`,
-    DELETE: (id: number) => `/blood-inventory/delete-blood?id=${id}`,
+    UPDATE: (id: number) => `/blood-inventory/update-blood/${id}`,
+    DELETE: (id: number) => `/blood-inventory/delete-blood/${id}`,
   }
 }; 

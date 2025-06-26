@@ -12,9 +12,11 @@ interface StaffLayoutProps {
 const StaffLayout = ({ children, currentPage, onNavigate, onLogout, userName }: StaffLayoutProps) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'donations', label: 'Donation Management', icon: Droplet },
+    { id: 'donations', label: 'Donation Management', icon: Heart },
     { id: 'requests', label: 'Blood Requests', icon: ClipboardList },
     { id: 'inventory', label: 'Blood Inventory', icon: FlaskConical },
+    { id: 'history', label: 'Donation History', icon: History },
+    { id: 'records', label: 'Health Records', icon: Newspaper },
     { id: 'profile', label: 'Profile', icon: User },
   ];
 

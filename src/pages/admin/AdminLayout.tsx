@@ -14,11 +14,6 @@ const AdminLayout = ({ children, currentPage, onNavigate, onLogout, userName }: 
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'users', label: 'User Management', icon: Users },
     { id: 'blog', label: 'Blog Management', icon: FileText },
-    { id: 'donations', label: 'Donations', icon: Droplet },
-    { id: 'blood-requests', label: 'Blood Requests', icon: ClipboardList },
-    { id: 'history', label: 'Donation History', icon: History },
-    { id: 'health-records', label: 'Health Records', icon: HeartPulse },
-    { id: 'inventory', label: 'Blood Inventory', icon: FlaskConical },
     { id: 'profile', label: 'Profile', icon: User },
   ];
 
