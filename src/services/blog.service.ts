@@ -11,10 +11,9 @@ export interface BlogPost {
 }
 
 export interface CreateBlogPost {
-  user_id: number;
-  date: string;
-  title: string;
-  content: string;
+  UserId: number;
+  Title: string;
+  Content: string;
 }
 
 export class BlogService {

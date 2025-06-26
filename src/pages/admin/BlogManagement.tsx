@@ -3,12 +3,19 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
-import BlogService, { BlogPost } from '@/services/blog.service';
+import {BlogService, BlogPost } from '@/services/blog.service';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { CreateBlogPost } from '@/components/CreateBlogPost';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+} from '@/components/ui/dialog';
 
 const BlogManagement = () => {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   useEffect(() => {
     fetchBlogPosts();
@@ -54,10 +61,23 @@ const BlogManagement = () => {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Blog Post Management</CardTitle>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Create New Post
-        </Button>
+        <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
+          <DialogTrigger asChild>
+            <Button>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Create New Post
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl w-full p-0 bg-transparent border-none shadow-none">
+            <CreateBlogPost
+              onPostCreated={() => {
+                setShowCreateForm(false);
+                fetchBlogPosts();
+              }}
+              onCancel={() => setShowCreateForm(false)}
+            />
+          </DialogContent>
+        </Dialog>
       </CardHeader>
       <CardContent>
         <Table>

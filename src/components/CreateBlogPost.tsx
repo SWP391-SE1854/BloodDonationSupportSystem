@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { blogService } from '@/services/blog.service';
+import BlogService from '@/services/blog.service';
 import { ImageIcon, Loader2 } from 'lucide-react';
 
 interface CreateBlogPostProps {
@@ -30,7 +31,11 @@ export function CreateBlogPost({ onPostCreated, onCancel }: CreateBlogPostProps)
     setIsLoading(true);
 
     try {
-      await blogService.createPost(formData);
+      await BlogService.createBlogPost({
+        UserId: 1, // TODO: Replace with actual user ID
+        Title: formData.title,
+        Content: formData.content
+      });
       toast({
         title: 'Success',
         description: 'Blog post created successfully!',
@@ -49,53 +54,50 @@ export function CreateBlogPost({ onPostCreated, onCancel }: CreateBlogPostProps)
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="w-full max-w-2xl mx-auto shadow-lg border border-gray-200">
       <CardHeader>
         <CardTitle>Create New Blog Post</CardTitle>
+        <CardDescription>Share important updates, tips, or stories with the community. Fill out the details below to publish a new blog post.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <label htmlFor="title" className="text-sm font-medium">
-              Title
-            </label>
+            <Label htmlFor="title">Title</Label>
             <Input
               id="title"
               value={formData.title}
               onChange={(e) => handleInputChange('title', e.target.value)}
               placeholder="Enter post title"
               required
+              className="text-base"
             />
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="content" className="text-sm font-medium">
-              Content
-            </label>
+            <Label htmlFor="content">Content</Label>
             <Textarea
               id="content"
               value={formData.content}
               onChange={(e) => handleInputChange('content', e.target.value)}
               placeholder="Write your blog post content here..."
-              className="min-h-[200px]"
+              className="min-h-[160px] text-base"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="imageUrl" className="text-sm font-medium">
-              Image URL
-            </label>
-            <div className="flex gap-2">
+            <Label htmlFor="imageUrl">Image URL</Label>
+            <div className="flex flex-col sm:flex-row gap-4 items-start">
               <Input
                 id="imageUrl"
                 value={formData.imageUrl}
                 onChange={(e) => handleInputChange('imageUrl', e.target.value)}
-                placeholder="Enter image URL"
+                placeholder="Enter image URL (optional)"
                 type="url"
+                className="text-base"
               />
               {formData.imageUrl && (
-                <div className="relative w-20 h-20 border rounded-md overflow-hidden">
+                <div className="relative w-28 h-28 border rounded-md overflow-hidden bg-gray-50 flex items-center justify-center">
                   <img
                     src={formData.imageUrl}
                     alt="Preview"
@@ -112,12 +114,12 @@ export function CreateBlogPost({ onPostCreated, onCancel }: CreateBlogPostProps)
                 </div>
               )}
             </div>
-            <p className="text-sm text-gray-500">
-              Enter a URL for your blog post image
+            <p className="text-xs text-muted-foreground mt-1">
+              Optional: Add a visual to your post by providing an image URL.
             </p>
           </div>
 
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 pt-2">
             {onCancel && (
               <Button
                 type="button"
@@ -128,7 +130,7 @@ export function CreateBlogPost({ onPostCreated, onCancel }: CreateBlogPostProps)
                 Cancel
               </Button>
             )}
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading} className="font-semibold">
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -33,11 +33,11 @@ export const API_ENDPOINTS = {
   
   // Blog Post endpoints
   BLOG_POST: {
-    GET_ALL: '/blogpost/all',
-    GET_BY_ID: (id: number) => `/blogpost/${id}`,
-    CREATE: '/blogpost/new',
-    UPDATE: (id: number) => `/blogpost/update/${id}`,
-    DELETE: (id: number) => `/blogpost/delete/${id}`,
+    GET_ALL: '/blog/all',
+    GET_BY_ID: (id: number) => `/blog/${id}`,
+    CREATE: '/blog',
+    UPDATE: (id: number) => `/blog/${id}`,
+    DELETE: (id: number) => `/blog?id=${id}`,
   },
 
   // Donation endpoints
