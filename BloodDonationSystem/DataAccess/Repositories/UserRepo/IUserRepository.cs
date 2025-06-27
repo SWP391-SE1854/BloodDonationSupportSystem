@@ -21,6 +21,7 @@ public interface IUserRepository
     // Lấy tất cả user
     Task<List<User>> GetAllUsersAsync();
 
+    Task<List<User>> GetUsersByBloodCompatibilityAsync(string recipientBloodType);
 
 
 

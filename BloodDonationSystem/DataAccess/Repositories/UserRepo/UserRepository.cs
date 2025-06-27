@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using BloodDonationSystem.DataAccess.Entities;
+using BloodDonationSystem.Utilities.Helper;
 
 namespace BloodDonationSystem.DataAccess.Repositories.UserRepo;
 public class UserRepository(AppDbContext context) : IUserRepository
@@ -33,6 +34,18 @@ public class UserRepository(AppDbContext context) : IUserRepository
     {
         return await context.Users.ToListAsync();
     }
+    // Example using Entity Framework Core
+    public async Task<List<User>> GetUsersByBloodCompatibilityAsync(string recipientBloodType)
+    {
+        return await context.Users
+            .Join(context.Health_Record,
+                  user => user.user_id,
+                  record => record.user_id,
+                  (user, record) => new { user, record })
+            .Where(x => !string.IsNullOrEmpty(x.record.blood_type) &&
+                        BloodCompatibilityHelper.CanDonateTo(x.record.blood_type, recipientBloodType))
+            .Select(x => x.user)
+            .ToListAsync();
+    }
 
- 
 }

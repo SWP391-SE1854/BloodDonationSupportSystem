@@ -132,6 +132,19 @@ namespace BloodDonationSystem.Presentation.Controllers.UserController
         {
             var users = await _userRepository.GetAllUsersAsync();
             return Ok(users);
+
+        }
+
+        // GET: api/user/compatible-donors?recipientBloodType=A+
+        [Authorize(Policy = "StaffOnly")]
+        [HttpGet("compatible-donors")]
+        public async Task<IActionResult> GetCompatibleDonors([FromQuery] string recipientBloodType)
+        {
+            if (string.IsNullOrWhiteSpace(recipientBloodType))
+                return BadRequest(new { Message = "Recipient blood type is required." });
+
+            var users = await _userRepository.GetUsersByBloodCompatibilityAsync(recipientBloodType);
+            return Ok(users);
         }
 
 
