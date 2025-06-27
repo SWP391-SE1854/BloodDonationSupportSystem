@@ -18,7 +18,7 @@ namespace BloodDonationSystem.DataAccess.Repositories.Impl
             return await _context.DonationHistories
                 .Include(d => d.User)
                 .Include(d => d.BloodInventory)
-                .FirstOrDefaultAsync(d => d.donation_id == donationHistoryId);
+                .FirstOrDefaultAsync(d => d.history_id == donationHistoryId);
         }
 
         public async Task<List<DonationHistory>> GetAllAsync()
@@ -47,7 +47,7 @@ namespace BloodDonationSystem.DataAccess.Repositories.Impl
 
         public async Task<bool> UpdateAsync(DonationHistory donationHistory)
         {
-            var existing = await _context.DonationHistories.FindAsync(donationHistory.donation_id);
+            var existing = await _context.DonationHistories.FindAsync(donationHistory.history_id);
             if (existing == null) return false;
 
             _context.Entry(existing).CurrentValues.SetValues(donationHistory);

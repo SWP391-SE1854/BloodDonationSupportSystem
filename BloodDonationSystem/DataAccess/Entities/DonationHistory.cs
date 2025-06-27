@@ -6,7 +6,7 @@ namespace BloodDonationSystem.DataAccess.Entities
     public class DonationHistory
     {
         [Key]
-        public int donation_id { get; set; }
+        public int history_id { get; set; }
         public int user_id { get; set; }
         public int unit_id { get; set; }
         public DateTime donation_date { get; set; }
