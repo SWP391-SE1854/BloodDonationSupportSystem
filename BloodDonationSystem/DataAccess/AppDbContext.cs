@@ -38,7 +38,7 @@ namespace BloodDonationSystem.DataAccess
                 .HasKey(d => d.donation_id);
 
             modelBuilder.Entity<DonationHistory>()
-                .HasKey(dh => dh.donation_id);
+                .HasKey(dh => dh.history_id);
 
             modelBuilder.Entity<HealthRecord>()
                 .HasKey(h => h.record_id);
