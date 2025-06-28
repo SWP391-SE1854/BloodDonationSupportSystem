@@ -32,37 +32,37 @@ export default function Blog() {
             <div className="col-span-full text-center text-lg py-12">Loading...</div>
           ) : blogPosts.length > 0 ? (
             blogPosts.map((post) => (
-              <Card key={post.id} className="overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
-                <div className="aspect-video relative overflow-hidden">
-                  <img
+            <Card key={post.id} className="overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
+              <div className="aspect-video relative overflow-hidden">
+                <img
                     src={"/public/placeholder.svg"}
-                    alt={post.title}
-                    className="object-cover w-full h-full hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <CardHeader className="flex-grow">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
+                  alt={post.title}
+                  className="object-cover w-full h-full hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+              <CardHeader className="flex-grow">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="h-4 w-4" />
                       {new Date(post.date).toLocaleDateString()}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <User className="h-4 w-4" />
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <User className="h-4 w-4" />
                       {post.authorName || `User #${post.user_id}`}
-                    </span>
-                  </div>
-                  <CardTitle className="line-clamp-2">{post.title}</CardTitle>
-                  <CardDescription className="line-clamp-3">
+                  </span>
+                </div>
+                <CardTitle className="line-clamp-2">{post.title}</CardTitle>
+                <CardDescription className="line-clamp-3">
                     {post.content?.slice(0, 120) || ''}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <Button variant="outline" className="w-full group">
-                    Read More
-                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </CardContent>
-              </Card>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Button variant="outline" className="w-full group">
+                  Read More
+                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </CardContent>
+            </Card>
             ))
           ) : (
             <div className="col-span-full text-center text-muted-foreground py-12">

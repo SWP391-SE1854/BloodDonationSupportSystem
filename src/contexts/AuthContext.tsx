@@ -15,6 +15,7 @@ interface JwtPayload {
   email: string;
   exp: number;
   iat: number;
+  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"?: string;
 }
 
 interface User {
@@ -181,11 +182,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log("Role comparison - role.toLowerCase() === 'staff':", role.toLowerCase() === 'staff');
         
         const userData: User = {
-          id: decoded.sub,
+          id: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] || decoded.sub,
           email: decoded.email || (firebaseUser?.email || ''),
           displayName: firebaseUser?.displayName || '',
           role: role
         };
+
         
         localStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);

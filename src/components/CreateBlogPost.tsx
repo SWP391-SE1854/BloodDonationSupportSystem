@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import BlogService from '@/services/blog.service';
 import { ImageIcon, Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CreateBlogPostProps {
   onPostCreated?: () => void;
@@ -15,6 +16,7 @@ interface CreateBlogPostProps {
 
 export function CreateBlogPost({ onPostCreated, onCancel }: CreateBlogPostProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -30,11 +32,21 @@ export function CreateBlogPost({ onPostCreated, onCancel }: CreateBlogPostProps)
     e.preventDefault();
     setIsLoading(true);
 
+    if (!user?.id) {
+      toast({
+        title: 'Error',
+        description: 'User not found. Please log in again.',
+        variant: 'destructive',
+      });
+      setIsLoading(false);
+      return;
+    }
+
     try {
       await BlogService.createBlogPost({
-        UserId: 1, // TODO: Replace with actual user ID
-        Title: formData.title,
-        Content: formData.content
+        user_id: Number(user.id),
+        title: formData.title,
+        content: formData.content
       });
       toast({
         title: 'Success',

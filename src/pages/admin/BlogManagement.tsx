@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -11,11 +11,13 @@ import {
   DialogTrigger,
   DialogContent,
 } from '@/components/ui/dialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 const BlogManagement = () => {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchBlogPosts();
@@ -98,7 +100,7 @@ const BlogManagement = () => {
               </TableRow>
             ) : blogPosts.length > 0 ? (
               blogPosts.map((post) => (
-                <TableRow key={post.id}>
+                <TableRow key={post.blog_id}>
                   <TableCell className="font-medium">{post.title}</TableCell>
                   <TableCell>{post.user_id}</TableCell>
                   <TableCell>{new Date(post.date).toLocaleDateString()}</TableCell>
@@ -110,7 +112,7 @@ const BlogManagement = () => {
                       variant="ghost"
                       size="icon"
                       className="text-red-600 hover:text-red-700"
-                      onClick={() => handleDelete(post.id)}
+                      onClick={() => handleDelete(post.blog_id)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
