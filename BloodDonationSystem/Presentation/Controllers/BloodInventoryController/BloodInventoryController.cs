@@ -55,6 +55,7 @@ namespace BloodDonationSystem.Presentation.Controllers.BloodController
                 return NotFound(new { Message = "Không tìm thấy đơn vị máu." });
 
             existingUnit.status = updatedUnit.status;
+            existingUnit.component = updatedUnit.component;
             existingUnit.quantity = updatedUnit.quantity;
             existingUnit.expiration_date = updatedUnit.expiration_date;
             existingUnit.blood_type = updatedUnit.blood_type;
