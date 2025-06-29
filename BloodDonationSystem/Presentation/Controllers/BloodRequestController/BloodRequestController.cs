@@ -3,6 +3,7 @@ using BloodDonationSystem.DataAccess.Repositories.BloodRequestRepo;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics.Eventing.Reader;
 
 namespace BloodDonationSystem.Presentation.Controllers.BloodRequestController
 {
@@ -44,7 +45,8 @@ namespace BloodDonationSystem.Presentation.Controllers.BloodRequestController
         [HttpPost("new")]
         public async Task<IActionResult> Create([FromBody] BloodRequest request)
         {
-            request.request_date = DateTime.Now;
+            if (request.emergency_status)
+                request.request_date = DateTime.Now;
             await _bloodRequestRepository.AddAsync(request);
             return Ok(request);
         }
