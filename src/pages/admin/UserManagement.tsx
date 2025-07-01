@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,8 @@ import {
   Edit,
   Trash2,
   User as UserIcon,
+  LogOut,
+  Shield,
   Mail,
   Phone,
   MapPin
@@ -18,8 +21,9 @@ import {
 import { AdminService, UserProfile } from "@/services/admin.service";
 import { useToast } from "@/hooks/use-toast";
 
-const UserManagement = () => {
-  const { toast } = useToast();
+const Admin = () => {
+  const navigate = useNavigate();
+    const { toast } = useToast();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -47,6 +51,10 @@ const UserManagement = () => {
         setLoading(false);
       }
     };
+
+  const handleLogout = async () => {
+    navigate("/login");
+  };
 
   const handleEditUser = (user: UserProfile) => {
     setEditingUser(user);
@@ -122,40 +130,44 @@ const UserManagement = () => {
     return matchesSearch && matchesRole;
   });
 
-  if (isEditing && editingUser) {
-    // This part can be moved to a separate modal/form component later
+  if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Edit User</CardTitle>
-          <CardDescription>Update the user's details.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-            <Input 
-                value={editingUser.name} 
-                onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })} 
-                placeholder="Name" 
-            />
-            <Input 
-                value={editingUser.email} 
-                onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })} 
-                placeholder="Email" 
-            />
-            <Button onClick={() => handleUpdateUser(editingUser)}>Save Changes</Button>
-            <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
-        </CardContent>
-      </Card>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-lg">Loading users...</div>
+      </div>
     );
   }
 
-  return (
-    <div className="space-y-6">
-       <CardHeader>
-            <CardTitle>User Management</CardTitle>
-            <CardDescription>View, search, and manage all users in the system.</CardDescription>
-        </CardHeader>
+    return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center space-x-3">
+              <div className="bg-purple-500 p-2 rounded-full">
+                <Shield className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">Admin Portal</h1>
+                <p className="text-sm text-gray-600">User Management</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Button variant="outline" onClick={() => navigate('/')}>
+                Back to Home
+              </Button>
+                <Button variant="ghost" size="sm" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4" />
+                </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Search and Filter */}
-        <div className="flex flex-col sm:flex-row gap-4 px-6">
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -170,21 +182,19 @@ const UserManagement = () => {
                   <Select value={filterRole} onValueChange={setFilterRole}>
             <SelectTrigger className="w-full sm:w-48">
                       <SelectValue placeholder="Filter by role" />
-                    </SelectTrigger>
-                    <SelectContent>
+                            </SelectTrigger>
+                            <SelectContent>
                       <SelectItem value="all">All Roles</SelectItem>
               <SelectItem value="admin">Admin</SelectItem>
               <SelectItem value="staff">Staff</SelectItem>
               <SelectItem value="member">Member</SelectItem>
-                    </SelectContent>
-                  </Select>
+                            </SelectContent>
+                        </Select>
                 </div>
 
         {/* Users List */}
-        <div className="grid gap-6 px-6 pb-6">
-          {loading ? (
-             <div className="text-center">Loading users...</div>
-          ) : filteredUsers.map((user) => (
+        <div className="grid gap-6">
+          {filteredUsers.map((user) => (
             <Card key={user.user_id}>
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
@@ -238,11 +248,88 @@ const UserManagement = () => {
                           </div>
                         </div>
                       </CardContent>
-            </Card>
-          ))}
-        </div>
-    </div>
-  );
+                    </Card>
+                  ))}
+                </div>
+
+        {filteredUsers.length === 0 && (
+          <div className="text-center py-12">
+            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
+            <p className="text-gray-600">Try adjusting your search or filter criteria.</p>
+                            </div>
+                            )}
+                          </div>
+
+      {/* Edit User Modal */}
+      {isEditing && editingUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-md">
+                <CardHeader>
+              <CardTitle>Edit User</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Name</label>
+                <Input
+                  value={editingUser.name}
+                  onChange={(e) => setEditingUser({...editingUser, name: e.target.value})}
+                />
+                    </div>
+              <div>
+                <label className="text-sm font-medium">Email</label>
+                <Input
+                  value={editingUser.email}
+                  onChange={(e) => setEditingUser({...editingUser, email: e.target.value})}
+                />
+                  </div>
+              <div>
+                <label className="text-sm font-medium">Phone</label>
+                <Input
+                  value={editingUser.phone}
+                  onChange={(e) => setEditingUser({...editingUser, phone: e.target.value})}
+                />
+                    </div>
+              <div>
+                <label className="text-sm font-medium">Role</label>
+                <Select 
+                  value={editingUser.role} 
+                  onValueChange={(value) => setEditingUser({...editingUser, role: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="staff">Staff</SelectItem>
+                    <SelectItem value="member">Member</SelectItem>
+                  </SelectContent>
+                </Select>
+                  </div>
+              <div className="flex space-x-2 pt-4">
+                <Button 
+                  onClick={() => handleUpdateUser(editingUser)}
+                  className="flex-1"
+                >
+                        Save Changes
+                    </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditingUser(null);
+                  }}
+                  className="flex-1"
+                >
+                  Cancel
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+      )}
+                </div>
+    );
 };
 
-export default UserManagement; 
+export default Admin; 

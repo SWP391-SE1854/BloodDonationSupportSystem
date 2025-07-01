@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,7 @@ import { loginSchema } from '@/lib/validations';
 import { jwtDecode } from 'jwt-decode';
 import { ZodError, ZodIssue } from 'zod';
 import { useAuth } from "@/contexts/AuthContext";
+import axios from 'axios';
 
 interface JwtPayload {
   role?: string;
@@ -96,13 +97,13 @@ const Login = () => {
     
     if (role === 'Admin') {
       console.log('Redirecting to admin profile');
-      navigate('/admin/profile');
+      navigate('/admin/AdminProfile');
     } else if (role === 'Staff') {
       console.log('Redirecting to staff profile');
-      navigate('/staff/profile');
+      navigate('/staff/StaffProfile');
     } else {
       console.log('Redirecting to member profile');
-      navigate('/member/profile');
+        navigate('/member/profile');
     }
   };
 
@@ -141,24 +142,15 @@ const Login = () => {
       await loginWithFirebase(firebaseToken);
 
     } catch (error) {
-      console.error('Firebase login failed:', error);
-      toast({
-        title: "Login Failed",
-        description: "Invalid email or password. Please try again.",
-        variant: "destructive",
-      });
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        toast({ title: 'Login Error', description: 'Invalid credentials or user not found.' });
+      } else {
+        toast({ title: 'Error', description: 'An unexpected error occurred during login.' });
+      }
+      console.error('Login error:', error);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleClearSession = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('firebaseToken');
-    toast({ title: 'Session Cleared', description: 'Your session has been cleared. Please log in again.' });
-    // We can't use navigate here because the context might be unstable
-    window.location.reload();
   };
 
   const handleResetPassword = async () => {
@@ -252,7 +244,7 @@ const Login = () => {
                   <p className="text-red-500 text-sm mt-1">{errors.password}</p>
                 )}
                 <div className="flex items-center justify-between">
-                  <Button type="button" variant="link" onClick={handleClearSession} className="text-xs p-0 h-auto">Clear Session</Button>
+                  <div></div>
                   <button
                     type="button"
                     className="text-xs text-red-500 hover:underline focus:outline-none"

@@ -1,10 +1,10 @@
-import axios from 'axios';
 import type { AxiosResponse } from 'axios';
 import type {
   User,
   BloodRequest,
   Donor,
   BloodInventory,
+  BloodInventoryUnit,
   DashboardStats,
   MonthlyReport,
   DonorStatistics,
@@ -12,40 +12,22 @@ import type {
   PaginatedResponse,
   SystemLog as SystemLogType
 } from '../types/api';
-import { API_BASE_URL } from '@/config/api';
-import api from './api.service';
-
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 30000,
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-  }
-});
-
-// Add auth token to requests
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+import api, { publicApi } from './api.service';
+import { API_ENDPOINTS } from './api.config';
 
 // Helper function to handle API responses
 const handleResponse = <T>(response: AxiosResponse<ApiResponse<T>>): ApiResponse<T> => {
   return response.data;
 };
 
-// Auth API
+// Auth API - Uses the public client for login/register
 export const authApi = {
   login: async (email: string, password: string): Promise<ApiResponse<{ token: string; user: User }>> => {
-    const response = await apiClient.post<ApiResponse<{ token: string; user: User }>>('/api/auth/login', { email, password });
+    const response = await publicApi.post<ApiResponse<{ token: string; user: User }>>('/api/auth/login', { email, password });
     return handleResponse(response);
   },
   register: async (userData: Partial<User>): Promise<ApiResponse<User>> => {
-    const response = await apiClient.post<ApiResponse<User>>('/api/auth/register', userData);
+    const response = await publicApi.post<ApiResponse<User>>('/api/auth/register', userData);
     return handleResponse(response);
   },
   logout: async (): Promise<void> => {
@@ -56,23 +38,23 @@ export const authApi = {
 // Blood Requests API
 export const bloodRequestApi = {
   getAll: async (params?: { page?: number; status?: string; search?: string }): Promise<ApiResponse<PaginatedResponse<BloodRequest>>> => {
-    const response = await apiClient.get<ApiResponse<PaginatedResponse<BloodRequest>>>('/blood-requests', { params });
+    const response = await api.get<ApiResponse<PaginatedResponse<BloodRequest>>>('/blood-requests', { params });
     return handleResponse(response);
   },
   getById: async (id: string): Promise<ApiResponse<BloodRequest>> => {
-    const response = await apiClient.get<ApiResponse<BloodRequest>>(`/blood-requests/${id}`);
+    const response = await api.get<ApiResponse<BloodRequest>>(`/blood-requests/${id}`);
     return handleResponse(response);
   },
   create: async (request: Partial<BloodRequest>): Promise<ApiResponse<BloodRequest>> => {
-    const response = await apiClient.post<ApiResponse<BloodRequest>>('/blood-requests', request);
+    const response = await api.post<ApiResponse<BloodRequest>>('/blood-requests', request);
     return handleResponse(response);
   },
   update: async (id: string, request: Partial<BloodRequest>): Promise<ApiResponse<BloodRequest>> => {
-    const response = await apiClient.put<ApiResponse<BloodRequest>>(`/blood-requests/${id}`, request);
+    const response = await api.put<ApiResponse<BloodRequest>>(`/blood-requests/${id}`, request);
     return handleResponse(response);
   },
   delete: async (id: string): Promise<ApiResponse<void>> => {
-    const response = await apiClient.delete<ApiResponse<void>>(`/blood-requests/${id}`);
+    const response = await api.delete<ApiResponse<void>>(`/blood-requests/${id}`);
     return handleResponse(response);
   },
 };
@@ -80,51 +62,63 @@ export const bloodRequestApi = {
 // Donors API
 export const donorApi = {
   getAll: async (params?: { page?: number; bloodType?: string; status?: string; search?: string }): Promise<ApiResponse<PaginatedResponse<Donor>>> => {
-    const response = await apiClient.get<ApiResponse<PaginatedResponse<Donor>>>('/donors', { params });
+    const response = await api.get<ApiResponse<PaginatedResponse<Donor>>>('/donors', { params });
     return handleResponse(response);
   },
   getById: async (id: string): Promise<ApiResponse<Donor>> => {
-    const response = await apiClient.get<ApiResponse<Donor>>(`/donors/${id}`);
+    const response = await api.get<ApiResponse<Donor>>(`/donors/${id}`);
     return handleResponse(response);
   },
   create: async (donor: Partial<Donor>): Promise<ApiResponse<Donor>> => {
-    const response = await apiClient.post<ApiResponse<Donor>>('/donors', donor);
+    const response = await api.post<ApiResponse<Donor>>('/donors', donor);
     return handleResponse(response);
   },
   update: async (id: string, donor: Partial<Donor>): Promise<ApiResponse<Donor>> => {
-    const response = await apiClient.put<ApiResponse<Donor>>(`/donors/${id}`, donor);
+    const response = await api.put<ApiResponse<Donor>>(`/donors/${id}`, donor);
     return handleResponse(response);
   },
   delete: async (id: string): Promise<ApiResponse<void>> => {
-    const response = await apiClient.delete<ApiResponse<void>>(`/donors/${id}`);
+    const response = await api.delete<ApiResponse<void>>(`/donors/${id}`);
     return handleResponse(response);
   },
 };
 
-// Inventory API
+// Inventory API - NEW VERSION
 export const inventoryApi = {
-  getAll: async (): Promise<ApiResponse<BloodInventory[]>> => {
-    const response = await apiClient.get<ApiResponse<BloodInventory[]>>('/inventory');
+  getAll: async (): Promise<ApiResponse<BloodInventoryUnit[]>> => {
+    const response = await api.get<ApiResponse<BloodInventoryUnit[]>>(API_ENDPOINTS.BLOOD_INVENTORY.GET_ALL);
     return handleResponse(response);
   },
-  update: async (type: string, units: number): Promise<ApiResponse<BloodInventory>> => {
-    const response = await apiClient.put<ApiResponse<BloodInventory>>(`/inventory/${type}`, { units });
+  getById: async (id: number): Promise<ApiResponse<BloodInventoryUnit>> => {
+    const response = await api.get<ApiResponse<BloodInventoryUnit>>(API_ENDPOINTS.BLOOD_INVENTORY.GET_BY_ID(id));
+    return handleResponse(response);
+  },
+  create: async (data: Partial<BloodInventoryUnit>): Promise<ApiResponse<BloodInventoryUnit>> => {
+    const response = await api.post<ApiResponse<BloodInventoryUnit>>(API_ENDPOINTS.BLOOD_INVENTORY.CREATE, data);
+    return handleResponse(response);
+  },
+  update: async (id: number, data: Partial<BloodInventoryUnit>): Promise<ApiResponse<BloodInventoryUnit>> => {
+    const response = await api.put<ApiResponse<BloodInventoryUnit>>(API_ENDPOINTS.BLOOD_INVENTORY.UPDATE(id), data);
+    return handleResponse(response);
+  },
+  delete: async (id: number): Promise<ApiResponse<void>> => {
+    const response = await api.delete<ApiResponse<void>>(API_ENDPOINTS.BLOOD_INVENTORY.DELETE(id));
     return handleResponse(response);
   },
 };
 
 // Dashboard API
 export const dashboardApi = {
-  getStats: () => apiClient.get<ApiResponse<DashboardStats>>('/dashboard/stats'),
+  getStats: () => api.get<ApiResponse<DashboardStats>>('/dashboard/stats'),
   getMonthlyReport: async (month: string): Promise<ApiResponse<MonthlyReport>> => {
-    const response = await apiClient.get<ApiResponse<MonthlyReport>>(`/dashboard/reports/monthly/${month}`);
+    const response = await api.get<ApiResponse<MonthlyReport>>(`/dashboard/reports/monthly/${month}`);
     return handleResponse(response);
   },
   getDonorStats: async (): Promise<ApiResponse<DonorStatistics>> => {
-    const response = await apiClient.get<ApiResponse<DonorStatistics>>('/dashboard/stats/donors');
+    const response = await api.get<ApiResponse<DonorStatistics>>('/dashboard/stats/donors');
     return handleResponse(response);
   },
-  getRecentActivity: () => apiClient.get<ApiResponse<BloodRequest[]>>('/dashboard/activity'),
+  getRecentActivity: () => api.get<ApiResponse<BloodRequest[]>>('/dashboard/activity'),
 };
 
 // System Log type
@@ -139,14 +133,14 @@ interface SystemLog {
 
 // Admin API
 export const adminApi = {
-  getAllUsers: () => apiClient.get<ApiResponse<PaginatedResponse<User>>>('/admin/users'),
-  getUserById: (id: string) => apiClient.get<ApiResponse<User>>(`/admin/users/${id}`),
-  updateUser: (id: string, data: Partial<User>) => apiClient.put<ApiResponse<User>>(`/admin/users/${id}`, data),
-  deleteUser: (id: string) => apiClient.delete<ApiResponse<void>>(`/admin/users/${id}`),
-  getSystemLogs: () => apiClient.get<ApiResponse<PaginatedResponse<SystemLogType>>>('/admin/logs'),
+  getAllUsers: () => api.get<ApiResponse<PaginatedResponse<User>>>('/admin/users'),
+  getUserById: (id: string) => api.get<ApiResponse<User>>(`/admin/users/${id}`),
+  updateUser: (id: string, data: Partial<User>) => api.put<ApiResponse<User>>(`/admin/users/${id}`, data),
+  deleteUser: (id: string) => api.delete<ApiResponse<void>>(`/admin/users/${id}`),
+  getSystemLogs: () => api.get<ApiResponse<PaginatedResponse<SystemLogType>>>('/admin/logs'),
 };
 
 // Firebase API
 export const firebaseApi = {
-  sendResetPassword: (email: string) => apiClient.post<ApiResponse<void>>('/firebase/send-reset-password', email),
+  sendResetPassword: (email: string) => publicApi.post<ApiResponse<void>>('/firebase/send-reset-password', email),
 }; 

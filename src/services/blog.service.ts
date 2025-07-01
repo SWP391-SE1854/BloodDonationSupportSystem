@@ -1,18 +1,9 @@
 import api from './api.service';
 import { API_ENDPOINTS } from './api.config';
-
-export interface BlogPost {
-  id: number;
-  user_id: number;
-  date: string;
-  title: string;
-  content: string;
-  authorName?: string;
-}
+import { BlogPost } from '@/types/api';
 
 export interface CreateBlogPost {
   user_id: number;
-  date: string;
   title: string;
   content: string;
 }

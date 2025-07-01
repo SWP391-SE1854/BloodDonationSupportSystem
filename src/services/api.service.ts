@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { environment } from '../config/environment';
 import { auth } from '@/config/firebase';
 import { API_BASE_URL } from '@/config/api';
@@ -39,14 +39,40 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Log the error but don't redirect
+    // Check if the error is a 401 Unauthorized
+    if (error.response?.status === 401) {
+      console.log("Caught 401 Unauthorized error. Token may be invalid or expired. Redirecting to login.");
+
+      // The token is invalid or expired.
+      // Clear the user's session from local storage.
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      
+      // Redirect to the login page to force re-authentication.
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+
+      // Return a new promise that never resolves to prevent further actions.
+      return new Promise(() => {});
+    }
+    
+    // Log any other errors
     console.error('API Error:', {
       status: error.response?.status,
       message: error.message,
       url: error.config?.url
     });
+    
     return Promise.reject(error);
   }
 );
+
+export const publicApi: AxiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
 export default api; 

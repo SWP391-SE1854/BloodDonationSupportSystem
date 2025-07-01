@@ -13,7 +13,6 @@ const navLinks = [
   { to: "/", label: "Home", aria: "Go to home page" },
   { to: "/blog", label: "Blog", aria: "Go to blog page" },
   { to: "/about", label: "About Us", aria: "Go to about us page" },
-  { to: "/blood-request", label: "Blood Request", aria: "Go to blood request page" },
 ];
 
 const NavigationBar = ({ fixed = false }: NavigationBarProps) => {

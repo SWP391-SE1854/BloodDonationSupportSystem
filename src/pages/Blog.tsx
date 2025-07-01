@@ -1,43 +1,23 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Heart, Calendar, User, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { UserProfileDropdown } from "@/components/UserProfileDropdown";
+import { useEffect, useState } from "react";
+import BlogService from "@/services/blog.service";
 import NavigationBar from "@/components/NavigationBar";
-
-const blogPosts = [
-  {
-    id: 1,
-    title: "The Importance of Regular Blood Donation",
-    description: "Learn why regular blood donation is crucial for saving lives and maintaining a healthy blood supply in hospitals.",
-    author: "Dr. Sarah Johnson",
-    date: "March 20, 2024",
-    category: "Health",
-    image: "https://images.unsplash.com/photo-1615461066841-6116e61058f4?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-  },
-  {
-    id: 2,
-    title: "Blood Types Explained: What You Need to Know",
-    description: "Understanding different blood types and their compatibility is essential for both donors and recipients.",
-    author: "Dr. Michael Chen",
-    date: "March 18, 2024",
-    category: "Education",
-    image: "https://images.unsplash.com/photo-1581594693702-fbdc51b2763b?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-  },
-  {
-    id: 3,
-    title: "Tips for a Successful Blood Donation",
-    description: "Follow these guidelines to ensure a smooth and comfortable blood donation experience.",
-    author: "Nurse Emily Wilson",
-    date: "March 15, 2024",
-    category: "Tips",
-    image: "https://images.unsplash.com/photo-1579154204601-01588f351e67?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-  },
-];
+import { BlogPost } from "@/types/api";
 
 export default function Blog() {
-  const { isAuthenticated } = useAuth();
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => {
+    BlogService.getAllBlogPosts()
+      .then((posts) => setBlogPosts(posts))
+      .catch((error) => {
+        console.error("Error fetching blog posts:", error);
+        setBlogPosts([]);
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-red-50">
@@ -52,11 +32,14 @@ export default function Blog() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {blogPosts.map((post) => (
-            <Card key={post.id} className="overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
+          {isLoading ? (
+            <div className="col-span-full text-center text-lg py-12">Loading...</div>
+          ) : blogPosts.length > 0 ? (
+            blogPosts.map((post) => (
+            <Card key={post.blog_id} className="overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
               <div className="aspect-video relative overflow-hidden">
                 <img
-                  src={post.image}
+                    src={"/public/placeholder.svg"}
                   alt={post.title}
                   className="object-cover w-full h-full hover:scale-105 transition-transform duration-300"
                 />
@@ -65,16 +48,16 @@ export default function Blog() {
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                   <span className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
-                    {post.date}
+                      {new Date(post.date).toLocaleDateString()}
                   </span>
                   <span className="flex items-center gap-1">
                     <User className="h-4 w-4" />
-                    {post.author}
+                      {post.User?.name || `User #${post.user_id}`}
                   </span>
                 </div>
                 <CardTitle className="line-clamp-2">{post.title}</CardTitle>
                 <CardDescription className="line-clamp-3">
-                  {post.description}
+                    {post.content?.slice(0, 120) || ''}
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
@@ -84,7 +67,12 @@ export default function Blog() {
                 </Button>
               </CardContent>
             </Card>
-          ))}
+            ))
+          ) : (
+            <div className="col-span-full text-center text-muted-foreground py-12">
+              No blog posts found.
+            </div>
+          )}
         </div>
 
         <div className="mt-12 text-center">

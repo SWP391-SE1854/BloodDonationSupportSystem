@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { blogService } from '@/services/blog.service';
+import { BlogService } from '@/services/blog.service';
 import type { BlogPost } from '@/types/api';
 
 interface BlogPostActionsProps {
@@ -35,7 +35,7 @@ export function BlogPostActions({ post, onEdit, onDeleted }: BlogPostActionsProp
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      await blogService.deletePost(post.id);
+      await BlogService.deleteBlogPost(post.blog_id);
       toast({
         title: 'Success',
         description: 'Blog post deleted successfully',
