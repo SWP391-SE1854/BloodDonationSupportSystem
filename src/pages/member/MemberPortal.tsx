@@ -5,6 +5,7 @@ import MemberProfile from './MemberProfile';
 import MemberDonationRequest from './MemberDonationRequest';
 import MemberHealthRecords from './MemberHealthRecords';
 import MemberDonationHistory from './MemberDonationHistory';
+import MemberBloodRequests from './MemberBloodRequests';
 import { useAuth } from '@/contexts/AuthContext';
 
 const MemberPortal = () => {
@@ -22,17 +23,19 @@ const MemberPortal = () => {
 
     switch (currentPage) {
       case 'dashboard':
-        return <MemberDashboard user={user} onNavigate={handleNavigate} />;
+        return <MemberDashboard onNavigate={handleNavigate} />;
       case 'profile':
-        return <MemberProfile user={user} onUpdateUser={() => {}} />; // onUpdateUser might need to be refactored
+        return <MemberProfile />;
       case 'donation-request':
         return <MemberDonationRequest />;
       case 'health-records':
         return <MemberHealthRecords />;
       case 'donation-history':
         return <MemberDonationHistory />;
+      case 'blood-requests':
+        return <MemberBloodRequests />;
       default:
-        return <MemberDashboard user={user} onNavigate={handleNavigate} />;
+        return <MemberDashboard onNavigate={handleNavigate} />;
     }
   };
 

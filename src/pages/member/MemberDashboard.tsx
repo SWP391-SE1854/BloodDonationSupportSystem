@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Heart, Calendar, FileText, Activity, Bell, Droplet } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Heart, Calendar, FileText, Activity, Droplet } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { UserService } from '@/services/user.service';
 import { HealthRecordService, HealthRecord } from '@/services/health-record.service';
 import { DonationHistoryService, DonationHistoryRecord } from '@/services/donation-history.service';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -9,12 +8,14 @@ import { format, differenceInDays } from 'date-fns';
 
 const bloodTypes = [
     { id: "1", name: "A+" }, { id: "2", name: "A-" }, { id: "3", name: "B+" },
-    { id: "4", name: "B-" }, { id: "5", name: "AB+" }, { id: "6", name: "AB-" },
+    { id: "4", name: "B-" }, { id: "5", name: "AB+" }, { id: "6", "name": "AB-" },
     { id: "7", name: "O+" }, { id: "8", name: "O-" }
 ];
 
-const getBloodTypeName = (id: string | number) => {
-    const bloodType = bloodTypes.find(bt => bt.id === id.toString());
+const getBloodTypeName = (id: string | number | null): string => {
+    if (id === null) return 'N/A';
+    const stringId = id.toString();
+    const bloodType = bloodTypes.find(bt => bt.id === stringId);
     return bloodType ? bloodType.name : 'N/A';
 };
 
@@ -32,6 +33,11 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
+      
       setIsLoading(true);
       try {
         const historyPromise = DonationHistoryService.getMemberHistory() as Promise<HistoryServerResponse>;
@@ -53,21 +59,19 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
 
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
-        // It's okay if one fails, we can still show the other data
       } finally {
         setIsLoading(false);
       }
     };
     fetchData();
-  }, []);
-  
+  }, [user]);
+
   const nextEligibleDays = healthRecord?.last_donation ? Math.max(0, 90 - differenceInDays(new Date(), new Date(healthRecord.last_donation))) : 0;
 
   const memberStats = [
     { title: 'Total Donations', value: healthRecord?.donation_count ?? 'N/A', icon: Heart, color: 'text-red-600', bgColor: 'bg-red-100' },
     { title: 'Blood Type', value: healthRecord ? getBloodTypeName(healthRecord.blood_type) : 'N/A', icon: Droplet, color: 'text-blue-600', bgColor: 'bg-blue-100' },
     { title: 'Next Eligible', value: nextEligibleDays > 0 ? `${nextEligibleDays} days` : 'Now', icon: Calendar, color: 'text-green-600', bgColor: 'bg-green-100' },
-    { title: 'Notifications', value: '3', icon: Bell, color: 'text-purple-600', bgColor: 'bg-purple-100' },
   ];
 
   const recentDonations = history.slice(0, 2);
@@ -86,9 +90,9 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {isLoading ? (
-          Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)
+          Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)
         ) : (
           memberStats.map((stat, index) => {
           const Icon = stat.icon;

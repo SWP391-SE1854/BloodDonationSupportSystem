@@ -42,11 +42,11 @@ const HealthRecordForm: React.FC<HealthRecordFormProps> = ({ isOpen, onClose, on
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="weight">Weight (kg)</Label>
-              <Input id="weight" type="number" value={formData.weight || ''} onChange={e => handleInputChange('weight', parseFloat(e.target.value))} />
+              <Input id="weight" type="number" value={formData.weight || ''} onChange={e => handleInputChange('weight', parseInt(e.target.value, 10) || 0)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="height">Height (cm)</Label>
-              <Input id="height" type="number" value={formData.height || ''} onChange={e => handleInputChange('height', parseFloat(e.target.value))} />
+              <Input id="height" type="number" value={formData.height || ''} onChange={e => handleInputChange('height', parseInt(e.target.value, 10) || 0)} />
             </div>
           </div>
           <div className="space-y-2">

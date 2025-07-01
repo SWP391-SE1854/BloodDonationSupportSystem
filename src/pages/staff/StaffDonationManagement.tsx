@@ -2,78 +2,92 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, RefreshCw } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CheckCircle, Clock, RefreshCw, XCircle, HeartPulse } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { DonationService, Donation } from '@/services/donation.service';
+import DonationService from '@/services/donation.service';
+import { Donation } from '@/types/api';
 import HealthRecordService from '@/services/health-record.service';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
-
-type ServerResponse = Donation[] | { $values: Donation[] };
+import { HealthCheckForm } from '@/components/HealthCheckForm';
 
 const StaffDonationManagement = () => {
-    const [donations, setDonations] = useState<Donation[]>([]);
+    const [pendingDonations, setPendingDonations] = useState<Donation[]>([]);
+    const [approvedDonations, setApprovedDonations] = useState<Donation[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
+    const [isHealthCheckOpen, setIsHealthCheckOpen] = useState(false);
+    const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
+    const [healthCheckPassed, setHealthCheckPassed] = useState<Record<number, boolean>>({});
 
-    const loadDonations = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const data = await DonationService.getDonationsByStatus('Pending') as ServerResponse;
-            console.log('Fetched donation data:', data);
+  const loadDonations = useCallback(async () => {
+    setIsLoading(true);
+    try {
+            const pendingPromise = DonationService.getDonationsByStatus('Pending');
+            const approvedPromise = DonationService.getDonationsByStatus('Approved');
             
-            if (data && '$values' in data) {
-                setDonations(Array.isArray(data.$values) ? data.$values : []);
-            } else if (Array.isArray(data)) {
-                setDonations(data);
-            } else {
-                setDonations([]);
-            }
-        } catch (error) {
+            const [pendingData, approvedData] = await Promise.all([pendingPromise, approvedPromise]);
+
+            setPendingDonations(pendingData);
+            setApprovedDonations(approvedData);
+
+    } catch (error) {
             console.error("Failed to fetch donations:", error);
             toast({
                 title: 'Error',
                 description: 'Could not fetch donation requests. Please try again later.',
                 variant: 'destructive',
             });
-            setDonations([]);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [toast]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
 
-    useEffect(() => {
-        loadDonations();
-    }, [loadDonations]);
+  useEffect(() => {
+    loadDonations();
+  }, [loadDonations]);
 
-    const handleStatusChange = async (donation: Donation, newStatus: 'Approved' | 'Rejected') => {
+  const handleHealthCheckResult = (donationId: number, isEligible: boolean) => {
+    if (isEligible) {
+      setHealthCheckPassed(prev => ({ ...prev, [donationId]: true }));
+    } else {
+      const donation = approvedDonations.find(d => d.donation_id === donationId);
+      if (donation) {
+        handleStatusUpdate(donation, 'Rejected');
+      }
+    }
+  };
+
+  const handleOpenHealthCheck = (donation: Donation) => {
+    setSelectedDonation(donation);
+    setIsHealthCheckOpen(true);
+  };
+
+    const handleStatusUpdate = async (donation: Donation, newStatus: 'Approved' | 'Rejected' | 'Completed') => {
         setIsLoading(true);
-        try {
-            const statusToSend = newStatus === 'Approved' ? 'Completed' : newStatus;
-            const updatedDonation = await DonationService.updateDonation({ ...donation, status: statusToSend });
-
-            if (newStatus === 'Approved') {
-                // Attempt to update health record, but don't block on it
+    try {
+            await DonationService.updateDonation({ ...donation, status: newStatus });
+      
+            if (newStatus === 'Completed') {
                 try {
-                    const healthRecord = await HealthRecordService.getRecordByUserId(donation.user_id.toString());
-                    if (healthRecord) {
-                        await HealthRecordService.updateUserDonationStats(healthRecord.record_id, true);
-                        toast({ title: 'Success', description: `Donation approved and user's health record updated.` });
-                    } else {
-                        toast({ title: 'Warning', variant: 'destructive', description: `Donation approved, but could not find health record for user ${donation.user_id} to update stats.` });
-                    }
+                    await HealthRecordService.updateUserDonationStats(donation.user_id.toString(), donation.donation_date);
+                        toast({ title: 'Success', description: `Donation completed and user's health record updated.` });
                 } catch (hrError) {
                     console.error("Failed to update health record:", hrError);
-                    toast({ title: 'Warning', variant: 'destructive', description: `Donation approved, but failed to update health record stats.` });
-                }
+                    toast({ 
+                        title: 'Warning', 
+                        variant: 'destructive', 
+                        description: `Donation status was updated, but failed to update the user's health record stats.` 
+                    });
+      }
             } else {
-                toast({ title: 'Success', description: 'Donation status updated.' });
+                 toast({ title: 'Success', description: 'Donation status updated.' });
             }
             
-            // Refresh the list with the updated donation
-            setDonations(prev => prev.map(d => d.donation_id === donation.donation_id ? updatedDonation : d));
+            loadDonations();
 
-        } catch (error) {
+    } catch (error) {
             console.error(`Failed to update donation to ${newStatus}:`, error);
             toast({
                 title: 'Update Failed',
@@ -82,36 +96,94 @@ const StaffDonationManagement = () => {
             });
         } finally {
             setIsLoading(false);
-        }
-    };
-    
-    const getStatusBadgeVariant = (status: string): 'default' | 'destructive' | 'secondary' => {
-        switch (status) {
-            case 'Approved':
+    }
+  };
+
+    const getStatusBadgeVariant = (status: string): 'default' | 'destructive' | 'secondary' | 'outline' => {
+    switch (status) {
             case 'Completed':
                 return 'default';
+            case 'Approved':
+                return 'outline';
             case 'Rejected':
+            case 'Cancelled':
                 return 'destructive';
             default:
                 return 'secondary';
-        }
-    };
+    }
+  };
 
-    if (isLoading && donations.length === 0) {
-        return (
-            <div className="flex items-center justify-center h-full">
-                <div className="text-center text-muted-foreground">
-                    <Clock className="mx-auto h-12 w-12 animate-spin" />
-                    <p className="mt-4">Loading Donations...</p>
-                </div>
+    const renderDonationList = (donations: Donation[], type: 'pending' | 'approved') => {
+  if (isLoading) {
+    return (
+                <div className="flex items-center justify-center h-48">
+                    <div className="text-center text-muted-foreground">
+                        <Clock className="mx-auto h-8 w-8 animate-spin" />
+                        <p className="mt-2">Loading Donations...</p>
+        </div>
+      </div>
+    );
+  }
+
+        if (donations.length === 0) {
+            return <div className="text-center py-16"><p className="text-muted-foreground">No {type} donations found.</p></div>
+        }
+
+  return (
+            <div className="space-y-4">
+              {donations.map((donation) => (
+                <Card key={donation.donation_id}>
+                  <CardContent className="p-4 grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                    <div>
+                                <p className="font-semibold">Donor ID: {donation.user_id}</p>
+                                <p className="text-sm text-muted-foreground">Component: {donation.component}</p>
+                    </div>
+                    <div>
+                      <p>{format(new Date(donation.donation_date), 'PPP')}</p>
+                                <p className="text-sm text-muted-foreground">Location: {donation.location}</p>
+                    </div>
+                    <div>
+                                <Badge variant={getStatusBadgeVariant(donation.status)}>
+                                    {donation.status}
+                                </Badge>
+                    </div>
+                            {type === 'pending' && (
+                    <div className="w-[150px]">
+                      <Select
+                                        onValueChange={(newStatus: 'Approved' | 'Rejected') => handleStatusUpdate(donation, newStatus)}
+                                        disabled={isLoading}
+                      >
+                                        <SelectTrigger><SelectValue placeholder="Update Status" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Approved">Approve</SelectItem>
+                          <SelectItem value="Rejected">Reject</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                            )}
+                             {type === 'approved' && (
+                               <div className="flex gap-2">
+                                 <Button onClick={() => handleOpenHealthCheck(donation)} variant="outline">
+                                   <HeartPulse className="h-4 w-4 mr-2" />
+                                   Health Check
+                                 </Button>
+                                 <Button onClick={() => handleStatusUpdate(donation, 'Completed')} disabled={isLoading || !healthCheckPassed[donation.donation_id]}>
+                                     <CheckCircle className="h-4 w-4 mr-2" />
+                                     Mark as Complete
+                                 </Button>
+                               </div>
+                            )}
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-        );
+        )
     }
 
     return (
         <div className="container mx-auto p-4">
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
+                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Manage Donation Requests</CardTitle>
                     <Button onClick={loadDonations} variant="outline" size="sm" disabled={isLoading}>
                         <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -119,51 +191,32 @@ const StaffDonationManagement = () => {
                     </Button>
                 </CardHeader>
                 <CardContent>
-                    <div className="space-y-4">
-                        {donations.length > 0 ? (
-                            donations.map((donation) => (
-                                <Card key={donation.donation_id}>
-                                    <CardContent className="p-4 grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-                                        <div>
-                                            <p className="font-semibold">Donor ID: {donation.user_id}</p>
-                                            <p className="text-sm text-muted-foreground">Component: {donation.component}</p>
-                                        </div>
-                                        <div>
-                                            <p>{format(new Date(donation.donation_date), 'PPP')}</p>
-                                            <p className="text-sm text-muted-foreground">Location: {donation.location}</p>
-                                        </div>
-                                        <div>
-                                            <Badge variant={getStatusBadgeVariant(donation.status)}>
-                                                {donation.status === 'Completed' ? 'Approved' : donation.status}
-                                            </Badge>
-                                        </div>
-                                        <div className="w-[150px]">
-                                            <Select
-                                                onValueChange={(newStatus: 'Approved' | 'Rejected') => handleStatusChange(donation, newStatus)}
-                                                disabled={donation.status !== 'Pending' || isLoading}
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Update Status" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="Approved">Approve</SelectItem>
-                                                    <SelectItem value="Rejected">Reject</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))
-                        ) : (
-                            <div className="text-center py-16">
-                                <p className="text-muted-foreground">No pending donation requests found.</p>
-                            </div>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
-    );
+                    <Tabs defaultValue="pending">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="pending">
+                                <Clock className="mr-2 h-4 w-4" /> In Progress ({pendingDonations.length})
+                            </TabsTrigger>
+                            <TabsTrigger value="approved">
+                                <CheckCircle className="mr-2 h-4 w-4" /> Approved ({approvedDonations.length})
+                            </TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="pending" className="pt-4">
+                            {renderDonationList(pendingDonations, 'pending')}
+                        </TabsContent>
+                        <TabsContent value="approved" className="pt-4">
+                             {renderDonationList(approvedDonations, 'approved')}
+                        </TabsContent>
+                    </Tabs>
+        </CardContent>
+      </Card>
+      <HealthCheckForm 
+        isOpen={isHealthCheckOpen}
+        onOpenChange={setIsHealthCheckOpen}
+        donation={selectedDonation}
+        onCheckResult={handleHealthCheckResult}
+      />
+    </div>
+  );
 };
 
-export default StaffDonationManagement;
+export default StaffDonationManagement; 

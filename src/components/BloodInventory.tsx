@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { BloodInventoryService } from '@/services/blood-inventory.service';
 import { Button } from '@/components/ui/button';
@@ -13,21 +13,44 @@ import { Edit, Trash2, PlusCircle } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { DonationService } from '@/services/donation.service';
+import { Donation } from '@/types/api';
 
 const bloodTypes = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+const bloodTypeMap: Record<string, number> = {
+    "A+": 1, "A-": 2, "B+": 3, "B-": 4, 
+    "AB+": 5, "AB-": 6, "O+": 7, "O-": 8
+};
+
+const getBloodTypeName = (id: number): string => {
+    return Object.keys(bloodTypeMap).find(key => bloodTypeMap[key] === id) || 'Unknown';
+}
+
+const initialFormState: Omit<BloodInventoryUnit, 'unit_id' | 'donation_id'> = {
+    quantity: 450,
+    blood_type: 1,
+    status: 'Available',
+    expiration_date: new Date(new Date().setDate(new Date().getDate() + 42)).toISOString()
+};
 
 const InventoryForm = ({ unit, onSave, onClose }: { unit: Partial<BloodInventoryUnit> | null, onSave: (data: Partial<BloodInventoryUnit>) => void, onClose: () => void }) => {
-    const [formData, setFormData] = useState(unit || { 
-        blood_type: 'A+', 
-        donation_date: new Date().toISOString().substring(0, 10)
-    });
+    const { toast } = useToast();
+    const [formData, setFormData] = useState<Partial<BloodInventoryUnit>>(unit ? { ...unit } : { ...initialFormState, donation_id: undefined });
 
-    const handleChange = (field: keyof BloodInventoryUnit, value: string | number | boolean) => {
+    const handleChange = (field: keyof BloodInventoryUnit, value: string | number | boolean | undefined) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (!formData.donation_id || formData.donation_id <= 0) {
+            toast({
+                title: 'Invalid Input',
+                description: 'Please enter a valid, positive Donation ID.',
+                variant: 'destructive',
+            });
+            return;
+        }
         onSave(formData);
     };
 
@@ -39,7 +62,7 @@ const InventoryForm = ({ unit, onSave, onClose }: { unit: Partial<BloodInventory
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                     <Label htmlFor="donation_id">Donation ID</Label>
-                    <Input id="donation_id" type="number" value={formData.donation_id || ''} onChange={e => handleChange('donation_id', parseInt(e.target.value))} required />
+                    <Input id="donation_id" type="number" placeholder="Enter valid Donation ID" value={formData.donation_id || ''} onChange={e => handleChange('donation_id', e.target.value ? parseInt(e.target.value, 10) : undefined)} required />
                 </div>
                 <div className="space-y-1">
                     <Label htmlFor="quantity">Quantity (ml)</Label>
@@ -48,13 +71,13 @@ const InventoryForm = ({ unit, onSave, onClose }: { unit: Partial<BloodInventory
             </div>
             <div className="space-y-1">
                 <Label>Blood Type</Label>
-                <Select value={formData.blood_type || ''} onValueChange={val => handleChange('blood_type', val)}>
+                <Select value={String(formData.blood_type)} onValueChange={val => handleChange('blood_type', parseInt(val, 10))}>
                     <SelectTrigger>
                         <SelectValue placeholder="Select blood type" />
                     </SelectTrigger>
                     <SelectContent>
-                        {bloodTypes.map((type) => (
-                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                        {Object.entries(bloodTypeMap).map(([name, id]) => (
+                            <SelectItem key={id} value={String(id)}>{name}</SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
@@ -91,10 +114,20 @@ const BloodInventory = () => {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [selectedUnit, setSelectedUnit] = useState<Partial<BloodInventoryUnit> | null>(null);
 
-    const { data: inventory, isLoading, isError, error } = useQuery<BloodInventoryUnit[], Error>({
+    const { data: inventory, isLoading: isLoadingInventory, isError: isErrorInventory, error: errorInventory } = useQuery<BloodInventoryUnit[], Error>({
         queryKey: ['bloodInventory'],
         queryFn: BloodInventoryService.getAll,
     });
+
+    const { data: donations, isLoading: isLoadingDonations } = useQuery<Donation[], Error>({
+        queryKey: ['allDonations'],
+        queryFn: DonationService.getAllDonations
+    });
+
+    const donationMap = useMemo(() => {
+        if (!donations) return new Map<number, Donation>();
+        return new Map(donations.map(d => [d.donation_id, d]));
+    }, [donations]);
 
     const mutationOptions = {
         onSuccess: () => {
@@ -157,11 +190,11 @@ const BloodInventory = () => {
                 </Button>
             </CardHeader>
             <CardContent>
-                {isError ? (
+                {isErrorInventory ? (
                     <div className="text-red-600 bg-red-50 p-4 rounded-md">
                         <h4 className="font-bold">Error Fetching Inventory</h4>
                         <p>The server could not retrieve the blood inventory. This is likely a backend issue.</p>
-                        <p className="text-sm mt-2"><strong>Details:</strong> {error.message}</p>
+                        <p className="text-sm mt-2"><strong>Details:</strong> {errorInventory.message}</p>
                         <p className="text-sm mt-1">Please ensure the backend is running and the database table (likely named 'Blood_Inventory' or 'BloodInventories') exists.</p>
                     </div>
                 ) : (
@@ -169,8 +202,9 @@ const BloodInventory = () => {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Unit ID</TableHead>
-                            <TableHead>Donation ID</TableHead>
+                            <TableHead>Donation Date</TableHead>
                             <TableHead>Blood Type</TableHead>
+                            <TableHead>Component</TableHead>
                             <TableHead>Quantity</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Expiration Date</TableHead>
@@ -178,14 +212,15 @@ const BloodInventory = () => {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {isLoading ? (
-                            <TableRow><TableCell colSpan={7} className="text-center">Loading...</TableCell></TableRow>
+                        {isLoadingInventory || isLoadingDonations ? (
+                            <TableRow><TableCell colSpan={8} className="text-center">Loading...</TableCell></TableRow>
                         ) : inventory && inventory.length > 0 ? (
                             inventory.map((unit) => (
                                 <TableRow key={unit.unit_id}>
                                     <TableCell>{unit.unit_id}</TableCell>
-                                    <TableCell>{unit.donation_id}</TableCell>
-                                    <TableCell>{unit.blood_type}</TableCell>
+                                    <TableCell>{donationMap.get(unit.donation_id)?.donation_date ? new Date(donationMap.get(unit.donation_id)!.donation_date).toLocaleDateString() : 'N/A'}</TableCell>
+                                    <TableCell>{getBloodTypeName(unit.blood_type)}</TableCell>
+                                    <TableCell>{donationMap.get(unit.donation_id)?.component || 'N/A'}</TableCell>
                                     <TableCell>{unit.quantity}ml</TableCell>
                                     <TableCell>
                                         <Badge variant={unit.status === 'Available' ? 'default' : 'secondary'}>{unit.status}</Badge>
@@ -216,7 +251,7 @@ const BloodInventory = () => {
                                 </TableRow>
                             ))
                         ) : (
-                            <TableRow><TableCell colSpan={7} className="text-center">No inventory units found.</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={8} className="text-center">No inventory units found.</TableCell></TableRow>
                         )}
                     </TableBody>
                 </Table>

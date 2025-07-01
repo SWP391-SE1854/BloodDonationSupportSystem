@@ -11,7 +11,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 
 type UserResponse = UserProfile[] | { $values: UserProfile[] };
 
-const DonationHistoryViewer = () => {
+const DonationHistoryViewer: React.FC = () => {
   const { toast } = useToast();
   const currentUserRole = useUserRole();
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -35,7 +35,7 @@ const DonationHistoryViewer = () => {
         if (allUsers && !Array.isArray(allUsers) && '$values' in allUsers) {
           setUsers(allUsers.$values);
         } else if (Array.isArray(allUsers)) {
-          setUsers(allUsers);
+        setUsers(allUsers);
         } else {
           setUsers([]);
         }
@@ -45,7 +45,7 @@ const DonationHistoryViewer = () => {
       }
     };
     if (currentUserRole) {
-      fetchUsers();
+    fetchUsers();
     }
   }, [currentUserRole, toast]);
 

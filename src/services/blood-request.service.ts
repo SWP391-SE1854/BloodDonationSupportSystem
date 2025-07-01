@@ -25,7 +25,7 @@ interface User {
 // Interface matching the C# backend entity
 export interface BloodRequest {
   request_id: number;
-  user_id: number;
+  user_id: number | null;
   blood_id: string | null;
   emergency_status: boolean;
   request_date: string;
@@ -40,6 +40,21 @@ export type BloodRequestFormData = Pick<BloodRequest, 'user_id' | 'blood_id' | '
 // Data for updating a request
 export type UpdateBloodRequestData = Partial<Omit<BloodRequest, 'request_id' | 'request_date' | 'user' | 'location'>>;
 
+export interface BloodRequestStatus {
+  status: 'Pending' | 'Approved' | 'Rejected';
+  created_at: string;
+}
+
+export interface NewBloodRequest {
+  patient_name: string;
+  blood_type: string;
+  quantity: number;
+  contact_person: string;
+  contact_phone: string;
+  contact_email: string;
+  location_id?: number | null;
+  status: 'Pending';
+}
 
 export class BloodRequestService {
     // This is now a public endpoint
@@ -56,7 +71,7 @@ export class BloodRequestService {
 
     // This requires authentication
     static async createBloodRequest(data: BloodRequestFormData): Promise<BloodRequest> {
-        const response = await api.post(API_ENDPOINTS.BLOOD_REQUEST.CREATE, data);
+        const response = await api.post<BloodRequest>('/bloodrequest/new', data);
         return response.data;
     }
 
@@ -69,5 +84,19 @@ export class BloodRequestService {
     // This requires authentication
     static async deleteBloodRequest(id: number): Promise<void> {
         await api.delete(API_ENDPOINTS.BLOOD_REQUEST.DELETE(id));
+    }
+
+    static async getMemberBloodRequests(): Promise<BloodRequest[]> {
+        try {
+            const response = await api.get(API_ENDPOINTS.BLOOD_REQUEST.GET_MEMBER_REQUESTS);
+            // Handle cases where the response has a $values property
+            if (response.data && response.data.$values) {
+                return response.data.$values;
+            }
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching member blood requests:', error);
+            throw error;
+        }
     }
 } 

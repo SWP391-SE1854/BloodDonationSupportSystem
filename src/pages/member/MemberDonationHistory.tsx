@@ -1,76 +1,98 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import DonationHistoryService, { DonationHistoryRecord } from '@/services/donation-history.service';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { toast } from '@/hooks/use-toast';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useMemo } from 'react';
+
+type DonationHistoryServerResponse = DonationHistoryRecord[] | { $values: DonationHistoryRecord[] };
 
 const MemberDonationHistory = () => {
-  const [history, setHistory] = useState<DonationHistoryRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const data = await DonationHistoryService.getMemberHistory();
-        setHistory(data);
-      } catch (error) {
-        toast({
-          title: 'Error',
-          description: 'Failed to fetch donation history.',
-          variant: 'destructive',
-        });
-      } finally {
-        setLoading(false);
+  const { data: donations, isLoading, isError, error } = useQuery<DonationHistoryRecord[], Error>({
+    queryKey: ['memberDonationHistory'],
+    queryFn: async () => {
+      const response: DonationHistoryServerResponse = await DonationHistoryService.getMemberHistory();
+      console.log("Raw donation history from API:", response);
+      if (response && '$values' in response) {
+        return Array.isArray(response.$values) ? response.$values : [];
       }
-    };
+      return Array.isArray(response) ? response : [];
+    },
+  });
 
-    fetchHistory();
-  }, []);
+  const filteredDonations = useMemo(() => {
+    if (!donations) return [];
+    const finalStatuses = ['Completed', 'Rejected', 'Cancelled'];
+    return donations.filter(donation => finalStatuses.includes(donation.status));
+  }, [donations]);
+
+  const getStatusBadgeVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
+    switch (status) {
+      case 'Completed':
+        return 'default';
+      case 'Rejected':
+        return 'destructive';
+      case 'Cancelled':
+        return 'destructive';
+      default:
+        return 'outline';
+    }
+  };
+
+  if (isError) {
+    return (
+      <Alert variant="destructive">
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{error?.message || 'Failed to fetch donation history.'}</AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>My Donation History</CardTitle>
+        <p className="text-sm text-muted-foreground">A record of your past donation activities.</p>
       </CardHeader>
       <CardContent>
-        {loading ? (
-          <p>Loading donation history...</p>
-        ) : (
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Date</TableHead>
                 <TableHead>Location</TableHead>
-                <TableHead>Component</TableHead>
-                <TableHead>Quantity (ML)</TableHead>
-                <TableHead>Status</TableHead>
+              <TableHead>Quantity (ml)</TableHead>
+              <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {history.length > 0 ? (
-                history.map((record) => (
-                  <TableRow key={record.donation_id}>
-                    <TableCell>{format(new Date(record.donation_date), 'PPP')}</TableCell>
-                    <TableCell>{record.location}</TableCell>
-                    <TableCell>{record.component}</TableCell>
-                    <TableCell>{record.quantity}</TableCell>
-                    <TableCell>
-                      <Badge>{record.status}</Badge>
-                    </TableCell>
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={`skeleton-${i}`}>
+                  <TableCell colSpan={4}><Skeleton className="h-8 w-full" /></TableCell>
+                </TableRow>
+              ))
+            ) : filteredDonations.length > 0 ? (
+              filteredDonations.map((donation) => (
+                <TableRow key={donation.donation_id}>
+                  <TableCell>{new Date(donation.donation_date).toLocaleDateString()}</TableCell>
+                  <TableCell>{donation.location}</TableCell>
+                  <TableCell>{donation.quantity}</TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusBadgeVariant(donation.status)}>{donation.status}</Badge>
+                  </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center">
-                    You have no donation history.
+                <TableCell colSpan={4} className="text-center">
+                  You have no completed, rejected, or cancelled donations.
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
-        )}
       </CardContent>
     </Card>
   );

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, User, LogOut, Home, Calendar, FileText, Activity } from 'lucide-react';
+import { Heart, User, LogOut, Home, Calendar, FileText, Activity, History } from 'lucide-react';
 
 interface MemberLayoutProps {
   children: React.ReactNode;
@@ -14,8 +14,9 @@ const MemberLayout = ({ children, currentPage, onNavigate, onLogout, userName }:
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'donation-request', label: 'Donate', icon: Heart },
+    { id: 'blood-requests', label: 'Blood Requests', icon: FileText },
     { id: 'health-records', label: 'Health Records', icon: Activity },
-    { id: 'donation-history', label: 'History', icon: FileText },
+    { id: 'donation-history', label: 'History', icon: History },
   ];
 
   return (

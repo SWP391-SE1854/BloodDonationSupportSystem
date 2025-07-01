@@ -10,12 +10,7 @@ import { profileUpdateSchema } from '@/lib/validations';
 import { useNavigate } from 'react-router-dom';
 import { ZodError, ZodIssue } from 'zod';
 
-interface MemberProfileProps {
-  user: UserProfile | null;
-  onUpdateUser: (userData: UserProfile) => void;
-}
-
-const MemberProfile = ({ user, onUpdateUser }: MemberProfileProps) => {
+const MemberProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
@@ -96,7 +91,6 @@ const MemberProfile = ({ user, onUpdateUser }: MemberProfileProps) => {
       setIsLoading(true);
       const updateData: UpdateUserProfile = {
         name: formData.name,
-        email: formData.email,
         phone: formData.phone,
         address: formData.address,
         city: formData.city,
@@ -106,7 +100,6 @@ const MemberProfile = ({ user, onUpdateUser }: MemberProfileProps) => {
 
       const updatedProfile = await UserService.updateMemberProfile(updateData);
       setProfileData(updatedProfile);
-      onUpdateUser(updatedProfile);
     setIsEditing(false);
       
       toast({

@@ -11,9 +11,7 @@ import { StaffService } from '@/services/staff.service';
 import HealthRecordForm from '@/components/HealthRecordForm';
 import { useUserRole } from '@/hooks/useUserRole';
 
-type UserResponse = UserProfile[] | { $values: UserProfile[] };
-
-const HealthRecordViewer = () => {
+const HealthRecordViewer: React.FC = () => {
   const { toast } = useToast();
   const currentUserRole = useUserRole();
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -26,23 +24,13 @@ const HealthRecordViewer = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        let allUsers: UserResponse;
+        let allUsers: UserProfile[] = [];
         if (currentUserRole === 'Admin') {
           allUsers = await AdminService.getAllUsers();
         } else if (currentUserRole === 'Staff') {
           allUsers = await StaffService.getAllMembers();
-        } else {
-          allUsers = [];
         }
-
-        if (allUsers && !Array.isArray(allUsers) && '$values' in allUsers) {
-          setUsers(allUsers.$values);
-        } else if (Array.isArray(allUsers)) {
           setUsers(allUsers);
-        } else {
-          console.error("Fetched users data is not a recognized format:", allUsers);
-          setUsers([]);
-        }
       } catch (error) {
         toast({ title: "Error", description: "Could not fetch users." });
         setUsers([]); // Ensure users is an array on error

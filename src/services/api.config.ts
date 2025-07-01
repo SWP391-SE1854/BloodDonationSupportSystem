@@ -3,12 +3,14 @@ export const API_TIMEOUT = 30000;
 export const API_ENDPOINTS = {
   // Auth endpoints
   AUTH: {
-    LOGIN: `/auth/login`,
-    REGISTER: `/auth/register`,
-    FIREBASE_LOGIN: `/auth/firebase-login`,
-    VERIFY_EMAIL: `/auth/verify-email`,
-    RESET_PASSWORD: `/auth/send-reset-password`,
-    REFRESH_TOKEN: `/auth/refresh-token`,
+    LOGIN: '/auth/login',
+    REGISTER: '/auth/register',
+    FIREBASE_LOGIN: '/auth/firebase-login',
+    VERIFY_EMAIL: '/auth/verify-email',
+    RESET_PASSWORD: '/auth/send-reset-password',
+    REFRESH_TOKEN: '/auth/refresh-token',
+    GOOGLE_LOGIN: '/auth/google-login',
+    GET_ADMIN_PROFILE: '/auth/admin-profile'
   },
   
   // User endpoints based on the C# controller
@@ -43,7 +45,7 @@ export const API_ENDPOINTS = {
     CREATE_MEMBER_REQUEST: '/donation/member',
     GET_ALL: '/donation/all',
     GET_BY_STATUS: '/donation/status',
-    UPDATE: (id: number) => `/donation/staff/update/${id}`,
+    UPDATE: '/donation/staff',
   },
   
   // Donation History endpoints
@@ -62,6 +64,7 @@ export const API_ENDPOINTS = {
     CREATE: '/bloodrequest/new',
     UPDATE: (id: number) => `/bloodrequest/update/${id}`,
     DELETE: (id: number) => `/bloodrequest/delete/${id}`,
+    GET_MEMBER_REQUESTS: '/bloodrequest/member'
   },
   
   // Location endpoints
@@ -76,9 +79,9 @@ export const API_ENDPOINTS = {
   
   // Statistics endpoints
   STATISTICS: {
-    DASHBOARD: `/statistics/dashboard`,
-    DONATIONS: `/statistics/donations`,
-    REQUESTS: `/statistics/requests`,
+    DASHBOARD: '/statistics/dashboard',
+    DONATIONS: '/statistics/donations',
+    REQUESTS: '/statistics/requests',
   },
 
   // Blood Bank endpoints
@@ -100,9 +103,9 @@ export const API_ENDPOINTS = {
     GET_USER_HEALTH_RECORD: '/healthrecord/view',
     CREATE_HEALTH_RECORD: '/healthrecord/member',
     UPDATE_MY_RECORD: '/healthrecord/member',
-    GET_ALL_HEALTH_RECORDS: '/healthrecord/all',
-    GET_HEALTH_RECORD_BY_USER_ID: (userId: string) => `/healthrecord/user/${userId}`,
-    UPDATE_HEALTH_RECORD: (id: string) => `/healthrecord/${id}`,
+  GET_ALL_HEALTH_RECORDS: '/healthrecord/all',
+    GET_HEALTH_RECORD_BY_USER_ID: (userId: string) => `/healthrecord/${userId}`,
+  UPDATE_HEALTH_RECORD: (id: string) => `/healthrecord/${id}`,
   },
 
   // Notification endpoints
@@ -114,8 +117,11 @@ export const API_ENDPOINTS = {
   CREATE_STAFF: '/notification/staff',
 
   DONATIONS: {
-    MEMBER_HISTORY: '/donations/member',
-    REQUEST_DONATION: '/donations/request'
+    MEMBER_HISTORY: '/donation/member-history',
+    REQUEST_DONATION: '/donation/request',
+    GET_BY_STATUS: '/donation/status',
+    GET_MEMBER_DONATIONS: '/donation-history/member',
+    UPDATE: (id: number) => `/donation/${id}`
   },
 
   BLOOD_INVENTORY: {
@@ -123,6 +129,11 @@ export const API_ENDPOINTS = {
     GET_BY_ID: (id: number) => `/blood-inventory/${id}`,
     CREATE: '/blood-inventory/add-blood',
     UPDATE: (id: number) => `/blood-inventory/update-blood/${id}`,
-    DELETE: (id: number) => `/blood-inventory/delete-blood/${id}`,
-  }
+    DELETE: (id: number) => `/blood-inventory/delete-blood?id=${id}`,
+    ADD_BLOOD: '/blood-inventory/add-blood',
+  },
+
+  NOTIFICATIONS: {
+    GET_MY_NOTIFICATIONS: '/notifications/my-notifications',
+  },
 }; 

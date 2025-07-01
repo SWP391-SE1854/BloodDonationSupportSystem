@@ -45,13 +45,14 @@ export class HealthRecordService {
     return response.data;
   }
 
-  static async updateUserDonationStats(healthRecordId: number, increment: boolean): Promise<HealthRecord> {
-    const payload = {
-      eligibility_status: false, // After donation, user is temporarily ineligible
-      increment_donation: increment,
+  static async updateUserDonationStats(userId: string, donationDate: string): Promise<HealthRecord> {
+    const currentRecord = await this.getRecordByUserId(userId);
+    const updatedRecord: HealthRecord = {
+      ...currentRecord,
+      donation_count: (currentRecord.donation_count || 0) + 1,
+      last_donation: donationDate,
     };
-    const response = await api.put(API_ENDPOINTS.HEALTH_RECORD.UPDATE_HEALTH_RECORD(healthRecordId.toString()), payload);
-    return response.data;
+    return this.updateRecord(userId, updatedRecord);
   }
 }
 

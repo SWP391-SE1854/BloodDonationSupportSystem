@@ -3,6 +3,8 @@ import { API_ENDPOINTS } from './api.config';
 import { UserProfile, UpdateUserProfile } from './user.service';
 import axios from 'axios';
 
+type UserListResponse = UserProfile[] | { $values: UserProfile[] };
+
 export class StaffService {
   static async getStaffProfile(): Promise<UserProfile> {
     try {
@@ -30,8 +32,16 @@ export class StaffService {
 
   static async getAllMembers(): Promise<UserProfile[]> {
     try {
-      const response = await api.get<UserProfile[]>(API_ENDPOINTS.USER.GET_ALL_MEMBERS);
-      return response.data;
+      const response = await api.get<UserListResponse>(API_ENDPOINTS.USER.GET_ALL_MEMBERS);
+      const data = response.data;
+      if (data && !Array.isArray(data) && data.$values) {
+        return data.$values;
+      }
+      if (Array.isArray(data)) {
+        return data;
+      }
+      console.error("Unexpected response format from getAllMembers:", data);
+      return [];
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error('Error fetching all members:', error.message);

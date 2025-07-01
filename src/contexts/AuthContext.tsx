@@ -2,10 +2,9 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { auth } from '@/config/firebase';
-import { onAuthStateChanged, User as FirebaseUser, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import api from '@/services/api.service';
 import { jwtDecode } from 'jwt-decode';
-import { AxiosError } from 'axios';
 import { API_ENDPOINTS } from "@/services/api.config";
 
 interface JwtPayload {
@@ -65,13 +64,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if user is already authenticated via token
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
     
     if (storedToken && storedUser) {
-    try {
-        // Check if token is expired
+      try {
         const decoded = jwtDecode<JwtPayload>(storedToken);
         const isExpired = decoded.exp * 1000 < Date.now();
         
@@ -84,7 +81,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             role: decoded.role || parsedUser.role
           });
         } else {
-          // Token is expired, clean up
           localStorage.removeItem('token');
           localStorage.removeItem('user');
         }
@@ -92,19 +88,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error('Error parsing stored auth data:', error);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-    }
+      }
     }
     
-    // Always listen to Firebase auth state changes
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // If we have a stored user from a previous session, use that.
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
             try {
                 setUser(JSON.parse(storedUser));
             } catch {
-                // If parsing fails, clear the bad data
                 localStorage.removeItem('user');
             }
         }
@@ -112,14 +105,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
     });
 
-    return () => {
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, []);
 
   const register = async (data: RegisterData) => {
-    // This function now only handles backend registration.
-    // The calling component is responsible for Firebase user creation.
     try {
       let formattedDate;
       try {
@@ -144,22 +133,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Sending registration data to backend:', registerData);
       
       await api.post(API_ENDPOINTS.AUTH.REGISTER, registerData);
-      // On success, just resolve. The caller will handle the next steps.
-
     } catch (error) {
       console.error('Backend registration in AuthContext failed:', error);
-      // Re-throw the error to be handled by the calling component
       throw error;
     }
   };
 
   const loginWithFirebase = async (firebaseToken: string) => {
-    localStorage.setItem('firebaseToken', firebaseToken);
     try {
-      const decodedFirebaseToken: { aud?: string } = jwtDecode(firebaseToken);
-      console.log("Attempting to exchange Firebase token. Decoded payload:", decodedFirebaseToken);
-      console.log("Ensure the 'aud' value above matches your Firebase Project ID in the backend configuration.");
-
       const response = await api.post(API_ENDPOINTS.AUTH.FIREBASE_LOGIN, null, {
         headers: {
           'Authorization': `Bearer ${firebaseToken}`
@@ -170,16 +151,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('token', response.data.token);
         
         const decoded = jwtDecode<JwtPayload>(response.data.token);
-        console.log("Decoded JWT token from backend:", decoded);
-
+        
         const firebaseUser = auth.currentUser;
         
-        // Check for role in standard and .NET claim formats
         const role = decoded.role || decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || 'Member';
-        console.log("Extracted role:", role);
-        console.log("Role comparison - role === 'Staff':", role === 'Staff');
-        console.log("Role comparison - role === 'staff':", role === 'staff');
-        console.log("Role comparison - role.toLowerCase() === 'staff':", role.toLowerCase() === 'staff');
+
         
         const userData: User = {
           id: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] || decoded.sub,
@@ -192,15 +168,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);
         
-        console.log("About to navigate based on role:", role);
         if (role === 'Admin') {
-          console.log("Navigating to admin profile");
           navigate('/admin/profile');
         } else if (role === 'Staff') {
-          console.log("Navigating to staff portal");
           navigate('/staff');
         } else {
-          console.log("Navigating to member profile");
           navigate('/member');
         }
         
@@ -212,9 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error("Backend did not return a token.");
       }
     } catch (error) {
-      // Per user request, remove fallback logic and UI notifications.
       console.error('Firebase login/token exchange failed:', error);
-      // Re-throw the error so the calling component knows it failed.
       throw error;
     }
   };
@@ -225,7 +195,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       localStorage.removeItem('user');
       localStorage.removeItem('token');
-      localStorage.removeItem('firebaseToken');
       navigate('/login');
       toast({
         title: "Success",
@@ -249,10 +218,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loginWithFirebase,
     isAuthenticated: !!user
   }), [user, isLoading]);
-
-  if (isLoading) {
-    return null;
-  }
 
   return (
     <AuthContext.Provider value={value}>

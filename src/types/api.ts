@@ -76,7 +76,7 @@ export interface BloodInventory {
 export interface BloodInventoryUnit {
   unit_id: number;
   donation_id: number;
-  blood_type: string; // This is a foreign key ID
+  blood_type: number; // This is a foreign key ID
   status: 'Available' | 'Reserved' | 'Expired' | 'Used';
   quantity: number; // in ml
   expiration_date: string; // ISO 8601 format
@@ -125,4 +125,28 @@ export interface PaginatedResponse<T> {
   page: number;
   pageSize: number;
   totalPages: number;
+}
+
+export interface BlogPost {
+  blog_id: number;
+  user_id: number;
+  date: string;
+  title: string;
+  content: string;
+  User?: {
+    name?: string;
+  };
+}
+
+export interface Donation {
+  donation_id: number;
+  user_id: string;
+  donation_date: string;
+  donation_time: string;
+  component: 'Whole Blood' | 'Platelets' | 'Power Red';
+  quantity: number;
+  location: string;
+  note?: string;
+  status: 'Pending' | 'Approved' | 'Completed' | 'Rejected' | 'Cancelled';
+  created_at: string;
 }

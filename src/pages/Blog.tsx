@@ -2,8 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Heart, Calendar, User, ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
-import BlogService, { BlogPost } from "@/services/blog.service";
+import BlogService from "@/services/blog.service";
 import NavigationBar from "@/components/NavigationBar";
+import { BlogPost } from "@/types/api";
 
 export default function Blog() {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
@@ -11,7 +12,10 @@ export default function Blog() {
   useEffect(() => {
     BlogService.getAllBlogPosts()
       .then((posts) => setBlogPosts(posts))
-      .catch(() => setBlogPosts([]))
+      .catch((error) => {
+        console.error("Error fetching blog posts:", error);
+        setBlogPosts([]);
+      })
       .finally(() => setIsLoading(false));
   }, []);
 
@@ -32,7 +36,7 @@ export default function Blog() {
             <div className="col-span-full text-center text-lg py-12">Loading...</div>
           ) : blogPosts.length > 0 ? (
             blogPosts.map((post) => (
-            <Card key={post.id} className="overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
+            <Card key={post.blog_id} className="overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
               <div className="aspect-video relative overflow-hidden">
                 <img
                     src={"/public/placeholder.svg"}
@@ -48,7 +52,7 @@ export default function Blog() {
                   </span>
                   <span className="flex items-center gap-1">
                     <User className="h-4 w-4" />
-                      {post.authorName || `User #${post.user_id}`}
+                      {post.User?.name || `User #${post.user_id}`}
                   </span>
                 </div>
                 <CardTitle className="line-clamp-2">{post.title}</CardTitle>

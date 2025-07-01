@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import BlogService from '@/services/blog.service';
+import { BlogService } from '@/services/blog.service';
 import { ImageIcon, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 

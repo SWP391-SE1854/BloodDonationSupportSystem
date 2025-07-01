@@ -1,35 +1,27 @@
 import api from './api.service';
 import { API_ENDPOINTS } from './api.config';
 import axios from 'axios';
+import { Donation } from '@/types/api';
 
-export interface Donation {
-  donation_id: number;
-  user_id: number;
-  unit_id: number | null;
-  donation_date: string;
-  status: 'Pending' | 'Approved' | 'Rejected' | 'Completed';
-  component: 'Whole Blood' | 'Platelets' | 'Plasma' | 'Red Cells';
-  location: string;
-  quantity: number;
-  notes?: string;
-}
+// CreateDonationPayload is a subset of the full Donation object
+export type CreateDonationPayload = Pick<Donation, 
+  'donation_date' | 
+  'donation_time' |
+  'location' | 
+  'component' | 
+  'quantity'
+> & { note?: string };
 
-export interface CreateDonationPayload {
-  donation_date: string;
-  location: string;
-  component: string;
-  quantity: number;
-  notes?: string;
-}
 
 export class DonationService {
-  static async createMemberDonation(payload: CreateDonationPayload): Promise<Donation> {
+  static async createDonation(payload: CreateDonationPayload): Promise<Donation> {
     try {
+      // The backend expects user_id from the token, and status/created_at are set server-side.
       const response = await api.post<Donation>(API_ENDPOINTS.DONATION.CREATE_MEMBER_REQUEST, payload);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error('Error creating member donation request:', error.message);
+        console.error('Error creating donation request:', error.message);
       }
       throw error;
     }
@@ -37,8 +29,8 @@ export class DonationService {
 
   static async getAllDonations(): Promise<Donation[]> {
     try {
-      const response = await api.get<Donation[]>(API_ENDPOINTS.DONATION.GET_ALL);
-      return response.data;
+      const response = await api.get<{ $values: Donation[] }>(API_ENDPOINTS.DONATION.GET_ALL);
+      return response.data.$values || [];
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error('Error fetching all donations:', error.message);
@@ -47,21 +39,10 @@ export class DonationService {
     }
   }
 
-  static async getDonationsByUserId(userId: number): Promise<Donation[]> {
+  static async updateDonation(donation: Partial<Donation> & { donation_id: number }): Promise<Donation> {
     try {
-      const response = await api.get<Donation[]>(API_ENDPOINTS.DONATION.GET_BY_USER_ID(userId));
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error(`Error fetching donations for user id ${userId}:`, error.message);
-      }
-      throw error;
-    }
-  }
-
-  static async updateDonation(donation: Donation): Promise<Donation> {
-    try {
-      const response = await api.put<Donation>(API_ENDPOINTS.DONATION.UPDATE(donation.donation_id), donation);
+      // The update endpoint for staff is a static path. The donation object in the body contains the ID.
+      const response = await api.put<Donation>(API_ENDPOINTS.DONATION.UPDATE, donation);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -73,14 +54,24 @@ export class DonationService {
 
   static async getDonationsByStatus(status?: string): Promise<Donation[]> {
     try {
-      const response = await api.get<Donation[]>(API_ENDPOINTS.DONATION.GET_BY_STATUS, {
+      const response = await api.get<{ $values: Donation[] }>(API_ENDPOINTS.DONATION.GET_BY_STATUS, {
         params: { status }
       });
-      return response.data;
+      return response.data.$values || [];
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error('Error fetching donations by status:', error.message);
       }
+      throw error;
+    }
+  }
+
+  static async getMemberDonations(): Promise<Donation[]> {
+    try {
+      const response = await api.get<{ $values: Donation[] }>(API_ENDPOINTS.DONATIONS.GET_MEMBER_DONATIONS);
+      return response.data?.$values || response.data || [];
+    } catch (error) {
+      console.error('Error fetching member donations:', error);
       throw error;
     }
   }

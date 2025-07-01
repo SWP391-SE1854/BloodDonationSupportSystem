@@ -13,6 +13,28 @@ import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useAuth } from '@/contexts/AuthContext';
 import BloodTypeSelect from '@/components/BloodTypeSelect';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+
+const bloodTypeMap: Record<string, number> = {
+    "A+": 1, "A-": 2, "B+": 3, "B-": 4, 
+    "AB+": 5, "AB-": 6, "O+": 7, "O-": 8
+};
+
+const getBloodTypeName = (id: string | number | null): string => {
+    if (id === null) return 'N/A';
+    if (typeof id === 'string' && isNaN(parseInt(id, 10))) {
+        return id;
+    }
+    const numId = typeof id === 'string' ? parseInt(id, 10) : id;
+    return Object.keys(bloodTypeMap).find(key => bloodTypeMap[key] === numId) || 'Unknown';
+}
+
+type BloodRequestServerResponse = BloodRequest[] | { $values: BloodRequest[] };
 
 const BloodRequestManagement = () => {
     const { toast } = useToast();
@@ -23,10 +45,15 @@ const BloodRequestManagement = () => {
 
     const isStaffOrAdmin = user?.role === 'Staff' || user?.role === 'Admin';
 
-    const { data: requests, isLoading } = useQuery<BloodRequest[], Error>({
+    const { data: requests, isLoading } = useQuery<BloodRequestServerResponse, Error, BloodRequest[]>({
         queryKey: ['bloodRequests'],
         queryFn: BloodRequestService.getAllBloodRequests,
-        select: (data) => Array.isArray(data) ? data : [],
+        select: (data) => {
+            if (data && '$values' in data) {
+                return Array.isArray(data.$values) ? data.$values : [];
+            }
+            return Array.isArray(data) ? data : [];
+        },
     });
 
     const mutationOptions = {
@@ -95,7 +122,7 @@ const BloodRequestManagement = () => {
                             <TableHead>Blood Type</TableHead>
                             <TableHead>Location ID</TableHead>
                             <TableHead>Emergency</TableHead>
-                            <TableHead>Date</TableHead>
+                            <TableHead>Donation Date</TableHead>
                             {isStaffOrAdmin && <TableHead>Actions</TableHead>}
                         </TableRow>
                     </TableHeader>
@@ -109,7 +136,7 @@ const BloodRequestManagement = () => {
                             <TableRow key={request.request_id}>
                                 <TableCell>{request.request_id}</TableCell>
                                 <TableCell>{request.user_id}</TableCell>
-                                <TableCell>{request.blood_id || 'N/A'}</TableCell>
+                                <TableCell>{getBloodTypeName(request.blood_id)}</TableCell>
                                 <TableCell>{request.location_id}</TableCell>
                                 <TableCell>{request.emergency_status ? 'Yes' : 'No'}</TableCell>
                                 <TableCell>{new Date(request.request_date).toLocaleDateString()}</TableCell>
@@ -153,28 +180,50 @@ interface RequestFormProps {
 }
 
 const RequestForm = ({ isOpen, setIsOpen, request, onSave }: RequestFormProps) => {
-    const [formData, setFormData] = useState<Partial<UpdateBloodRequestData>>({});
+    const [formData, setFormData] = useState<Partial<UpdateBloodRequestData & { request_date?: Date | null }>>({});
+    const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
     useEffect(() => {
-        if (request) {
-            setFormData(request);
-        } else {
-            setFormData({
-                user_id: 0,
-                blood_id: 'A+',
-                location_id: null,
-                emergency_status: false,
-            });
+        if (isOpen) {
+            let initialData;
+            if (request) {
+                let initialDate = null;
+                if (request.request_date) {
+                    const datePart = request.request_date.substring(0, 10);
+                    const [year, month, day] = datePart.split('-').map(Number);
+                    initialDate = new Date(year, month - 1, day);
+                }
+                initialData = { ...request, request_date: initialDate };
+            } else {
+                initialData = {
+                    user_id: null,
+                    blood_id: 'A+',
+                    location_id: null,
+                    emergency_status: false,
+                    request_date: new Date(),
+                };
+            }
+            setFormData(initialData);
         }
     }, [request, isOpen]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.user_id || !formData.blood_id) {
-            alert("Please fill in all required fields (User ID and Blood Type).");
+        if (!formData.blood_id) {
+            alert("Please select a blood type.");
             return;
         }
-        onSave(formData, request?.request_id);
+        
+        const dataToSave: Partial<UpdateBloodRequestData & { request_date?: string | Date}> = {
+            ...formData,
+            request_date: formData.request_date ? formData.request_date.toISOString() : undefined,
+        };
+
+        if (!request?.request_id) {
+            delete (dataToSave as Partial<BloodRequest>).request_id;
+        }
+        
+        onSave(dataToSave, request?.request_id);
     };
 
     return (
@@ -183,13 +232,21 @@ const RequestForm = ({ isOpen, setIsOpen, request, onSave }: RequestFormProps) =
                 <DialogHeader>
                     <DialogTitle>{request ? 'Edit' : 'Create'} Blood Request</DialogTitle>
                     <DialogDescription>
-                        Fill in the details below to create or update a blood request.
+                        Fill in the details below. For general requests, leave User ID blank.
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4 pt-4">
                     <div className="space-y-1">
-                        <Label htmlFor="user_id">User ID</Label>
-                        <Input id="user_id" type="number" value={formData.user_id || 0} onChange={e => setFormData({ ...formData, user_id: parseInt(e.target.value) })} required />
+                        <Label htmlFor="user_id">User ID (Optional)</Label>
+                        <Input
+                            id="user_id"
+                            type="number"
+                            value={formData.user_id === null ? '' : formData.user_id}
+                            onChange={e => {
+                                const value = e.target.value;
+                                setFormData({ ...formData, user_id: value === '' ? null : parseInt(value) });
+                            }}
+                        />
                     </div>
                     <div className="space-y-1">
                         <Label>Blood Type Needed</Label>
@@ -203,6 +260,34 @@ const RequestForm = ({ isOpen, setIsOpen, request, onSave }: RequestFormProps) =
                             value={formData.location_id ?? ''} 
                             onChange={e => setFormData({ ...formData, location_id: e.target.value ? parseInt(e.target.value) : null })} 
                         />
+                    </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="request_date">Donation Date</Label>
+                        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant={"outline"}
+                                    className={cn(
+                                        "w-full justify-start text-left font-normal",
+                                        !formData.request_date && "text-muted-foreground"
+                                    )}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {formData.request_date ? format(formData.request_date, "PPP") : <span>Pick a date</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                    mode="single"
+                                    selected={formData.request_date || undefined}
+                                    onSelect={(date) => {
+                                        setFormData({ ...formData, request_date: date });
+                                        setIsCalendarOpen(false);
+                                    }}
+                                    initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
                     </div>
                     <div className="flex items-center space-x-2 pt-2">
                         <Switch id="emergency_status" checked={formData.emergency_status} onCheckedChange={checked => setFormData({ ...formData, emergency_status: checked })} />

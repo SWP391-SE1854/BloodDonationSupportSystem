@@ -81,7 +81,15 @@ const StaffProfile = () => {
 
     try {
       setIsLoading(true);
-      const updatedProfile = await StaffService.updateStaffProfile(formData);
+      const updatePayload: UpdateUserProfile = {
+        name: formData.name,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        district: formData.district,
+        dob: formData.dob,
+      };
+      const updatedProfile = await StaffService.updateStaffProfile(updatePayload);
       setProfileData(updatedProfile);
       setIsEditing(false);
       toast({
