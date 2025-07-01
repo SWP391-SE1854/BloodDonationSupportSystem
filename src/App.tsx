@@ -15,6 +15,7 @@ import StaffPortal from "./pages/staff/StaffPortal";
 import UserManagement from "./pages/admin/UserManagement";
 import { AuthProvider } from "./contexts/AuthContext";
 import MemberPortal from "./pages/member/MemberPortal";
+import Blog from './pages/Blog';
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
             <Route path="/about" element={<AboutUs />} />
+            <Route path="/blog" element={<Blog />} />
             <Route
               path="/profile/*"
               element={
