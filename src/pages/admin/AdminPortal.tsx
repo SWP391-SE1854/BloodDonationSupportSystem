@@ -4,6 +4,7 @@ import AdminLayout from './AdminLayout';
 import UserManagement from './UserManagement';
 import AdminDashboard from './AdminDashboard';
 import AdminProfile from './AdminProfile';
+import BlogManagement from './BlogManagement';
 
 const AdminPortal = () => {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -21,6 +22,8 @@ const AdminPortal = () => {
         return <AdminProfile />;
       case 'users':
         return <UserManagement />;
+      case 'blog':
+        return <BlogManagement />;
       default:
         return <AdminDashboard />;
     }
