@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Heart, Users, Target, Award, BarChart, Globe, UserCheck, Calendar } from "lucide-react";
 import { UserProfileDropdown } from "@/components/UserProfileDropdown";
+import Footer from '@/components/Footer';
 import { useAuth } from "@/contexts/AuthContext";
 import NavigationBar from "@/components/NavigationBar";
 
@@ -162,17 +163,7 @@ const AboutUs = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-white py-8">
-        <div className="max-w-6xl mx-auto px-4 text-center">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <Heart className="h-6 w-6 text-red-500" />
-            <span className="text-xl font-bold">Blood Care</span>
-          </div>
-          <p className="text-gray-400">
-            Every drop counts - Join our life-saving community
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
