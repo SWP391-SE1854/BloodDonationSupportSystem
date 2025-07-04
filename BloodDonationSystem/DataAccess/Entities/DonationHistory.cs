@@ -12,7 +12,6 @@ namespace BloodDonationSystem.DataAccess.Entities
         public DateTime donation_date { get; set; }
         public string status { get; set; } = string.Empty;
         public string? blood_type { get; set; }
-        public string location { get; set; } = string.Empty;
         public int quantity { get; set; }
 
         // Navigation
