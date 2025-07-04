@@ -16,7 +16,7 @@ namespace BloodDonationSystem.DataAccess
         public DbSet<BlogPost> Blog_Post { get; set; }
         public DbSet<BloodRequest> Blood_Requests { get; set; }
         public DbSet<Donation> Donations { get; set; }
-        public DbSet<Location> Locations { get; set; }
+        
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<DonationHistory> DonationHistories { get; set; }
 
@@ -43,8 +43,7 @@ namespace BloodDonationSystem.DataAccess
             modelBuilder.Entity<HealthRecord>()
                 .HasKey(h => h.record_id);
 
-            modelBuilder.Entity<Location>()
-               .HasKey(l => l.location_id);
+           
 
             modelBuilder.Entity<Notification>()
                 .HasKey(n => n.notification_id);
