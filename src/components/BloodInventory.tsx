@@ -219,7 +219,7 @@ const BloodInventory = () => {
                                 <TableRow key={unit.unit_id}>
                                     <TableCell>{unit.unit_id}</TableCell>
                                     <TableCell>{donationMap.get(unit.donation_id)?.donation_date ? new Date(donationMap.get(unit.donation_id)!.donation_date).toLocaleDateString() : 'N/A'}</TableCell>
-                                    <TableCell>{getBloodTypeName(unit.blood_type)}</TableCell>
+                                    <TableCell>{getBloodTypeName(parseInt(unit.blood_type, 10))}</TableCell>
                                     <TableCell>{donationMap.get(unit.donation_id)?.component || 'N/A'}</TableCell>
                                     <TableCell>{unit.quantity}ml</TableCell>
                                     <TableCell>
