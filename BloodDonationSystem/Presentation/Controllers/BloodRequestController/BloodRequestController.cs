@@ -64,8 +64,7 @@ namespace BloodDonationSystem.Presentation.Controllers.BloodRequestController
             existingRequest.blood_id = updatedRequest.blood_id;
             existingRequest.emergency_status = updatedRequest.emergency_status;
             existingRequest.request_date = DateTime.Now;
-            existingRequest.location_id = updatedRequest.location_id;
-
+          
             await _bloodRequestRepository.UpdateAsync(existingRequest);
             return Ok(existingRequest);
         }
