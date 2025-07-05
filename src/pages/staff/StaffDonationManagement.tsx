@@ -71,7 +71,11 @@ const StaffDonationManagement = () => {
       
             if (newStatus === 'Completed') {
                 try {
-                    await HealthRecordService.updateUserDonationStats(donation.user_id.toString(), donation.donation_date);
+                    await HealthRecordService.updateUserDonationStats(
+                      donation.user_id.toString(), 
+                      donation.donation_date,
+                      donation.component
+                    );
                         toast({ title: 'Success', description: `Donation completed and user's health record updated.` });
                 } catch (hrError) {
                     console.error("Failed to update health record:", hrError);
