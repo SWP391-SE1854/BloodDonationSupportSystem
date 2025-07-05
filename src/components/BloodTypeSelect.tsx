@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 interface BloodTypeSelectProps {
   value: string;
   onChange: (value: string) => void;
+  className?: string;
 }
 
 const bloodTypes = [
@@ -17,10 +18,10 @@ const bloodTypes = [
     { id: "8", name: "O-" }
 ];
 
-const BloodTypeSelect: React.FC<BloodTypeSelectProps> = ({ value, onChange }) => {
+const BloodTypeSelect: React.FC<BloodTypeSelectProps> = ({ value, onChange, className }) => {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger>
+      <SelectTrigger className={className}>
         <SelectValue placeholder="Select blood type" />
       </SelectTrigger>
       <SelectContent>
