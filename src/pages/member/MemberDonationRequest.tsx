@@ -1,19 +1,19 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useToast } from "@/components/ui/use-toast";
+import { DonationService } from "@/services/donation.service";
+import { Donation } from "@/types/api";
 import { Heart, Calendar as CalendarIcon, FileText, Send, Clock, MapPin, Droplet, TestTube, Trash2, RefreshCw, CheckCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { format } from 'date-fns';
-import { DonationService } from '@/services/donation.service';
-import { useToast } from '@/components/ui/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useLocation } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Donation } from '@/types/api';
 import { Label } from '@/components/ui/label';
 
 interface MemberDonationRequestProps {
@@ -103,6 +103,18 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
       });
       return;
     }
+
+    // Validate that donation date is not in the past
+    const today = new Date(new Date().setHours(0, 0, 0, 0));
+    if (donationDate < today) {
+      toast({
+        title: "Invalid Date",
+        description: "You cannot schedule a donation for a past date.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const donationData = {
@@ -175,6 +187,8 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
                   selected={donationDate}
                   onSelect={setDonationDate}
                   initialFocus
+                  disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                  fromDate={new Date()}
                 />
               </PopoverContent>
             </Popover>
@@ -295,38 +309,86 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
       <Card className="border-red-100">
         <CardHeader>
           <div className="flex items-center justify-between">
+            <div>
               <CardTitle>My Active Donations</CardTitle>
-              <Button onClick={fetchMemberDonations} variant="outline" size="sm" disabled={isFetching}>
-                <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
+            </div>
           </div>
-             <p className="text-sm text-muted-foreground">Your upcoming or pending donations.</p>
         </CardHeader>
         <CardContent>
-            {isFetching ? (
-            <p>Loading donations...</p>
-            ) : activeDonations.length > 0 ? (
+          {isFetching ? (
+            <div className="flex items-center justify-center py-8">
+              <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : activeDonations.length > 0 ? (
             <div className="space-y-4">
-                {activeDonations.map(donation => (
-                <div key={donation.donation_id} className="flex justify-between items-center p-3 border rounded-lg">
-                  <div>
-                      <p className="font-semibold">{donation.component} Donation on {format(new Date(donation.donation_date), 'PPP')}</p>
-                      <p className="text-sm text-muted-foreground">at {donation.location} - <Badge variant="secondary">{donation.status}</Badge></p>
+              {activeDonations.map(donation => (
+                <div key={donation.donation_id} 
+                     className={`flex justify-between items-center p-4 border rounded-lg ${
+                       donation.status === 'Approved' ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200'
+                     }`}>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Heart className={`h-5 w-5 ${donation.status === 'Approved' ? 'text-green-600' : 'text-orange-600'}`} />
+                      <p className="font-semibold">{donation.component} Donation</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm">
+                        <span className="text-muted-foreground">Date:</span> {format(new Date(donation.donation_date), 'PPP')}
+                      </p>
+                      <p className="text-sm">
+                        <span className="text-muted-foreground">Location:</span> {donation.location}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        {donation.status === 'Approved' ? (
+                          <>
+                            <Badge variant="default" className="bg-green-100 text-green-800">
+                              Approved by Staff
+                            </Badge>
+                            <span className="text-xs text-green-600">
+                              <CheckCircle className="h-3 w-3 inline mr-1" />
+                              Ready for Donation
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                              Pending Staff Review
+                            </Badge>
+                            <span className="text-xs text-orange-600">
+                              <Clock className="h-3 w-3 inline mr-1" />
+                              Awaiting Approval
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
+                  <div className="flex flex-col items-end gap-2">
+                    {donation.status === 'Pending' && (
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleCancelDonation(donation.donation_id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
-                        Cancel
+                        Cancel Request
                       </Button>
+                    )}
+                    {donation.status === 'Approved' && (
+                      <div className="text-xs text-green-600 text-right">
+                        Please arrive on time
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
-      </div>
+            </div>
           ) : (
-              <p className="text-center text-muted-foreground py-4">You have no active donation requests.</p>
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">You have no active donation requests.</p>
+              <p className="text-sm text-muted-foreground mt-1">Create a new request to start donating!</p>
+            </div>
           )}
         </CardContent>
       </Card>

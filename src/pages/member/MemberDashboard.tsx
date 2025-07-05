@@ -5,6 +5,8 @@ import { HealthRecordService, HealthRecord } from '@/services/health-record.serv
 import { DonationHistoryService, DonationHistoryRecord } from '@/services/donation-history.service';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, differenceInDays } from 'date-fns';
+import { calculateNextEligibleDate, DonationHistoryEntry, getWaitingPeriod, getLatestDonation } from '@/utils/donationConstants';
+import { isEligibleByHistory } from '@/utils/donationConstants';
 
 const bloodTypes = [
     { id: "1", name: "A+" }, { id: "2", name: "A-" }, { id: "3", name: "B+" },
@@ -30,6 +32,25 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
   const [healthRecord, setHealthRecord] = useState<HealthRecord | null>(null);
   const [history, setHistory] = useState<DonationHistoryRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Calculate total completed donations
+  const totalDonations = useMemo(() => {
+    return history.filter(donation => donation.status.toLowerCase() === 'completed').length;
+  }, [history]);
+
+  // Calculate eligibility and waiting period
+  const { isEligible, lastDonation, waitingPeriod, nextEligibleDate } = useMemo(() => {
+    const nextDate = calculateNextEligibleDate(history as DonationHistoryEntry[]);
+    const latestDonation = getLatestDonation(history as DonationHistoryEntry[]);
+    const componentWaitingPeriod = latestDonation ? getWaitingPeriod(latestDonation.component) : 0;
+
+    return {
+      isEligible: isEligibleByHistory(history as DonationHistoryEntry[]),
+      lastDonation: latestDonation,
+      waitingPeriod: componentWaitingPeriod,
+      nextEligibleDate: nextDate ? format(nextDate, 'PPP') : 'Now'
+    };
+  }, [history]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -66,12 +87,30 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
     fetchData();
   }, [user]);
 
-  const nextEligibleDays = healthRecord?.last_donation ? Math.max(0, 90 - differenceInDays(new Date(), new Date(healthRecord.last_donation))) : 0;
-
   const memberStats = [
-    { title: 'Total Donations', value: healthRecord?.donation_count ?? 'N/A', icon: Heart, color: 'text-red-600', bgColor: 'bg-red-100' },
-    { title: 'Blood Type', value: healthRecord ? getBloodTypeName(healthRecord.blood_type) : 'N/A', icon: Droplet, color: 'text-blue-600', bgColor: 'bg-blue-100' },
-    { title: 'Next Eligible', value: nextEligibleDays > 0 ? `${nextEligibleDays} days` : 'Now', icon: Calendar, color: 'text-green-600', bgColor: 'bg-green-100' },
+    { 
+      title: 'Total Donations', 
+      value: totalDonations, 
+      icon: Heart, 
+      color: 'text-red-600', 
+      bgColor: 'bg-red-100' 
+    },
+    { 
+      title: 'Blood Type', 
+      value: healthRecord ? getBloodTypeName(healthRecord.blood_type) : 'N/A', 
+      icon: Droplet, 
+      color: 'text-blue-600', 
+      bgColor: 'bg-blue-100' 
+    },
+    { 
+      title: 'Next Eligible', 
+      value: isEligible ? 'Now' : `${waitingPeriod} days`, 
+      description: lastDonation ? `Last donation (${lastDonation.component}): ${format(new Date(lastDonation.donation_date), 'PPP')}` : undefined,
+      subtext: !isEligible ? `Next eligible: ${nextEligibleDate}` : undefined,
+      icon: Calendar, 
+      color: isEligible ? 'text-green-600' : 'text-red-600', 
+      bgColor: isEligible ? 'bg-green-100' : 'bg-red-100' 
+    }
   ];
 
   const recentDonations = history.slice(0, 2);
@@ -102,6 +141,9 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
                 <div>
                   <p className="text-sm font-medium text-gray-600">{stat.title}</p>
                   <p className="text-3xl font-bold mt-2">{stat.value}</p>
+                    {stat.description && (
+                      <p className="text-sm text-red-500 mt-1">{stat.description}</p>
+                    )}
                 </div>
                 <div className={`p-3 rounded-lg ${stat.bgColor}`}>
                   <Icon className={`h-6 w-6 ${stat.color}`} />
