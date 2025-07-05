@@ -16,9 +16,12 @@ import {
   Shield,
   Mail,
   Phone,
-  MapPin
+  MapPin,
+  ToggleLeft,
+  ToggleRight
 } from "lucide-react";
-import { AdminService, UserProfile } from "@/services/admin.service";
+import AdminService from "@/services/admin.service";
+import { UserProfile } from "@/services/user.service";
 import { useToast } from "@/hooks/use-toast";
 
 const Admin = () => {
@@ -28,8 +31,6 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState("all");
-  const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -39,7 +40,9 @@ const Admin = () => {
     try {
       setLoading(true);
       const allUsers = await AdminService.getAllUsers();
-      setUsers(allUsers);
+      // Initialize status to 'Active' if it's missing
+      const usersWithStatus = allUsers.map(u => ({ ...u, status: u.status || 'Active' }));
+      setUsers(usersWithStatus);
       } catch (error) {
       console.error("Error fetching users:", error);
       toast({
@@ -56,61 +59,24 @@ const Admin = () => {
     navigate("/login");
   };
 
-  const handleEditUser = (user: UserProfile) => {
-    setEditingUser(user);
-    setIsEditing(true);
-  };
-
-  const handleUpdateUser = async (updatedUser: UserProfile) => {
+  const handleToggleStatus = async (userToUpdate: UserProfile) => {
+    const newStatus = userToUpdate.status === 'Active' ? 'Disabled' : 'Active';
     try {
-      await AdminService.updateUser(updatedUser.user_id, {
-        name: updatedUser.name,
-        email: updatedUser.email,
-        phone: updatedUser.phone,
-        role: updatedUser.role,
-        address: updatedUser.address,
-        city: updatedUser.city,
-        district: updatedUser.district
-      });
-      
+      await AdminService.updateUserStatus(userToUpdate.user_id, newStatus);
       setUsers(users.map(user => 
-        user.user_id === updatedUser.user_id ? updatedUser : user
+        user.user_id === userToUpdate.user_id ? { ...user, status: newStatus } : user
       ));
-      
-      setIsEditing(false);
-      setEditingUser(null);
-      
       toast({
         title: "Success",
-        description: "User updated successfully",
+        description: `User has been ${newStatus === 'Active' ? 'Enabled' : 'Disabled'}.`,
       });
     } catch (error) {
-      console.error("Error updating user:", error);
+      console.error("Error updating user status:", error);
       toast({
         title: "Error",
-        description: "Failed to update user",
+        description: "Failed to update user status.",
         variant: "destructive"
       });
-    }
-  };
-
-  const handleDeleteUser = async (userId: number) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
-      try {
-        await AdminService.deleteUser(userId);
-        setUsers(users.filter(user => user.user_id !== userId));
-        toast({
-          title: "Success",
-          description: "User deleted successfully",
-        });
-      } catch (error) {
-        console.error("Error deleting user:", error);
-        toast({
-          title: "Error",
-          description: "Failed to delete user",
-          variant: "destructive"
-        });
-      }
     }
   };
 
@@ -195,55 +161,30 @@ const Admin = () => {
         {/* Users List */}
         <div className="grid gap-6">
           {filteredUsers.map((user) => (
-            <Card key={user.user_id}>
+            <Card key={user.user_id} className={user.status === 'Disabled' ? 'bg-gray-100 opacity-70' : ''}>
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
-                    <div className="bg-purple-100 p-3 rounded-full">
-                      <UserIcon className="h-6 w-6 text-purple-600" />
+                    <div className="bg-gray-100 p-3 rounded-full">
+                      <UserIcon className="h-6 w-6 text-gray-600" />
                     </div>
                     <div>
-                              <h3 className="text-lg font-semibold">{user.name}</h3>
-                      <div className="flex items-center space-x-4 text-sm text-gray-600">
-                              <div className="flex items-center space-x-1">
-                          <Mail className="h-4 w-4" />
-                                <span>{user.email}</span>
+                      <h3 className="font-semibold text-lg">{user.name}</h3>
+                      <p className="text-sm text-gray-500">{user.email}</p>
                               </div>
-                              {user.phone && (
-                                <div className="flex items-center space-x-1">
-                            <Phone className="h-4 w-4" />
-                                  <span>{user.phone}</span>
-                                </div>
-                              )}
-                        {user.city && (
-                                <div className="flex items-center space-x-1">
-                            <MapPin className="h-4 w-4" />
-                            <span>{user.city}, {user.district}</span>
-                                </div>
-                              )}
-                              </div>
-                            </div>
-                          </div>
-                  <div className="flex items-center space-x-3">
-                    <Badge className={getRoleColor(user.role)}>
-                      {user.role}
+                    <Badge className={getRoleColor(user.role)}>{user.role}</Badge>
+                    <Badge variant={user.status === 'Active' ? 'default' : 'destructive'}>
+                      {user.status}
                     </Badge>
+                  </div>
+                  <div className="flex items-center space-x-2">
                     <Button
-                      variant="outline"
+                      variant={user.status === 'Active' ? 'destructive' : 'default'}
                       size="sm"
-                      onClick={() => handleEditUser(user)}
+                      onClick={() => handleToggleStatus(user)}
                     >
-                      <Edit className="h-4 w-4 mr-2" />
-                              Edit
-                            </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteUser(user.user_id)}
-                      className="text-red-600 border-red-200 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
+                      {user.status === 'Active' ? <ToggleLeft className="mr-2 h-4 w-4" /> : <ToggleRight className="mr-2 h-4 w-4" />}
+                      {user.status === 'Active' ? 'Disable' : 'Enable'}
                             </Button>
                           </div>
                         </div>
@@ -251,83 +192,7 @@ const Admin = () => {
                     </Card>
                   ))}
                 </div>
-
-        {filteredUsers.length === 0 && (
-          <div className="text-center py-12">
-            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
-            <p className="text-gray-600">Try adjusting your search or filter criteria.</p>
-                            </div>
-                            )}
-                          </div>
-
-      {/* Edit User Modal */}
-      {isEditing && editingUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <Card className="w-full max-w-md">
-                <CardHeader>
-              <CardTitle>Edit User</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">Name</label>
-                <Input
-                  value={editingUser.name}
-                  onChange={(e) => setEditingUser({...editingUser, name: e.target.value})}
-                />
-                    </div>
-              <div>
-                <label className="text-sm font-medium">Email</label>
-                <Input
-                  value={editingUser.email}
-                  onChange={(e) => setEditingUser({...editingUser, email: e.target.value})}
-                />
-                  </div>
-              <div>
-                <label className="text-sm font-medium">Phone</label>
-                <Input
-                  value={editingUser.phone}
-                  onChange={(e) => setEditingUser({...editingUser, phone: e.target.value})}
-                />
-                    </div>
-              <div>
-                <label className="text-sm font-medium">Role</label>
-                <Select 
-                  value={editingUser.role} 
-                  onValueChange={(value) => setEditingUser({...editingUser, role: value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="staff">Staff</SelectItem>
-                    <SelectItem value="member">Member</SelectItem>
-                  </SelectContent>
-                </Select>
-                  </div>
-              <div className="flex space-x-2 pt-4">
-                <Button 
-                  onClick={() => handleUpdateUser(editingUser)}
-                  className="flex-1"
-                >
-                        Save Changes
-                    </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setIsEditing(false);
-                    setEditingUser(null);
-                  }}
-                  className="flex-1"
-                >
-                  Cancel
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
-      )}
                 </div>
     );
 };
