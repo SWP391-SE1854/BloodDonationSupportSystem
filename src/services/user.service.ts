@@ -12,6 +12,7 @@ export interface UserProfile {
   city: string;
   district: string;
   address: string;
+  status?: 'Active' | 'Disabled';
 }
 
 export interface UpdateUserProfile {
