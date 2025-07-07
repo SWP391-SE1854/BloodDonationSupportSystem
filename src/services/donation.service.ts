@@ -4,14 +4,13 @@ import axios from 'axios';
 import { Donation } from '@/types/api';
 
 // CreateDonationPayload is a subset of the full Donation object
-export type CreateDonationPayload = Pick<Donation, 
-  'donation_date' | 
-  'donation_time' |
-  'location' | 
-  'component' | 
-  'quantity'
-> & { note?: string };
-
+export type CreateDonationPayload = {
+  donation_date: string;
+  donation_time: string;
+  diseases: string[];
+  allergies: string[];
+  note?: string;
+};
 
 export class DonationService {
   static async createDonation(payload: CreateDonationPayload): Promise<Donation> {

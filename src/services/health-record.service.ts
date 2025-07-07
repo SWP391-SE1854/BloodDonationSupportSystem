@@ -9,12 +9,13 @@ export interface HealthRecord {
     weight: number;
     height: number;
     blood_type: string;
-    allergies: string;
+    heart_rate: number;
     medication: string;
     last_donation: string;
     last_donation_type?: string;
     eligibility_status: boolean | null;
     donation_count: number;
+    rejection_reason?: string;
 }
 
 export class HealthRecordService {
@@ -74,15 +75,15 @@ export class HealthRecordService {
       
       // Update the record
       const updateData: Partial<HealthRecord> = {
-      donation_count: (currentRecord.donation_count || 0) + 1,
-      last_donation: donationDate,
+        donation_count: (currentRecord.donation_count || 0) + 1,
+        last_donation: donationDate,
         last_donation_type: component,
         eligibility_status: isCurrentlyEligible,
         // Preserve all other fields
         weight: currentRecord.weight,
         height: currentRecord.height,
         blood_type: currentRecord.blood_type,
-        allergies: currentRecord.allergies,
+        heart_rate: currentRecord.heart_rate,
         medication: currentRecord.medication
       };
 

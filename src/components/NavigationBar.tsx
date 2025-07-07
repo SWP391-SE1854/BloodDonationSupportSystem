@@ -4,6 +4,8 @@ import { Heart, Menu, X } from "lucide-react";
 import { UserProfileDropdown } from "@/components/UserProfileDropdown";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
+import NotificationBell, { Notification } from "@/components/ui/NotificationBell";
+import { useNotifications } from "@/hooks/useNotifications";
 
 interface NavigationBarProps {
   fixed?: boolean;
@@ -19,6 +21,17 @@ const NavigationBar = ({ fixed = false }: NavigationBarProps) => {
   const { isAuthenticated } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const {
+    notifications,
+    isLoading,
+    markAsRead,
+    markAllAsRead,
+    dismiss
+  } = useNotifications();
+
+  const handleNotificationClick = (notification: Notification) => {
+    markAsRead(notification.id);
+  };
 
   const navClass = fixed
     ? "fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-md shadow-lg z-50"
@@ -64,7 +77,16 @@ const NavigationBar = ({ fixed = false }: NavigationBarProps) => {
                 </Link>
               </>
             ) : (
-              <UserProfileDropdown />
+              <div className="flex items-center space-x-4">
+                <NotificationBell
+                  notifications={notifications}
+                  onNotificationClick={handleNotificationClick}
+                  onMarkAsRead={markAsRead}
+                  onMarkAllAsRead={markAllAsRead}
+                  onDismiss={dismiss}
+                />
+                <UserProfileDropdown />
+              </div>
             )}
           </div>
 
@@ -107,7 +129,14 @@ const NavigationBar = ({ fixed = false }: NavigationBarProps) => {
                   </Link>
                 </div>
               ) : (
-                <div className="px-4">
+                <div className="px-4 space-y-4">
+                  <NotificationBell
+                    notifications={notifications}
+                    onNotificationClick={handleNotificationClick}
+                    onMarkAsRead={markAsRead}
+                    onMarkAllAsRead={markAllAsRead}
+                    onDismiss={dismiss}
+                  />
                   <UserProfileDropdown />
                 </div>
               )}
