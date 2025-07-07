@@ -40,7 +40,9 @@ export interface BloodRequest {
   patientName: string;
   bloodType: string;
   urgency: 'Critical' | 'High' | 'Medium' | 'Low';
-  quantity_cc: number;
+  unitsNeeded: number;
+  hospital: string;
+  requestTime: string;
   status: 'Pending' | 'In Progress' | 'Completed';
   contactPhone: string;
   assignedDonorId?: string;
@@ -76,7 +78,7 @@ export interface BloodInventoryUnit {
   donation_id: number;
   blood_type: number; // This is a foreign key ID
   status: 'Available' | 'Reserved' | 'Expired' | 'Used';
-  quantity_cc: number; // in cc
+  quantity: number; // in ml
   expiration_date: string; // ISO 8601 format
 }
 
@@ -141,8 +143,9 @@ export interface Donation {
   user_id: string;
   donation_date: string;
   donation_time: string;
-  diseases: string[];
-  allergies: string[];
+  component: 'Whole Blood' | 'Platelets' | 'Power Red';
+  quantity: number;
+  location: string;
   note?: string;
   status: 'Pending' | 'Approved' | 'Completed' | 'Rejected' | 'Cancelled';
   created_at: string;

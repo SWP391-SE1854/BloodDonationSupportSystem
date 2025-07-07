@@ -134,11 +134,6 @@ export const API_ENDPOINTS = {
   },
 
   NOTIFICATIONS: {
-    GET_ALL: '/notifications/all',
-    MARK_AS_READ: (id: string) => `/notifications/${id}/read`,
-    MARK_ALL_AS_READ: '/notifications/mark-all-read',
     GET_MY_NOTIFICATIONS: '/notifications/my-notifications',
-    CREATE: '/notifications/create',
-    DISMISS: (id: string) => `/notifications/${id}/dismiss`
   },
 }; 
