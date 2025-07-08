@@ -85,7 +85,7 @@ const NavigationBar = ({ fixed = false }: NavigationBarProps) => {
                   onMarkAllAsRead={markAllAsRead}
                   onDismiss={dismiss}
                 />
-                <UserProfileDropdown />
+              <UserProfileDropdown />
               </div>
             )}
           </div>
