@@ -66,50 +66,52 @@ export function CreateBlogPost({ onPostCreated, onCancel }: CreateBlogPostProps)
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto shadow-lg border border-gray-200">
-      <CardHeader>
-        <CardTitle>Create New Blog Post</CardTitle>
-        <CardDescription>Share important updates, tips, or stories with the community. Fill out the details below to publish a new blog post.</CardDescription>
+    <Card className="w-full max-w-md mx-auto shadow-lg border border-gray-200">
+      <CardHeader className="p-4">
+        <CardTitle className="text-lg">Create New Blog Post</CardTitle>
+        <CardDescription className="text-xs">
+          Share important updates, tips, or stories with the community. Fill out the details below to publish a new blog post.
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+      <CardContent className="p-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1">
+            <Label htmlFor="title" className="text-sm">Title</Label>
             <Input
               id="title"
               value={formData.title}
               onChange={(e) => handleInputChange('title', e.target.value)}
               placeholder="Enter post title"
               required
-              className="text-base"
+              className="text-sm"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="content">Content</Label>
+          <div className="space-y-1">
+            <Label htmlFor="content" className="text-sm">Content</Label>
             <Textarea
               id="content"
               value={formData.content}
               onChange={(e) => handleInputChange('content', e.target.value)}
               placeholder="Write your blog post content here..."
-              className="min-h-[160px] text-base"
+              className="min-h-[120px] text-sm"
               required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="imageUrl">Image URL</Label>
-            <div className="flex flex-col sm:flex-row gap-4 items-start">
+          <div className="space-y-1">
+            <Label htmlFor="imageUrl" className="text-sm">Image URL</Label>
+            <div className="flex flex-col sm:flex-row gap-2 items-start">
               <Input
                 id="imageUrl"
                 value={formData.imageUrl}
                 onChange={(e) => handleInputChange('imageUrl', e.target.value)}
                 placeholder="Enter image URL (optional)"
                 type="url"
-                className="text-base"
+                className="text-sm"
               />
               {formData.imageUrl && (
-                <div className="relative w-28 h-28 border rounded-md overflow-hidden bg-gray-50 flex items-center justify-center">
+                <div className="relative w-20 h-20 border rounded-md overflow-hidden bg-gray-50 flex items-center justify-center">
                   <img
                     src={formData.imageUrl}
                     alt="Preview"
@@ -131,18 +133,19 @@ export function CreateBlogPost({ onPostCreated, onCancel }: CreateBlogPostProps)
             </p>
           </div>
 
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex justify-end gap-1 pt-1">
             {onCancel && (
               <Button
                 type="button"
                 variant="outline"
                 onClick={onCancel}
                 disabled={isLoading}
+                className="text-sm"
               >
                 Cancel
               </Button>
             )}
-            <Button type="submit" disabled={isLoading} className="font-semibold">
+            <Button type="submit" disabled={isLoading} className="font-semibold text-sm">
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
