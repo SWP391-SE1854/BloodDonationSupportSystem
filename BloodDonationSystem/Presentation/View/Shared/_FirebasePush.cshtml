@@ -1,0 +1,41 @@
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAlv8EpE86eXsuo3lP4g6tUPbYg2RolazE",
+        authDomain: "blooddonationsystem-f2379.firebaseapp.com",
+        projectId: "blooddonationsystem-f2379",
+        storageBucket: "blooddonationsystem-f2379.appspot.com",
+        messagingSenderId: "796297565410",
+        appId: "1:796297565410:web:0db3f0669011b980e27abb"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const messaging = getMessaging(app);
+
+    navigator.serviceWorker.register('firebase-messaging-sw.js')
+        .then((registration) => {
+            console.log("Service Worker registered:", registration);
+
+            getToken(messaging, {
+                vapidKey: "BMioz-WUsWOvTNl8peBMBskFVMIQOu60rNNPGg53cEsvKKVb29K-fHEfmq050K16US3_2FVcZn-Z8SzmSN-s5Oo",
+                serviceWorkerRegistration: registration
+            }).then((token) => {
+                if (token) {
+                    console.log("FCM Token:", token);
+                } else {
+                    console.warn("No registration token available");
+                }
+            }).catch((err) => {
+                console.error("Token error", err);
+            });
+        }).catch(err => {
+            console.error("Service Worker registration failed:", err);
+        });
+
+    onMessage(messaging, (payload) => {
+        console.log('Foreground message:', payload);
+        alert(payload.notification.title + ": " + payload.notification.body);
+    });
+</script>
