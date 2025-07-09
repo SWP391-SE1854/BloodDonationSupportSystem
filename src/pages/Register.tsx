@@ -222,10 +222,12 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-red-50 flex items-center justify-center py-8 px-4">
+    <div className="min-h-screen flex items-center justify-center py-4 px-2 relative overflow-hidden">
+      {/* Subtle animated gradient background */}
+      <div className="absolute inset-0 z-0 animate-gradient bg-gradient-to-br from-pink-100 via-red-100 to-pink-200 opacity-80" />
       <NavigationBar fixed />
 
-      <div className="w-full max-w-2xl mt-16">
+      <div className="w-full max-w-2xl mt-16 z-10">
         <Card className="shadow-2xl border-0">
           <CardHeader className="text-center bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-t-lg">
             <CardTitle className="text-2xl font-bold flex items-center justify-center space-x-2">
@@ -441,6 +443,17 @@ const Register = () => {
           </CardContent>
         </Card>
       </div>
+      <style>{`
+        @keyframes gradient {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .animate-gradient {
+          background-size: 200% 200%;
+          animation: gradient 8s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 };
