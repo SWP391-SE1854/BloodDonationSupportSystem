@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { BloodRequestService, BloodRequest, BloodRequestFormData, UpdateBloodRequestData } from '@/services/blood-request.service';
+import { BloodRequestService, BloodRequest, CreateBloodRequestData, UpdateBloodRequestData } from '@/services/blood-request.service';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,7 +31,7 @@ const getBloodTypeName = (id: string | number | null): string => {
         return id;
     }
     const numId = typeof id === 'string' ? parseInt(id, 10) : id;
-    return Object.keys(bloodTypeMap).find(key => bloodTypeMap[key] === numId) || 'Unknown';
+    return Object.keys(bloodTypeMap).find(key => bloodTypeMap[key] === numId) || 'Không xác định';
 }
 
 type BloodRequestServerResponse = BloodRequest[] | { $values: BloodRequest[] };
@@ -62,15 +62,15 @@ const BloodRequestManagement = () => {
             setIsFormOpen(false);
             setSelectedRequest(null);
         },
-        onError: (error: Error) => toast({ title: 'Error', description: `Failed to save request: ${error.message}`, variant: 'destructive' }),
+        onError: (error: Error) => toast({ title: 'Lỗi', description: `Lưu yêu cầu thất bại: ${error.message}`, variant: 'destructive' }),
     };
 
     const createMutation = useMutation({
-        mutationFn: (newData: BloodRequestFormData) => BloodRequestService.createBloodRequest(newData),
+        mutationFn: (newData: CreateBloodRequestData) => BloodRequestService.createBloodRequest(newData),
         ...mutationOptions,
         onSuccess: () => {
             mutationOptions.onSuccess();
-            toast({ title: 'Success', description: 'Blood request created successfully.' });
+            toast({ title: 'Thành công', description: 'Yêu cầu máu đã được tạo thành công.' });
         },
     });
 
@@ -79,7 +79,7 @@ const BloodRequestManagement = () => {
         ...mutationOptions,
         onSuccess: () => {
             mutationOptions.onSuccess();
-            toast({ title: 'Success', description: 'Blood request updated successfully.' });
+            toast({ title: 'Thành công', description: 'Yêu cầu máu đã được cập nhật thành công.' });
         },
     });
 
@@ -88,7 +88,7 @@ const BloodRequestManagement = () => {
         ...mutationOptions,
         onSuccess: () => {
             mutationOptions.onSuccess();
-            toast({ title: 'Success', description: 'Blood request deleted successfully.' });
+            toast({ title: 'Thành công', description: 'Yêu cầu máu đã được xóa thành công.' });
         },
     });
 
@@ -105,11 +105,11 @@ const BloodRequestManagement = () => {
     return (
         <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Manage Blood Requests</CardTitle>
+                <CardTitle>Quản lý Yêu cầu Máu</CardTitle>
                 {isStaffOrAdmin && (
                     <Button onClick={handleAddNew}>
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        New Request
+                        Tạo Yêu cầu
                     </Button>
                 )}
             </CardHeader>
@@ -117,28 +117,24 @@ const BloodRequestManagement = () => {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Request ID</TableHead>
-                            <TableHead>User ID</TableHead>
-                            <TableHead>Blood Type</TableHead>
-                            <TableHead>Location ID</TableHead>
-                            <TableHead>Emergency</TableHead>
-                            <TableHead>Donation Date</TableHead>
-                            {isStaffOrAdmin && <TableHead>Actions</TableHead>}
+                            <TableHead>ID Người dùng</TableHead>
+                            <TableHead>Loại máu</TableHead>
+                            <TableHead>Khẩn cấp</TableHead>
+                            <TableHead>Ngày yêu cầu</TableHead>
+                            {isStaffOrAdmin && <TableHead>Hành động</TableHead>}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {isLoading ? (
-                            <TableRow><TableCell colSpan={isStaffOrAdmin ? 7 : 6} className="text-center">Loading...</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={isStaffOrAdmin ? 5 : 4} className="text-center">Đang tải...</TableCell></TableRow>
                         ) : requests?.length === 0 ? (
-                            <TableRow><TableCell colSpan={isStaffOrAdmin ? 7 : 6} className="text-center">No blood requests found.</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={isStaffOrAdmin ? 5 : 4} className="text-center">Không tìm thấy yêu cầu máu nào.</TableCell></TableRow>
                         ) : (
                             requests?.map((request) => (
                             <TableRow key={request.request_id}>
-                                <TableCell>{request.request_id}</TableCell>
                                 <TableCell>{request.user_id}</TableCell>
                                 <TableCell>{getBloodTypeName(request.blood_id)}</TableCell>
-                                <TableCell>{request.location_id}</TableCell>
-                                <TableCell>{request.emergency_status ? 'Yes' : 'No'}</TableCell>
+                                <TableCell>{request.emergency_status ? 'Có' : 'Không'}</TableCell>
                                 <TableCell>{new Date(request.request_date).toLocaleDateString()}</TableCell>
                                 {isStaffOrAdmin && (
                                     <TableCell>
@@ -163,7 +159,7 @@ const BloodRequestManagement = () => {
                         if (id) {
                             updateMutation.mutate({ id, data });
                         } else {
-                            createMutation.mutate(data as BloodRequestFormData);
+                            createMutation.mutate(data as CreateBloodRequestData);
                         }
                     }}
                 />
@@ -176,93 +172,106 @@ interface RequestFormProps {
     isOpen: boolean;
     setIsOpen: (isOpen: boolean) => void;
     request: BloodRequest | null;
-    onSave: (data: Partial<UpdateBloodRequestData>, id?: number) => void;
+    onSave: (data: CreateBloodRequestData | Partial<UpdateBloodRequestData>, id?: number) => void;
 }
 
 const RequestForm = ({ isOpen, setIsOpen, request, onSave }: RequestFormProps) => {
-    const [formData, setFormData] = useState<Partial<UpdateBloodRequestData & { request_date?: Date | null }>>({});
+    const { toast } = useToast();
+    const [formData, setFormData] = useState<Partial<BloodRequest & { request_date: string }>>({});
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+    const { user: authUser } = useAuth();
 
     useEffect(() => {
         if (isOpen) {
-            let initialData;
             if (request) {
-                let initialDate = null;
-                if (request.request_date) {
-                    const datePart = request.request_date.substring(0, 10);
-                    const [year, month, day] = datePart.split('-').map(Number);
-                    initialDate = new Date(year, month - 1, day);
-                }
-                initialData = { ...request, request_date: initialDate };
+                setFormData({
+                    ...request,
+                    request_date: new Date(request.request_date).toISOString(),
+                });
             } else {
-                initialData = {
-                    user_id: null,
-                    blood_id: 'A+',
-                    location_id: null,
+                setFormData({
+                    user_id: authUser?.id ? parseInt(authUser.id) : undefined,
+                    blood_id: 1,
                     emergency_status: false,
-                    request_date: new Date(),
-                };
+                    request_date: new Date().toISOString(),
+                });
             }
-            setFormData(initialData);
         }
-    }, [request, isOpen]);
+    }, [request, isOpen, authUser]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.blood_id) {
-            alert("Please select a blood type.");
-            return;
-        }
-        
-        const dataToSave: Partial<UpdateBloodRequestData & { request_date?: string | Date}> = {
-            ...formData,
-            request_date: formData.request_date ? formData.request_date.toISOString() : undefined,
-        };
 
-        if (!request?.request_id) {
-            delete (dataToSave as Partial<BloodRequest>).request_id;
+        if (request?.request_id) {
+            if (!formData.blood_id) {
+                toast({ title: "Lỗi xác thực", description: "Loại máu là bắt buộc.", variant: "destructive" });
+                return;
+            }
+            const updateData: Partial<UpdateBloodRequestData> = {
+                blood_id: Number(formData.blood_id),
+                emergency_status: formData.emergency_status || false,
+                request_date: new Date(formData.request_date || Date.now()).toISOString(),
+            };
+            onSave(updateData, request.request_id);
+        } else {
+            if (!formData.user_id || !formData.blood_id || !formData.request_date) {
+                toast({ title: "Lỗi xác thực", description: "ID Người dùng, Loại máu, và Ngày yêu cầu là bắt buộc.", variant: "destructive" });
+                return;
+            }
+            const createData: CreateBloodRequestData = {
+                user_id: formData.user_id,
+                blood_id: Number(formData.blood_id),
+                emergency_status: formData.emergency_status || false,
+                request_date: new Date(formData.request_date).toISOString(),
+            };
+            onSave(createData);
         }
-        
-        onSave(dataToSave, request?.request_id);
     };
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>{request ? 'Edit' : 'Create'} Blood Request</DialogTitle>
+                    <DialogTitle>{request ? 'Chỉnh sửa' : 'Tạo'} Yêu cầu máu</DialogTitle>
                     <DialogDescription>
-                        Fill in the details below. For general requests, leave User ID blank.
+                        {request ? "Chỉnh sửa yêu cầu máu hiện có." : "Chọn loại máu và trạng thái khẩn cấp."}
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-                    <div className="space-y-1">
-                        <Label htmlFor="user_id">User ID (Optional)</Label>
-                        <Input
-                            id="user_id"
-                            type="number"
-                            value={formData.user_id === null ? '' : formData.user_id}
-                            onChange={e => {
-                                const value = e.target.value;
-                                setFormData({ ...formData, user_id: value === '' ? null : parseInt(value) });
-                            }}
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label>Blood Type Needed</Label>
-                        <BloodTypeSelect value={formData.blood_id || ''} onChange={val => setFormData({ ...formData, blood_id: val })} />
-                    </div>
+                    {/* --- Fields only for EDIT mode --- */}
+                    {request && (
+                        <>
+                            <div className="space-y-1">
+                                <Label htmlFor="user_id">ID Người dùng (Người yêu cầu)</Label>
+                                <Input
+                                    id="user_id"
+                                    type="number"
+                                    value={formData.user_id || ''}
+                                    disabled
+                                />
+                            </div>
+                        </>
+                    )}
+                    {/* --- Fields for BOTH modes --- */}
                      <div className="space-y-1">
-                        <Label htmlFor="location_id">Location ID (Optional)</Label>
-                        <Input 
-                            id="location_id" 
-                            type="number" 
-                            value={formData.location_id ?? ''} 
-                            onChange={e => setFormData({ ...formData, location_id: e.target.value ? parseInt(e.target.value) : null })} 
+                        <Label>Loại máu</Label>
+                        <BloodTypeSelect
+                            value={String(formData.blood_id || '')}
+                            onChange={(value) => setFormData(prev => ({ ...prev, blood_id: Number(value) }))}
                         />
                     </div>
+
+                    <div className="flex items-center space-x-2">
+                        <Switch
+                            id="emergency_status"
+                            checked={formData.emergency_status || false}
+                            onCheckedChange={(checked) => setFormData(prev => ({...prev, emergency_status: checked}))}
+                        />
+                        <Label htmlFor="emergency_status">Yêu cầu khẩn cấp</Label>
+                    </div>
+
                     <div className="space-y-1">
-                        <Label htmlFor="request_date">Donation Date</Label>
+                        <Label>Ngày yêu cầu</Label>
                         <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                             <PopoverTrigger asChild>
                                 <Button
@@ -273,15 +282,15 @@ const RequestForm = ({ isOpen, setIsOpen, request, onSave }: RequestFormProps) =
                                     )}
                                 >
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {formData.request_date ? format(formData.request_date, "PPP") : <span>Pick a date</span>}
+                                    {formData.request_date ? format(new Date(formData.request_date), "PPP") : <span>Chọn ngày</span>}
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0">
                                 <Calendar
                                     mode="single"
-                                    selected={formData.request_date || undefined}
+                                    selected={formData.request_date ? new Date(formData.request_date) : undefined}
                                     onSelect={(date) => {
-                                        setFormData({ ...formData, request_date: date });
+                                        setFormData(prev => ({...prev, request_date: date?.toISOString()}));
                                         setIsCalendarOpen(false);
                                     }}
                                     initialFocus
@@ -289,13 +298,10 @@ const RequestForm = ({ isOpen, setIsOpen, request, onSave }: RequestFormProps) =
                             </PopoverContent>
                         </Popover>
                     </div>
-                    <div className="flex items-center space-x-2 pt-2">
-                        <Switch id="emergency_status" checked={formData.emergency_status} onCheckedChange={checked => setFormData({ ...formData, emergency_status: checked })} />
-                        <Label htmlFor="emergency_status">Is Emergency</Label>
-                    </div>
-                    <div className="flex justify-end space-x-2">
-                         <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
-                         <Button type="submit">Save Request</Button>
+                    
+                    <div className="flex justify-end space-x-2 pt-4">
+                        <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Hủy</Button>
+                        <Button type="submit">Lưu</Button>
                     </div>
                 </form>
             </DialogContent>
@@ -310,14 +316,14 @@ const DeleteConfirmationDialog = ({ id, onDelete }: { id: number; onDelete: () =
         </AlertDialogTrigger>
         <AlertDialogContent>
             <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogTitle>Bạn có chắc chắn không?</AlertDialogTitle>
                 <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete the blood request record.
+                    Hành động này không thể được hoàn tác. Thao tác này sẽ xóa vĩnh viễn yêu cầu máu.
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={onDelete}>Continue</AlertDialogAction>
+                <AlertDialogCancel>Hủy</AlertDialogCancel>
+                <AlertDialogAction onClick={onDelete}>Xóa</AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
     </AlertDialog>

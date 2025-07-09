@@ -10,7 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import { auth } from "@/config/firebase";
 import EditProfileForm from "@/components/EditProfileForm";
 import { API_ENDPOINTS } from "@/services/api.config";
-import { useUserRole } from '@/hooks/useUserRole';
 
 interface ProfileData {
   user_id: number;
@@ -37,10 +36,13 @@ const Profile = () => {
   const [donationHistory, setDonationHistory] = useState<DonationHistory[]>([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const role = useUserRole();
 
-  const fetchProfileData = async () => {
-    if (!role) return;
+  const fetchProfileData = async (role: string | undefined) => {
+    if (!role) {
+      setIsLoading(false);
+      return;
+    }
+    setIsLoading(true);
     try {
       let endpoint = '';
       if (role === 'Member') {
@@ -66,17 +68,13 @@ const Profile = () => {
   };
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-    fetchProfileData();
-      } else {
-        setUser(null);
-        setProfileData(null);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
+    if (user?.role) {
+      fetchProfileData(user.role);
+    } else if (!user) {
+      setIsLoading(false);
+      setProfileData(null);
+    }
+  }, [user]);
 
   const handleLogout = async () => {
     try {
@@ -88,7 +86,9 @@ const Profile = () => {
 
   const handleProfileUpdated = () => {
     setIsEditing(false);
-    fetchProfileData();
+    if (user?.role) {
+      fetchProfileData(user.role);
+    }
   };
 
   if (isLoading) {

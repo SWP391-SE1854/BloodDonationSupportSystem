@@ -9,7 +9,7 @@ import { CheckCircle, PlusCircle, Calendar, Heart } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, differenceInDays } from 'date-fns';
 import { calculateNextEligibleDate, DonationHistoryEntry, getWaitingPeriod } from '@/utils/donationConstants';
-import { isEligibleByHistory } from '@/utils/donationConstants';
+import { isEligibleToDonate } from '@/utils/healthValidation';
 import axios from 'axios';
 
 // Data from BloodTypeSelect component
@@ -46,14 +46,15 @@ const MemberHealthRecords = () => {
       .sort((a, b) => new Date(b.donation_date).getTime() - new Date(a.donation_date).getTime())[0];
     
     const componentWaitingPeriod = lastDonation ? getWaitingPeriod(lastDonation.component) : 0;
+    const eligibility = healthRecord ? isEligibleToDonate(healthRecord, donationHistory) : false;
 
     return {
       nextEligibleDays: Math.max(0, daysToWait),
       waitingPeriod: componentWaitingPeriod,
-      isEligible: isEligibleByHistory(donationHistory),
-      nextEligibleDate: nextDate ? format(nextDate, 'PPP') : 'Now'
+      isEligible: eligibility,
+      nextEligibleDate: nextDate ? format(nextDate, 'PPP') : 'Bây giờ'
     };
-  }, [donationHistory]);
+  }, [donationHistory, healthRecord]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -79,7 +80,7 @@ const MemberHealthRecords = () => {
         }
       } catch (error) {
         if (axios.isAxiosError(error) && error.response?.status !== 404) {
-          toast({ title: 'Error', description: 'Failed to fetch health record.', variant: 'destructive'});
+          toast({ title: 'Lỗi', description: 'Không thể tải hồ sơ sức khỏe.', variant: 'destructive'});
         }
       } finally {
         setIsLoading(false);
@@ -93,15 +94,15 @@ const MemberHealthRecords = () => {
       let savedRecord;
       if (healthRecord) {
         savedRecord = await HealthRecordService.updateMyRecord(data);
-        toast({ title: 'Success', description: 'Health record updated.' });
+        toast({ title: 'Thành công', description: 'Đã cập nhật hồ sơ sức khỏe.' });
       } else {
         savedRecord = await HealthRecordService.createMyRecord(data);
-        toast({ title: 'Success', description: 'Health record created.' });
+        toast({ title: 'Thành công', description: 'Đã tạo hồ sơ sức khỏe.' });
       }
       setHealthRecord(savedRecord);
       setIsFormOpen(false);
     } catch (error) {
-      toast({ title: 'Error', description: 'Failed to save health record.' });
+      toast({ title: 'Lỗi', description: 'Không thể lưu hồ sơ sức khỏe.' });
     }
   };
   
@@ -113,11 +114,11 @@ const MemberHealthRecords = () => {
     return (
       <div className="text-center">
         <Alert>
-          <AlertTitle>No Health Record Found</AlertTitle>
-          <AlertDescription>You haven't created a health record yet. Creating one is the first step to becoming a donor.</AlertDescription>
+          <AlertTitle>Không Tìm Thấy Hồ Sơ Sức Khỏe</AlertTitle>
+          <AlertDescription>Bạn chưa tạo hồ sơ sức khỏe. Tạo hồ sơ là bước đầu tiên để trở thành người hiến máu.</AlertDescription>
         </Alert>
         <Button onClick={() => setIsFormOpen(true)} className="mt-4">
-          <PlusCircle className="mr-2 h-4 w-4" /> Create Health Record
+          <PlusCircle className="mr-2 h-4 w-4" /> Tạo Hồ Sơ Sức Khỏe
         </Button>
         <HealthRecordForm 
           isOpen={isFormOpen} 
@@ -132,8 +133,8 @@ const MemberHealthRecords = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Health Records</h1>
-          <p className="text-gray-600 mt-2">Your complete health information and donation eligibility.</p>
+          <h1 className="text-3xl font-bold text-gray-900">Hồ Sơ Sức Khỏe</h1>
+          <p className="text-gray-600 mt-2">Thông tin sức khỏe đầy đủ và tình trạng đủ điều kiện hiến máu của bạn.</p>
         </div>
       </div>
 
@@ -147,19 +148,19 @@ const MemberHealthRecords = () => {
             )}
           <div>
             <h3 className="text-xl font-semibold">
-                {isEligible ? 'Eligible for Donation' : 'Not Eligible for Donation'}
+                {isEligible ? 'Đủ điều kiện hiến máu' : 'Chưa đủ điều kiện hiến máu'}
             </h3>
               <p className={`text-sm ${isEligible ? 'text-gray-600' : 'text-red-600 font-medium'}`}>
                 {isEligible 
-                  ? 'You can donate now'
+                  ? 'Bạn có thể hiến máu ngay bây giờ'
                   : nextEligibleDays > 0
-                    ? `${nextEligibleDays} days remaining (${nextEligibleDate})`
-                    : 'Please check with staff'
+                    ? `Còn ${nextEligibleDays} ngày (${nextEligibleDate})`
+                    : 'Vui lòng kiểm tra với nhân viên'
                 }
               </p>
               {!isEligible && waitingPeriod > 0 && (
                 <p className="text-xs text-red-500 mt-1">
-                  Required waiting period: {waitingPeriod} days
+                  Thời gian chờ yêu cầu: {waitingPeriod} ngày
                 </p>
               )}
             </div>
@@ -169,32 +170,32 @@ const MemberHealthRecords = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <InfoCard 
-          title="Blood Type" 
+          title="Nhóm Máu" 
           value={getBloodTypeName(healthRecord.blood_type)} 
           icon={<Heart className="h-5 w-5 text-red-500" />}
         />
         <InfoCard 
-          title="Weight" 
+          title="Cân nặng" 
           value={`${healthRecord.weight} kg`} 
         />
         <InfoCard 
-          title="Height" 
+          title="Chiều cao" 
           value={`${healthRecord.height} cm`} 
         />
         <InfoCard 
-          title="Last Donation" 
-          value={healthRecord.last_donation ? format(new Date(healthRecord.last_donation), 'PPP') : 'N/A'} 
-          subValue={!isEligible && nextEligibleDays > 0 ? `Next eligible: ${nextEligibleDate}` : undefined}
+          title="Lần hiến cuối" 
+          value={healthRecord.last_donation ? format(new Date(healthRecord.last_donation), 'PPP') : 'Chưa có'} 
+          subValue={!isEligible && nextEligibleDays > 0 ? `Lần tiếp theo: ${nextEligibleDate}` : undefined}
           isHighlighted={!isEligible}
           icon={<Calendar className={`h-5 w-5 ${!isEligible ? 'text-red-500' : 'text-gray-500'}`} />}
         />
         <InfoCard 
-          title="Allergies" 
-          value={healthRecord.allergies || 'None'} 
+          title="Dị ứng" 
+          value={healthRecord.allergies || 'Không có'} 
         />
         <InfoCard 
-          title="Medication" 
-          value={healthRecord.medication || 'None'} 
+          title="Thuốc đang dùng" 
+          value={healthRecord.medication || 'Không có'} 
         />
       </div>
 

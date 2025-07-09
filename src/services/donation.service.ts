@@ -2,22 +2,33 @@ import api from './api.service';
 import { API_ENDPOINTS } from './api.config';
 import axios from 'axios';
 import { Donation } from '@/types/api';
+import { BloodInventoryService } from './blood-inventory.service';
+
+const bloodTypeMap: { [key: string]: number } = {
+  'A+': 1, 'A-': 2, 'B+': 3, 'B-': 4,
+  'AB+': 5, 'AB-': 6, 'O+': 7, 'O-': 8,
+};
 
 // CreateDonationPayload is a subset of the full Donation object
-export type CreateDonationPayload = Pick<Donation, 
-  'donation_date' | 
-  'donation_time' |
-  'location' | 
-  'component' | 
-  'quantity'
-> & { note?: string };
-
+export type CreateDonationPayload = {
+  donation_date: string;
+  donation_time: string;
+  diseases?: string[];
+  allergies?: string[];
+  note?: string;
+};
 
 export class DonationService {
   static async createDonation(payload: CreateDonationPayload): Promise<Donation> {
     try {
+      // Add the default location_id to the payload before sending
+      const payloadWithLocation = {
+        ...payload,
+        location_id: 1, // Default location for the singular hospital
+      };
+
       // The backend expects user_id from the token, and status/created_at are set server-side.
-      const response = await api.post<Donation>(API_ENDPOINTS.DONATION.CREATE_MEMBER_REQUEST, payload);
+      const response = await api.post<Donation>(API_ENDPOINTS.DONATION.CREATE_MEMBER_REQUEST, payloadWithLocation);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -41,7 +52,8 @@ export class DonationService {
 
   static async updateDonation(donation: Partial<Donation> & { donation_id: number }): Promise<Donation> {
     try {
-      // The update endpoint for staff is a static path. The donation object in the body contains the ID.
+      // This function will now only update the donation's status.
+      // The inventory update logic will be handled separately after component separation.
       const response = await api.put<Donation>(API_ENDPOINTS.DONATION.UPDATE, donation);
       return response.data;
     } catch (error) {

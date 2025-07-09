@@ -1,26 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import ProfileLayout from './ProfileLayout';
 import ProfilePage from './ProfilePage';
 import EditProfileForm from '@/components/EditProfileForm';
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/services/api.service';
 import { API_ENDPOINTS } from '@/services/api.config';
-import { useUserRole } from '@/hooks/useUserRole';
 
 const ProfilePortal = () => {
   const [currentPage, setCurrentPage] = useState('profile');
   const { user, logout } = useAuth();
-  const role = useUserRole();
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [profileData, setProfileData] = useState(null);
 
-  const fetchProfileData = async () => {
-    if (user && role) {
+  const fetchProfileData = useCallback(async () => {
+    if (user?.role) {
       try {
         let endpoint = '';
-        if (role === 'Member') {
+        if (user.role === 'Member') {
           endpoint = API_ENDPOINTS.USER.GET_MEMBER_PROFILE;
-        } else if (role === 'Staff' || role === 'Admin') {
+        } else if (user.role === 'Staff' || user.role === 'Admin') {
           endpoint = API_ENDPOINTS.USER.GET_STAFF_PROFILE;
         }
 
@@ -32,11 +30,11 @@ const ProfilePortal = () => {
         console.error("Failed to fetch profile data", error);
       }
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchProfileData();
-  }, [user, role]);
+  }, [fetchProfileData]);
 
   const handleNavigate = (page: string) => {
     if (page === 'edit-profile') {

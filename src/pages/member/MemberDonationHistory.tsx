@@ -44,8 +44,8 @@ const MemberDonationHistory = () => {
   if (isError) {
     return (
       <Alert variant="destructive">
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{error?.message || 'Failed to fetch donation history.'}</AlertDescription>
+        <AlertTitle>Lỗi</AlertTitle>
+        <AlertDescription>{error?.message || 'Không thể tải lịch sử hiến máu.'}</AlertDescription>
       </Alert>
     );
   }
@@ -53,17 +53,17 @@ const MemberDonationHistory = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>My Donation History</CardTitle>
-        <p className="text-sm text-muted-foreground">A record of your past donation activities.</p>
+        <CardTitle>Lịch Sử Hiến Máu Của Tôi</CardTitle>
+        <p className="text-sm text-muted-foreground">Hồ sơ về các hoạt động hiến máu đã qua của bạn.</p>
       </CardHeader>
       <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Location</TableHead>
-              <TableHead>Quantity (ml)</TableHead>
-              <TableHead>Status</TableHead>
+                <TableHead>Ngày</TableHead>
+                <TableHead>Địa điểm</TableHead>
+              <TableHead>Số lượng (ml)</TableHead>
+              <TableHead>Trạng thái</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -78,7 +78,7 @@ const MemberDonationHistory = () => {
                 <TableRow key={donation.donation_id}>
                   <TableCell>{new Date(donation.donation_date).toLocaleDateString()}</TableCell>
                   <TableCell>{donation.location}</TableCell>
-                  <TableCell>{donation.quantity}</TableCell>
+                  <TableCell>{donation.quantity_cc}</TableCell>
                   <TableCell>
                     <Badge variant={getStatusBadgeVariant(donation.status)}>{donation.status}</Badge>
                   </TableCell>
@@ -87,7 +87,7 @@ const MemberDonationHistory = () => {
               ) : (
                 <TableRow>
                 <TableCell colSpan={4} className="text-center">
-                  You have no completed, rejected, or cancelled donations.
+                  Bạn không có lần hiến máu nào đã hoàn thành, bị từ chối hoặc đã hủy.
                   </TableCell>
                 </TableRow>
               )}

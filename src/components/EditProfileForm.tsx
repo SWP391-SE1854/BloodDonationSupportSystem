@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import api from "@/services/api.service";
 import { API_ENDPOINTS } from "@/services/api.config";
-import { useUserRole } from "@/hooks/useUserRole";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface EditProfileFormProps {
   isOpen: boolean;
@@ -35,7 +35,8 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({ ...profileData });
-  const currentUserRole = useUserRole();
+  const { user } = useAuth();
+  const currentUserRole = user?.role;
 
   useEffect(() => {
     setFormData({ ...profileData });

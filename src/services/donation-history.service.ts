@@ -9,8 +9,8 @@ export interface DonationHistoryRecord {
   donation_date: string;
   status: string;
   component: string;
-  location: string;
-  quantity: number;
+  quantity_cc: number;
+  location?: string;
 }
 
 export class DonationHistoryService {

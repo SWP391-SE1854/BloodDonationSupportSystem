@@ -9,11 +9,9 @@ import { UserProfile } from '@/services/user.service';
 import { HealthRecordService, HealthRecord } from '@/services/health-record.service';
 import { StaffService } from '@/services/staff.service';
 import HealthRecordForm from '@/components/HealthRecordForm';
-import { useUserRole } from '@/hooks/useUserRole';
 
 const HealthRecordViewer: React.FC = () => {
   const { toast } = useToast();
-  const currentUserRole = useUserRole();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
@@ -24,22 +22,16 @@ const HealthRecordViewer: React.FC = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        let allUsers: UserProfile[] = [];
-        if (currentUserRole === 'Admin') {
-          allUsers = await AdminService.getAllUsers();
-        } else if (currentUserRole === 'Staff') {
-          allUsers = await StaffService.getAllMembers();
-        }
-          setUsers(allUsers);
+        let allUsers: UserProfile[] = await StaffService.getAllMembers();
+        const memberUsers = allUsers.filter(user => user.role === 'Member');
+        setUsers(memberUsers);
       } catch (error) {
         toast({ title: "Error", description: "Could not fetch users." });
         setUsers([]); // Ensure users is an array on error
       }
     };
-    if (currentUserRole) {
-      fetchUsers();
-    }
-  }, [currentUserRole, toast]);
+    fetchUsers();
+  }, [toast]);
 
   const handleUserSelect = async (user: UserProfile) => {
     setSelectedUser(user);
@@ -121,6 +113,7 @@ const HealthRecordViewer: React.FC = () => {
                   <p><strong>Blood Type:</strong> {healthRecord.blood_type}</p>
                   <p><strong>Weight:</strong> {healthRecord.weight} kg</p>
                   <p><strong>Height:</strong> {healthRecord.height} cm</p>
+                  <p><strong>Heart Rate:</strong> {healthRecord.heart_rate ? `${healthRecord.heart_rate} bpm` : 'N/A'}</p>
                   <p><strong>Eligible:</strong> {healthRecord.eligibility_status ? 'Yes' : 'No'}</p>
                   <HealthRecordForm isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} onSave={handleSave} initialData={healthRecord} />
                 </div>

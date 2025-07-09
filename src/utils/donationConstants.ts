@@ -3,7 +3,7 @@ export type DonationComponent = 'Whole Blood' | 'Platelets' | 'Power Red';
 
 // Waiting periods in days for each donation component
 export const DONATION_INTERVALS = {
-  'Whole Blood': 56, // 8 weeks
+  'Whole Blood': 0, // 8 weeks
   'Platelets': 7,    // 7 days
   'Power Red': 112,  // 16 weeks
 } as const;

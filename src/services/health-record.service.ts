@@ -3,18 +3,31 @@ import { API_ENDPOINTS } from './api.config';
 import { DonationComponent, calculateNextEligibleDate, DonationHistoryEntry } from '@/utils/donationConstants';
 import { DonationHistoryService } from './donation-history.service';
 
+export interface User {
+  user_id: number;
+  name: string;
+  email: string;
+  phone: string;
+  dob: string;
+  role: string;
+  address: string;
+  city: string;
+  district: string;
+}
+
 export interface HealthRecord {
-    record_id: number;
-    user_id: number;
-    weight: number;
-    height: number;
-    blood_type: string;
-    allergies: string;
-    medication: string;
-    last_donation: string;
-    last_donation_type?: string;
-    eligibility_status: boolean | null;
-    donation_count: number;
+  record_id: number;
+  user_id: number;
+  weight: number;
+  height: number;
+  blood_type: string;
+  heart_rate?: number;
+  allergies: string;
+  medication: string;
+  last_donation: string;
+  eligibility_status: boolean;
+  donation_count: number;
+  user?: User;
 }
 
 export class HealthRecordService {
@@ -50,10 +63,10 @@ export class HealthRecordService {
 
   static async updateUserDonationStats(userId: string, donationDate: string, component: DonationComponent): Promise<HealthRecord> {
     try {
-      // First get the current record and donation history
+      // First get the current record and donation history for the specific user
       const [currentRecord, donationHistory] = await Promise.all([
         this.getRecordByUserId(userId),
-        DonationHistoryService.getMemberHistory()
+        DonationHistoryService.getUserHistory(parseInt(userId, 10))
       ]);
 
       // Create history entry for the new donation
@@ -74,9 +87,8 @@ export class HealthRecordService {
       
       // Update the record
       const updateData: Partial<HealthRecord> = {
-      donation_count: (currentRecord.donation_count || 0) + 1,
-      last_donation: donationDate,
-        last_donation_type: component,
+        donation_count: (currentRecord.donation_count || 0) + 1,
+        last_donation: donationDate,
         eligibility_status: isCurrentlyEligible,
         // Preserve all other fields
         weight: currentRecord.weight,

@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { HealthRecord } from '@/services/health-record.service';
 import BloodTypeSelect from '@/components/BloodTypeSelect';
-import { useUserRole } from '@/hooks/useUserRole';
+import { useAuth } from '@/contexts/AuthContext';
 import { validateHealthRecord, ValidationError } from '@/utils/healthValidation';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
@@ -25,7 +25,8 @@ const HealthRecordForm: React.FC<HealthRecordFormProps> = ({ isOpen, onClose, on
   const [formData, setFormData] = useState<Partial<HealthRecord>>(initialData || {});
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const userRole = useUserRole();
+  const { user } = useAuth();
+  const userRole = user?.role;
 
   useEffect(() => {
     setFormData(initialData || {});
@@ -118,6 +119,20 @@ const HealthRecordForm: React.FC<HealthRecordFormProps> = ({ isOpen, onClose, on
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+            {(userRole === 'Admin' || userRole === 'Staff') && (
+              <div className="space-y-2">
+                <Label htmlFor="heart_rate">Nhịp tim (lần/phút)</Label>
+                <Input 
+                  id="heart_rate" 
+                  type="number" 
+                  value={formData.heart_rate || ''} 
+                  onChange={e => handleInputChange('heart_rate', parseFloat(e.target.value) || 0)}
+                  className={getFieldError('heart_rate') ? 'border-red-500' : ''}
+                />
+                {renderError('heart_rate')}
+              </div>
+            )}
           <div className="space-y-2">
             <Label>Nhóm Máu</Label>
             <BloodTypeSelect 
@@ -126,6 +141,7 @@ const HealthRecordForm: React.FC<HealthRecordFormProps> = ({ isOpen, onClose, on
               className={getFieldError('blood_type') ? 'border-red-500' : ''}
             />
             {renderError('blood_type')}
+            </div>
           </div>
 
           <div className="space-y-2">

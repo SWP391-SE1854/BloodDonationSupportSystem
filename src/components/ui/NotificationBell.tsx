@@ -11,7 +11,7 @@ export interface Notification {
   id: string;
   title: string;
   message: string;
-  type: 'event' | 'alert' | 'info';
+  type: 'event' | 'alert' | 'info' | 'request' | 'system';
   createdAt: string;
   read: boolean;
   link?: string;

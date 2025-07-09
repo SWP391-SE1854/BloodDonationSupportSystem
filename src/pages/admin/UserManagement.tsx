@@ -24,7 +24,7 @@ import AdminService from "@/services/admin.service";
 import { UserProfile } from "@/services/user.service";
 import { useToast } from "@/hooks/use-toast";
 
-const Admin = () => {
+const UserManagement = () => {
   const navigate = useNavigate();
     const { toast } = useToast();
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -46,8 +46,8 @@ const Admin = () => {
       } catch (error) {
       console.error("Error fetching users:", error);
       toast({
-        title: "Error",
-        description: "Failed to fetch users",
+        title: "Lỗi",
+        description: "Không thể tải danh sách người dùng",
         variant: "destructive"
       });
       } finally {
@@ -67,14 +67,14 @@ const Admin = () => {
         user.user_id === userToUpdate.user_id ? { ...user, status: newStatus } : user
       ));
       toast({
-        title: "Success",
-        description: `User has been ${newStatus === 'Active' ? 'Enabled' : 'Disabled'}.`,
+        title: "Thành công",
+        description: `Người dùng đã được ${newStatus === 'Active' ? 'kích hoạt' : 'vô hiệu hóa'}.`,
       });
     } catch (error) {
       console.error("Error updating user status:", error);
       toast({
-        title: "Error",
-        description: "Failed to update user status.",
+        title: "Lỗi",
+        description: "Không thể cập nhật trạng thái người dùng.",
         variant: "destructive"
       });
     }
@@ -99,7 +99,7 @@ const Admin = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-lg">Loading users...</div>
+        <div className="text-lg">Đang tải danh sách người dùng...</div>
       </div>
     );
   }
@@ -115,13 +115,13 @@ const Admin = () => {
                 <Shield className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Admin Portal</h1>
-                <p className="text-sm text-gray-600">User Management</p>
+                <h1 className="text-xl font-bold text-gray-900">Cổng thông tin Admin</h1>
+                <p className="text-sm text-gray-600">Quản lý người dùng</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <Button variant="outline" onClick={() => navigate('/')}>
-                Back to Home
+                Trở về trang chủ
               </Button>
                 <Button variant="ghost" size="sm" onClick={handleLogout}>
                   <LogOut className="h-4 w-4" />
@@ -138,7 +138,7 @@ const Admin = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <Input
-                placeholder="Search users by name or email..."
+                placeholder="Tìm kiếm người dùng theo tên hoặc email..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -147,13 +147,13 @@ const Admin = () => {
           </div>
                   <Select value={filterRole} onValueChange={setFilterRole}>
             <SelectTrigger className="w-full sm:w-48">
-                      <SelectValue placeholder="Filter by role" />
+                      <SelectValue placeholder="Lọc theo vai trò" />
                             </SelectTrigger>
                             <SelectContent>
-                      <SelectItem value="all">All Roles</SelectItem>
+                      <SelectItem value="all">Tất cả vai trò</SelectItem>
               <SelectItem value="admin">Admin</SelectItem>
-              <SelectItem value="staff">Staff</SelectItem>
-              <SelectItem value="member">Member</SelectItem>
+              <SelectItem value="staff">Nhân viên</SelectItem>
+              <SelectItem value="member">Thành viên</SelectItem>
                             </SelectContent>
                         </Select>
                 </div>
@@ -184,7 +184,7 @@ const Admin = () => {
                       onClick={() => handleToggleStatus(user)}
                     >
                       {user.status === 'Active' ? <ToggleLeft className="mr-2 h-4 w-4" /> : <ToggleRight className="mr-2 h-4 w-4" />}
-                      {user.status === 'Active' ? 'Disable' : 'Enable'}
+                      {user.status === 'Active' ? 'Vô hiệu hóa' : 'Kích hoạt'}
                             </Button>
                           </div>
                         </div>
@@ -197,4 +197,4 @@ const Admin = () => {
     );
 };
 
-export default Admin; 
+export default UserManagement; 

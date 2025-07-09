@@ -9,17 +9,19 @@ export interface UserProfile {
   phone: string;
   dob: string;
   role: string;
+  blood_type?: string;
   city: string;
   district: string;
   address: string;
   status?: 'Active' | 'Disabled';
 }
 
+// Type for the payload when updating a user's profile
 export interface UpdateUserProfile {
-  name?: string;
-  phone?: string;
-  dob?: string;
-  address?: string;
+  user_id?: number;
+  name: string;
+  phone: string;
+  address: string;
   city?: string;
   district?: string;
 }
@@ -37,16 +39,9 @@ export class UserService {
     }
   }
 
-  static async updateMemberProfile(profileData: UpdateUserProfile): Promise<UserProfile> {
-    try {
-      const response = await api.put(API_ENDPOINTS.USER.UPDATE_MEMBER_PROFILE, profileData);
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error('Error updating member profile:', error.message);
-      }
-      throw error;
-    }
+  static async updateMemberProfile(data: { updatedUser: UpdateUserProfile }): Promise<UserProfile> {
+    const response = await api.put<UserProfile>(API_ENDPOINTS.USER.UPDATE_MEMBER_PROFILE, data);
+    return response.data;
   }
 }
 
