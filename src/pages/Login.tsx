@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, Mail, Lock } from "lucide-react";
+import { Heart, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { auth, googleProvider } from "@/config/firebase";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
@@ -15,6 +15,7 @@ import { jwtDecode } from 'jwt-decode';
 import { ZodError, ZodIssue } from 'zod';
 import { useAuth } from "@/contexts/AuthContext";
 import axios from 'axios';
+import NavigationBar from '@/components/NavigationBar';
 
 interface JwtPayload {
   role?: string;
@@ -42,12 +43,25 @@ const Login = () => {
   const [showReset, setShowReset] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [loginSuccess, setLoginSuccess] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+    setLoginError("");
+    // Real-time validation
+    try {
+      loginSchema.parse({ ...formData, [field]: value });
+      setErrors({});
+    } catch (error: unknown) {
+      const newErrors: { [key: string]: string } = {};
+      if (error instanceof ZodError) {
+        error.errors.forEach((err: ZodIssue) => {
+          newErrors[err.path[0]] = err.message;
+        });
+      }
+      setErrors(newErrors);
     }
   };
 
@@ -128,7 +142,9 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginError("");
     if (!validateForm()) {
+      setLoginError("Please fix the errors above and try again.");
       return;
     }
     
@@ -140,12 +156,17 @@ const Login = () => {
       const firebaseToken = await user.getIdToken();
       
       await loginWithFirebase(firebaseToken);
+      setLoginSuccess(true);
+      setTimeout(() => {
+        setLoginSuccess(false);
+        navigate("/dashboard");
+      }, 1200);
 
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 401) {
-        toast({ title: 'Login Error', description: 'Invalid credentials or user not found.' });
+        setLoginError("Invalid credentials. Please try again.");
       } else {
-        toast({ title: 'Error', description: 'An unexpected error occurred during login.' });
+        setLoginError("An unexpected error occurred during login.");
       }
       console.error('Login error:', error);
     } finally {
@@ -170,28 +191,11 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-red-50 flex items-center justify-center py-8 px-4">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm shadow-sm z-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center space-x-2">
-              <Heart className="h-8 w-8 text-red-500" />
-              <span className="text-2xl font-bold text-gray-800">Blood Care</span>
-            </Link>
-            <div className="flex items-center space-x-4">
-              <Link to="/" className="text-gray-700 hover:text-red-500 transition-colors">Home</Link>
-              <Link to="/register">
-                <Button variant="outline" className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white">
-                  Register Now
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <div className="w-full max-w-md mt-16">
+    <div className="min-h-screen flex items-center justify-center py-4 px-2 relative overflow-hidden">
+      {/* Subtle animated gradient background */}
+      <div className="absolute inset-0 z-0 animate-gradient bg-gradient-to-br from-pink-100 via-red-100 to-pink-200 opacity-80" />
+      <NavigationBar fixed />
+      <div className="w-full max-w-md mt-20 z-10">
         <Card className="shadow-2xl border-0">
           <CardHeader className="text-center bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-t-lg">
             <CardTitle className="text-2xl font-bold flex items-center justify-center space-x-2">
@@ -200,54 +204,90 @@ const Login = () => {
             </CardTitle>
             <p className="text-red-100">Every drop counts - Join our life saving community</p>
           </CardHeader>
-          <CardContent className="p-8 bg-white">
-            <h2 className="text-xl font-semibold mb-6 text-center">Welcome Back</h2>
-            <p className="text-center text-gray-600 mb-6">Sign in to your account</p>
-            
-            <form onSubmit={handleSubmit} className="space-y-6">
+          <CardContent className="p-4 sm:p-8 bg-white">
+            <h2 className="text-xl font-semibold mb-4 text-center">Welcome Back</h2>
+            <p className="text-center text-gray-600 mb-4">Sign in to your account</p>
+            {loginError && (
+              <div className="mb-4 text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 text-center" role="alert">
+                {loginError}
+              </div>
+            )}
+            {loginSuccess && (
+              <div className="mb-4 text-green-600 bg-green-50 border border-green-200 rounded px-3 py-2 text-center animate-pulse" role="status">
+                Login successful! Redirecting...
+              </div>
+            )}
+            <form onSubmit={handleSubmit} className="space-y-4" aria-label="Login form">
               <div>
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-1">
                   <Mail className="h-4 w-4 text-red-500" />
                   <Label htmlFor="email">Email</Label>
                 </div>
                 <Input
                   id="email"
                   type="email"
+                  aria-label="Email address"
+                  aria-describedby={errors.email ? "email-error" : undefined}
                   placeholder="Enter your email"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   required
                   disabled={isLoading}
-                  className={errors.email ? "border-red-500" : ""}
+                  className={
+                    errors.email
+                      ? "border-red-500 focus-visible:ring-red-500"
+                      : formData.email && !errors.email
+                      ? "border-green-500 focus-visible:ring-green-500"
+                      : ""
+                  }
                 />
                 {errors.email && (
-                  <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                  <p id="email-error" className="text-red-500 text-xs mt-1">{errors.email}</p>
                 )}
               </div>
-
               <div>
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-1">
                   <Lock className="h-4 w-4 text-red-500" />
                   <Label htmlFor="password">Password</Label>
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={formData.password}
-                  onChange={(e) => handleInputChange("password", e.target.value)}
-                  required
-                  disabled={isLoading}
-                  className={errors.password ? "border-red-500" : ""}
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    aria-label="Password"
+                    aria-describedby={errors.password ? "password-error" : undefined}
+                    placeholder="Enter your password"
+                    value={formData.password}
+                    onChange={(e) => handleInputChange("password", e.target.value)}
+                    required
+                    disabled={isLoading}
+                    className={
+                      errors.password
+                        ? "border-red-500 focus-visible:ring-red-500 pr-10"
+                        : formData.password && !errors.password
+                        ? "border-green-500 focus-visible:ring-green-500 pr-10"
+                        : "pr-10"
+                    }
+                  />
+                  <button
+                    type="button"
+                    tabIndex={0}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                    onClick={() => setShowPassword((v) => !v)}
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
                 {errors.password && (
-                  <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                  <p id="password-error" className="text-red-500 text-xs mt-1">{errors.password}</p>
                 )}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mt-1">
                   <div></div>
                   <button
                     type="button"
-                    className="text-xs text-red-500 hover:underline focus:outline-none"
+                    className="text-xs text-red-700 font-semibold hover:underline focus:outline-none focus:underline"
+                    style={{ textShadow: '0 1px 2px #fff' }}
                     onClick={() => setShowReset((v) => !v)}
                   >
                     Forgot Password?
@@ -257,6 +297,7 @@ const Login = () => {
                   <div className="mt-2 space-y-2">
                     <Input
                       type="email"
+                      aria-label="Reset email"
                       placeholder="Enter your email"
                       value={resetEmail}
                       onChange={e => setResetEmail(e.target.value)}
@@ -268,20 +309,21 @@ const Login = () => {
                       onClick={handleResetPassword}
                       disabled={resetLoading || !resetEmail}
                     >
+                      {resetLoading ? <Loader2 className="animate-spin h-4 w-4 mr-2 inline" /> : null}
                       {resetLoading ? "Sending..." : "Send Reset Email"}
                     </Button>
                   </div>
                 )}
               </div>
-
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white"
-                disabled={isLoading}
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white flex items-center justify-center gap-2"
+                disabled={isLoading || loginSuccess}
+                aria-busy={isLoading}
               >
+                {isLoading ? <Loader2 className="animate-spin h-5 w-5" /> : null}
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
-
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t" />
@@ -290,13 +332,13 @@ const Login = () => {
                   <span className="bg-white px-2 text-gray-500">Or continue with</span>
                 </div>
               </div>
-
               <Button
                 type="button"
                 variant="outline"
                 className="w-full"
                 onClick={handleGoogleLogin}
                 disabled={isLoading}
+                aria-label="Sign in with Google"
               >
                 <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                   <path
@@ -322,6 +364,17 @@ const Login = () => {
           </CardContent>
         </Card>
       </div>
+      <style>{`
+        @keyframes gradient {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .animate-gradient {
+          background-size: 200% 200%;
+          animation: gradient 8s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 };
