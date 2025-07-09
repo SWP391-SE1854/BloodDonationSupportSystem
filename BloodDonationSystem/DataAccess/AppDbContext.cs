@@ -19,7 +19,7 @@ namespace BloodDonationSystem.DataAccess
         
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<DonationHistory> DonationHistories { get; set; }
-
+        public DbSet<Report> Reports { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<HealthRecord>()
@@ -43,7 +43,18 @@ namespace BloodDonationSystem.DataAccess
             modelBuilder.Entity<HealthRecord>()
                 .HasKey(h => h.record_id);
 
-           
+            modelBuilder.Entity<Report>(entity =>
+            {
+                entity.HasKey(r => r.ReportId);
+                entity.Property(r => r.Title).IsRequired().HasMaxLength(255);
+                entity.Property(r => r.Date).IsRequired();
+                entity.Property(r => r.Content).HasColumnType("nvarchar(max)");
+
+                entity.HasOne(r => r.User)
+                      .WithMany(u => u.Reports)
+                      .HasForeignKey(r => r.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
 
             modelBuilder.Entity<Notification>()
                 .HasKey(n => n.notification_id);

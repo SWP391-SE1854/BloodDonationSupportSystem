@@ -17,8 +17,10 @@ namespace BloodDonationSystem.DataAccess.Entities
         public string? city { get; set; } // Thành phố người dùng
         public string? district { get; set; } // Quận huyện người dùng
 
+        public ICollection<Report>? Reports { get; set; }
 
-      
+
+
 
     }
 }
