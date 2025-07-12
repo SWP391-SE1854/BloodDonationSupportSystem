@@ -1,6 +1,7 @@
 import api from './api.service';
 import { API_ENDPOINTS } from './api.config';
 import { Notification } from '@/components/ui/NotificationBell';
+import AdminService from './admin.service';
 
 export class NotificationService {
   static async getNotifications(): Promise<Notification[]> {
@@ -51,6 +52,24 @@ export class NotificationService {
       return response.data;
     } catch (error) {
       console.error('Error creating notification:', error);
+      throw error;
+    }
+  }
+
+  static async sendProblemReportToAdmins(data: { title: string; message: string }): Promise<void> {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+      
+      await api.post(API_ENDPOINTS.NOTIFICATIONS.SEND_PROBLEM_REPORT, {
+        token,
+        title: data.title,
+        body: data.message,
+      });
+    } catch (error) {
+      console.error('Error sending problem report to admins:', error);
       throw error;
     }
   }
