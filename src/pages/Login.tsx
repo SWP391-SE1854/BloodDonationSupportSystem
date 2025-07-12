@@ -105,22 +105,6 @@ const Login = () => {
     }
   };
 
-  // Helper function to redirect based on role
-  const redirectBasedOnRole = (role: string) => {
-    console.log('Redirecting based on role:', role);
-    
-    if (role === 'Admin') {
-      console.log('Redirecting to admin profile');
-      navigate('/admin/AdminProfile');
-    } else if (role === 'Staff') {
-      console.log('Redirecting to staff profile');
-      navigate('/staff/StaffProfile');
-    } else {
-      console.log('Redirecting to member profile');
-        navigate('/member/profile');
-    }
-  };
-
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
@@ -157,11 +141,6 @@ const Login = () => {
       
       await loginWithFirebase(firebaseToken);
       setLoginSuccess(true);
-      setTimeout(() => {
-        setLoginSuccess(false);
-        navigate("/dashboard");
-      }, 1200);
-
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 401) {
         setLoginError("Invalid credentials. Please try again.");
