@@ -25,7 +25,7 @@ export const API_ENDPOINTS = {
     GET_ALL_MEMBERS: '/user/staff/all',
     
     // Admin endpoints
-      GET_ALL_USERS: '/user/admin/all',
+    GET_ALL_USERS: '/user/admin/all',
     GET_USER_BY_ID: (id: number) => `/user/admin/${id}`,
     UPDATE_USER: (id: number) => `/user/admin/${id}`,
     DELETE_USER: (id: number) => `/user/admin/${id}`,
@@ -103,9 +103,9 @@ export const API_ENDPOINTS = {
     GET_USER_HEALTH_RECORD: '/healthrecord/view',
     CREATE_HEALTH_RECORD: '/healthrecord/member',
     UPDATE_MY_RECORD: '/healthrecord/member',
-    GET_ALL_HEALTH_RECORDS: '/healthrecord/all',
-    GET_HEALTH_RECORD_BY_USER_ID: (userId: string) => `/healthrecord/user/${userId}`,
-    UPDATE_HEALTH_RECORD: (id: string) => `/healthrecord/${id}`,
+  GET_ALL_HEALTH_RECORDS: '/healthrecord/all',
+    GET_HEALTH_RECORD_BY_USER_ID: (userId: string) => `/healthrecord/${userId}`,
+  UPDATE_HEALTH_RECORD: (id: string) => `/healthrecord/${id}`,
   },
 
   // Notification endpoints
@@ -116,27 +116,16 @@ export const API_ENDPOINTS = {
   DELETE_ADMIN: (id: number) => `/notification/admin/${id}`,
   CREATE_STAFF: '/notification/staff',
 
-  DONATIONS: {
-    MEMBER_HISTORY: '/donation/member-history',
-    REQUEST_DONATION: '/donation/request',
-    GET_BY_STATUS: '/donation/status',
-    GET_MEMBER_DONATIONS: '/donation-history/member',
-    UPDATE: (id: number) => `/donation/${id}`
-  },
-
   BLOOD_INVENTORY: {
     GET_ALL: '/blood-inventory/all',
     GET_BY_ID: (id: number) => `/blood-inventory/${id}`,
     CREATE: '/blood-inventory/add-blood',
-    UPDATE: (id: number) => `/blood-inventory/update-blood?id=${id}`,
+    UPDATE: (id: number) => `/blood-inventory/update-blood/${id}`,
     DELETE: (id: number) => `/blood-inventory/delete-blood?id=${id}`,
     ADD_BLOOD: '/blood-inventory/add-blood',
   },
 
   NOTIFICATIONS: {
-    GET_ALL: '/notifications/all',
-    MARK_AS_READ: (id: string) => `/notifications/${id}/read`,
-    MARK_ALL_AS_READ: '/notifications/mark-all-read',
     GET_MY_NOTIFICATIONS: '/notifications/my-notifications',
     CREATE: '/notifications/create',
     DISMISS: (id: string) => `/notifications/${id}/dismiss`,
