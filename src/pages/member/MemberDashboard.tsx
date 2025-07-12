@@ -16,6 +16,12 @@ import { Donation } from '@/types/api';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/components/ui/use-toast';
+
 
 const bloodTypes = [
     { id: "1", name: "A+" }, { id: "2", name: "A-" }, { id: "3", name: "B+" },
@@ -49,6 +55,10 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
   const [bloodRequests, setBloodRequests] = useState<BloodRequest[]>([]);
   const [recentDonations, setRecentDonations] = useState<Donation[]>([]);
   const navigate = useNavigate();
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [reportTitle, setReportTitle] = useState('');
+  const [reportMessage, setReportMessage] = useState('');
+  const { toast } = useToast();
 
   // Calculate total completed donations
   const totalDonations = useMemo(() => {
@@ -158,6 +168,36 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
     }
   };
 
+  const handleReportProblem = async () => {
+    if (!reportTitle || !reportMessage) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng nhập cả tiêu đề và nội dung.",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      await NotificationService.sendProblemReportToAdmins({
+        title: reportTitle,
+        message: reportMessage,
+      });
+      toast({
+        title: "Thành công",
+        description: "Báo cáo của bạn đã được gửi đến quản trị viên.",
+      });
+      setIsReportDialogOpen(false);
+      setReportTitle('');
+      setReportMessage('');
+    } catch (error) {
+      toast({
+        title: "Lỗi",
+        description: "Không thể gửi báo cáo. Vui lòng thử lại.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const memberStats = [
     { 
       title: 'Tổng Số Lần Hiến', 
@@ -208,6 +248,38 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
             <p className="text-red-100 text-lg">Cảm ơn bạn đã tham gia hiến máu cứu người.</p>
           </div>
           <div className="flex items-center space-x-4">
+            <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="secondary">
+                  <AlertCircle className="mr-2 h-4 w-4" /> Báo cáo sự cố
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Báo cáo sự cố</DialogTitle>
+                  <DialogDescription>
+                    Gặp sự cố? Gửi báo cáo cho quản trị viên của chúng tôi. Chúng tôi sẽ xem xét sớm nhất có thể.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="title" className="text-right">
+                      Tiêu đề
+                    </Label>
+                    <Input id="title" value={reportTitle} onChange={(e) => setReportTitle(e.target.value)} className="col-span-3" />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="message" className="text-right">
+                      Nội dung
+                    </Label>
+                    <Textarea id="message" value={reportMessage} onChange={(e) => setReportMessage(e.target.value)} className="col-span-3" />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button onClick={handleReportProblem}>Gửi báo cáo</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
             <NotificationBell
               notifications={notifications}
               onNotificationClick={handleNotificationClick}
@@ -301,7 +373,7 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
                   <div className="flex items-center">
                     <Clock className="h-5 w-5 text-blue-500 mr-3" />
                     <div>
-                      <p className="font-semibold">Ngày hiến: {format(new Date(donation.donation_date), 'PPP')} lúc {donation.donation_time}</p>
+                      <p className="font-semibold">Ngày hiến: {format(new Date(donation.donation_date), 'PPP p')}</p>
                       <Badge variant={donation.status === 'Approved' ? 'default' : 'secondary'}>{donation.status}</Badge>
                   </div>
                   </div>
