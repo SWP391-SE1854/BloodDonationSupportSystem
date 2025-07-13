@@ -8,7 +8,6 @@ import BloodRequestManagement from './BloodRequestManagement';
 import DonationHistoryViewer from './DonationHistoryViewer';
 import HealthRecordViewer from './HealthRecordViewer';
 import BloodInventoryManagement from './BloodInventoryManagement';
-import BloodUsageReport from './BloodUsageReport';
 
 const StaffPortal = () => {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -38,8 +37,6 @@ const StaffPortal = () => {
         return <HealthRecordViewer />;
       case 'inventory':
         return <BloodInventoryManagement />;
-      case 'usage-report':
-        return <BloodUsageReport />;
       default:
         return <StaffDashboard />;
     }
