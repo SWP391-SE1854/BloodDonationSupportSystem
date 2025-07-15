@@ -61,6 +61,8 @@ namespace BloodDonationSystem.Presentation.Controllers.BlogController
             existingPost.title = updatedPost.title;
             existingPost.content = updatedPost.content;
             existingPost.date = DateTime.Now;
+            existingPost.url = updatedPost.url; 
+            existingPost.image = updatedPost.image;
 
             await _blogPostRepository.UpdateAsync(existingPost);
             return Ok(existingPost);

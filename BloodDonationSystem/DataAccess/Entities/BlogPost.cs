@@ -11,6 +11,8 @@ namespace BloodDonationSystem.DataAccess.Entities
         public DateTime date { get; set; }
         public string title { get; set; } = string.Empty;
         public string content { get; set; } = string.Empty;
+        public string? url { get; set; } = string.Empty;
+        public string? image { get; set; } = string.Empty;
 
         // Navigation
         [ForeignKey("user_id")]
