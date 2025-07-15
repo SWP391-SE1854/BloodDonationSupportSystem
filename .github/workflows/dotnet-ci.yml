@@ -1,12 +1,27 @@
-name: Just Check Push
+name: .NET CI
 
 on:
   push:
-    branches: [ BackEnd ]
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  simple-check:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Say Hello
-        run: echo "CI is working! But no project to build yet."
+    - name: Checkout source
+      uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore ./BloodDonationSystem.sln
+
+    - name: Build
+      run: dotnet build ./BloodDonationSystem.sln --no-restore
+
