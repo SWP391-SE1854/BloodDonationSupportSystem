@@ -11,18 +11,7 @@ import { format, differenceInDays } from 'date-fns';
 import { calculateNextEligibleDate, DonationHistoryEntry, getWaitingPeriod } from '@/utils/donationConstants';
 import { isEligibleToDonate } from '@/utils/healthValidation';
 import axios from 'axios';
-
-// Data from BloodTypeSelect component
-const bloodTypes = [
-    { id: "1", name: "A+" }, { id: "2", name: "A-" }, { id: "3", name: "B+" },
-    { id: "4", name: "B-" }, { id: "5", name: "AB+" }, { id: "6", name: "AB-" },
-    { id: "7", name: "O+" }, { id: "8", name: "O-" }
-];
-
-const getBloodTypeName = (id: string | number) => {
-    const bloodType = bloodTypes.find(bt => bt.id === id.toString());
-    return bloodType ? bloodType.name : 'N/A';
-};
+import { getBloodTypeName } from '@/utils/bloodTypes';
 
 type HealthRecordResponse = HealthRecord | { $values: HealthRecord[] };
 type DonationHistoryResponse = DonationHistoryEntry[] | { $values: DonationHistoryEntry[] };
@@ -118,7 +107,7 @@ const MemberHealthRecords = () => {
           <AlertDescription>Bạn chưa tạo hồ sơ sức khỏe. Tạo hồ sơ là bước đầu tiên để trở thành người hiến máu.</AlertDescription>
         </Alert>
         <Button onClick={() => setIsFormOpen(true)} className="mt-4">
-          <PlusCircle className="mr-2 h-4 w-4" /> Tạo Hồ Sơ Sức Khỏe
+          <PlusCircle className="mr-2 h-4 w-4" /> Cập nhật hồ sơ
         </Button>
         <HealthRecordForm 
           isOpen={isFormOpen} 
@@ -136,6 +125,9 @@ const MemberHealthRecords = () => {
           <h1 className="text-3xl font-bold text-gray-900">Hồ Sơ Sức Khỏe</h1>
           <p className="text-gray-600 mt-2">Thông tin sức khỏe đầy đủ và tình trạng đủ điều kiện hiến máu của bạn.</p>
         </div>
+        <Button onClick={() => setIsFormOpen(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" /> Cập nhật hồ sơ
+        </Button>
       </div>
 
       <div className={`border-2 rounded-lg p-6 ${isEligible ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
@@ -194,8 +186,8 @@ const MemberHealthRecords = () => {
           value={healthRecord.allergies || 'Không có'} 
         />
         <InfoCard 
-          title="Thuốc đang dùng" 
-          value={healthRecord.medication || 'Không có'} 
+          title="Bệnh nền" 
+          value={healthRecord.disease || 'Không có'} 
         />
       </div>
 
