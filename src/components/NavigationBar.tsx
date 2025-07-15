@@ -12,9 +12,9 @@ interface NavigationBarProps {
 }
 
 const navLinks = [
-  { to: "/", label: "Home", aria: "Go to home page" },
-  { to: "/blog", label: "Blog", aria: "Go to blog page" },
-  { to: "/about", label: "About Us", aria: "Go to about us page" },
+  { to: "/", label: "Trang chủ", aria: "Về trang chủ" },
+  { to: "/blog", label: "Blog", aria: "Về trang blog" },
+  { to: "/about", label: "Về chúng tôi", aria: "Về trang giới thiệu" },
 ];
 
 const NavigationBar = ({ fixed = false }: NavigationBarProps) => {
@@ -67,12 +67,12 @@ const NavigationBar = ({ fixed = false }: NavigationBarProps) => {
               <>
                 <Link to="/register">
                   <Button className="bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                    Register Now
+                    Đăng ký ngay
                   </Button>
                 </Link>
                 <Link to="/login">
                   <Button variant="outline" className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white font-medium px-6 py-2 transition-all duration-300">
-                    Login
+                    Đăng nhập
                   </Button>
                 </Link>
               </>
@@ -119,12 +119,12 @@ const NavigationBar = ({ fixed = false }: NavigationBarProps) => {
                 <div className="flex flex-col space-y-2 px-4">
                   <Link to="/register" onClick={() => setIsMenuOpen(false)}>
                     <Button className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2">
-                      Register Now
+                      Đăng ký ngay
                     </Button>
                   </Link>
                   <Link to="/login" onClick={() => setIsMenuOpen(false)}>
                     <Button variant="outline" className="w-full border-red-500 text-red-500 hover:bg-red-500 hover:text-white font-medium py-2">
-                      Login
+                      Đăng nhập
                     </Button>
                   </Link>
                 </div>

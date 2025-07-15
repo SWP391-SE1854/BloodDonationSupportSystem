@@ -12,12 +12,12 @@ const Footer = () => (
           <span className="text-3xl font-bold">Blood Care</span>
         </div>
         <p className="text-gray-400 text-lg mb-6">
-          Every drop counts - Join our life-saving community
+          Mỗi giọt máu đều quý giá - Tham gia cộng đồng cứu người của chúng tôi
         </p>
         <div className="flex justify-center space-x-8 text-sm text-gray-400 mb-6">
-          <Link to="/about" className="hover:text-white transition-colors duration-300">About Us</Link>
+          <Link to="/about" className="hover:text-white transition-colors duration-300">Về Chúng Tôi</Link>
           <Link to="/blog" className="hover:text-white transition-colors duration-300">Blog</Link>
-          <Link to="/register" className="hover:text-white transition-colors duration-300">Register</Link>
+          <Link to="/register" className="hover:text-white transition-colors duration-300">Đăng Ký</Link>
         </div>
         <div className="flex justify-center space-x-4 mb-8">
           <a href="#" className="hover:text-red-400"><Facebook className="h-6 w-6" /></a>
@@ -25,7 +25,7 @@ const Footer = () => (
           <a href="#" className="hover:text-red-400"><Instagram className="h-6 w-6" /></a>
         </div>
         <div className="mt-8 pt-8 border-t border-gray-800 text-gray-500">
-          <p>&copy; 2024 Blood Care. All rights reserved. Making a difference, one donation at a time.</p>
+          <p>&copy; 2024 Blood Care. Bảo lưu mọi quyền. Tạo nên sự khác biệt, mỗi lần một lần hiến.</p>
         </div>
       </div>
     </div>
