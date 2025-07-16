@@ -1,6 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Notification } from '@/components/ui/NotificationBell';
+// import { Notification } from '@/components/ui/NotificationBell';
 import NotificationService from '@/services/notification.service';
+
+export interface Notification {
+  notification_id: string;
+  message: string;
+  read_status: boolean;
+  created_at: string;
+  donation_request_id?: number;
+  type?: 'event' | 'alert' | 'info' | 'request' | 'system';
+}
+
 
 export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -33,8 +43,8 @@ export function useNotifications() {
       await NotificationService.markAsRead(notificationId);
       setNotifications(prev =>
         prev.map(notification =>
-          notification.id === notificationId
-            ? { ...notification, read: true }
+          notification.notification_id === notificationId
+            ? { ...notification, read_status: true }
             : notification
         )
       );
@@ -43,22 +53,24 @@ export function useNotifications() {
     }
   }, []);
 
+  /*
   const handleMarkAllAsRead = useCallback(async () => {
     try {
       await NotificationService.markAllAsRead();
       setNotifications(prev =>
-        prev.map(notification => ({ ...notification, read: true }))
+        prev.map(notification => ({ ...notification, read_status: true }))
       );
     } catch (err) {
       console.error('Error marking all notifications as read:', err);
     }
   }, []);
+  */
 
   const handleDismiss = useCallback(async (notificationId: string) => {
     try {
       await NotificationService.dismissNotification(notificationId);
       setNotifications(prev =>
-        prev.filter(notification => notification.id !== notificationId)
+        prev.filter(notification => notification.notification_id !== notificationId)
       );
     } catch (err) {
       console.error('Error dismissing notification:', err);
@@ -81,12 +93,15 @@ export function useNotifications() {
     }
   }, []);
 
+  const unreadCount = notifications.filter(n => !n.read_status).length;
+
   return {
     notifications,
     isLoading,
     error,
+    unreadCount,
     markAsRead: handleMarkAsRead,
-    markAllAsRead: handleMarkAllAsRead,
+    // markAllAsRead: handleMarkAllAsRead,
     dismiss: handleDismiss,
     createNotification,
     refresh: fetchNotifications
