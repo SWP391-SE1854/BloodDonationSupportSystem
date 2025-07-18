@@ -1,21 +1,22 @@
 import api from './api.service';
 import { API_ENDPOINTS } from './api.config';
+import { Notification } from '@/types/api';
 // import { Notification } from '@/components/ui/NotificationBell';
-
-export interface Notification {
-  notification_id: string;
-  message: string;
-  read_status: boolean;
-  created_at: string;
-  donation_request_id?: number;
-  type?: 'event' | 'alert' | 'info' | 'request' | 'system';
-}
 
 export class NotificationService {
   static async getNotifications(): Promise<Notification[]> {
     try {
       const response = await api.get<{ $values: Notification[] }>(API_ENDPOINTS.GET_USER_NOTIFICATIONS);
-      return response.data.$values || [];
+      return (response.data.$values || []).map(n => ({
+        ...n,
+        id: n.notification_id || n.id || '',
+        title: n.title || '',
+        message: n.message,
+        type: n.type || 'info',
+        createdAt: n.created_at || n.createdAt || '',
+        read: typeof n.read_status === 'boolean' ? n.read_status : !!n.read,
+        link: n.link,
+      }));
     } catch (error) {
       console.error('Error fetching notifications:', error);
       throw error;

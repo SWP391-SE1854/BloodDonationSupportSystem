@@ -100,12 +100,12 @@ export const API_ENDPOINTS = {
 
   // Health Record endpoints
   HEALTH_RECORD: {
+    GET_ALL_HEALTH_RECORDS: '/healthrecord/all',
     GET_USER_HEALTH_RECORD: '/healthrecord/view',
+    GET_HEALTH_RECORD_BY_USER_ID: (userId: string) => `/healthrecord/user/${userId}`,
     CREATE_HEALTH_RECORD: '/healthrecord/member',
     UPDATE_MY_RECORD: '/healthrecord/member',
-  GET_ALL_HEALTH_RECORDS: '/healthrecord/all',
-    GET_HEALTH_RECORD_BY_USER_ID: (userId: string) => `/healthrecord/${userId}`,
-  UPDATE_HEALTH_RECORD: (id: string) => `/healthrecord/${id}`,
+    UPDATE_HEALTH_RECORD: (id: string) => `/healthrecord/${id}`,
   },
 
   // Notification endpoints

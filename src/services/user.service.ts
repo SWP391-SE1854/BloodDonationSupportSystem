@@ -13,17 +13,19 @@ export interface UserProfile {
   city: string;
   district: string;
   address: string;
-  status?: 'Active' | 'Disabled';
 }
 
 // Type for the payload when updating a user's profile
 export interface UpdateUserProfile {
-  user_id?: number;
+  user_id: number;
   name: string;
+  email: string;
   phone: string;
+  dob: string;
+  role: string;
+  city: string;
+  district: string;
   address: string;
-  city?: string;
-  district?: string;
 }
 
 export class UserService {
