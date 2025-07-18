@@ -11,7 +11,18 @@ import { format, differenceInDays } from 'date-fns';
 import { calculateNextEligibleDate, DonationHistoryEntry, getWaitingPeriod } from '@/utils/donationConstants';
 import { isEligibleToDonate } from '@/utils/healthValidation';
 import axios from 'axios';
-import { getBloodTypeName } from '@/utils/bloodTypes';
+
+// Data from BloodTypeSelect component
+const bloodTypes = [
+    { id: "1", name: "A+" }, { id: "2", name: "A-" }, { id: "3", name: "B+" },
+    { id: "4", name: "B-" }, { id: "5", name: "AB+" }, { id: "6", name: "AB-" },
+    { id: "7", name: "O+" }, { id: "8", name: "O-" }
+];
+
+const getBloodTypeName = (id: string | number) => {
+    const bloodType = bloodTypes.find(bt => bt.id === id.toString());
+    return bloodType ? bloodType.name : 'N/A';
+};
 
 type HealthRecordResponse = HealthRecord | { $values: HealthRecord[] };
 type DonationHistoryResponse = DonationHistoryEntry[] | { $values: DonationHistoryEntry[] };
@@ -77,6 +88,30 @@ const MemberHealthRecords = () => {
     };
     fetchData();
   }, [toast]);
+
+  useEffect(() => {
+    // Auto-update eligibility status if the waiting period has passed
+    if (healthRecord && !healthRecord.eligibility_status && isEligible) {
+      const updateStatus = async () => {
+        try {
+          const updatedRecord = await HealthRecordService.updateMyRecord({ 
+            ...healthRecord,
+            eligibility_status: true 
+          });
+          setHealthRecord(updatedRecord);
+          toast({
+            title: 'Trạng thái được cập nhật',
+            description: 'Bạn đã đủ điều kiện để hiến máu trở lại!',
+            variant: 'default'
+          });
+        } catch (error) {
+          // Silently fail or log error, as this is a background update
+          console.error("Failed to auto-update eligibility status:", error);
+        }
+      };
+      updateStatus();
+    }
+  }, [healthRecord, isEligible, toast]);
 
   const handleSave = async (data: Partial<HealthRecord>) => {
     try {
@@ -187,7 +222,7 @@ const MemberHealthRecords = () => {
         />
         <InfoCard 
           title="Bệnh nền" 
-          value={healthRecord.disease || 'Không có'} 
+          value={healthRecord.medication || 'Không có'} 
         />
       </div>
 

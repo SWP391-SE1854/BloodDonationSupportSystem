@@ -24,7 +24,7 @@ const MemberDonationHistory = () => {
 
   const filteredDonations = useMemo(() => {
     if (!donations) return [];
-    const finalStatuses = ['Completed', 'Rejected', 'Cancelled'];
+    const finalStatuses = ['Completed', 'Rejected', 'Cancelled', 'rejcted'];
     return donations.filter(donation => finalStatuses.includes(donation.status));
   }, [donations]);
 
@@ -33,6 +33,7 @@ const MemberDonationHistory = () => {
       case 'Completed':
         return 'default';
       case 'Rejected':
+      case 'rejcted':
         return 'destructive';
       case 'Cancelled':
         return 'destructive';
@@ -78,7 +79,7 @@ const MemberDonationHistory = () => {
                 <TableRow key={donation.donation_id}>
                   <TableCell>{new Date(donation.donation_date).toLocaleDateString()}</TableCell>
                   <TableCell>{donation.location}</TableCell>
-                  <TableCell>{donation.quantity_cc}</TableCell>
+                  <TableCell>{donation.quantity}</TableCell>
                   <TableCell>
                     <Badge variant={getStatusBadgeVariant(donation.status)}>{donation.status}</Badge>
                   </TableCell>

@@ -232,7 +232,7 @@ const Register = () => {
           <CardHeader className="text-center bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-t-lg">
             <CardTitle className="text-2xl font-bold flex items-center justify-center space-x-2">
               <Heart className="h-6 w-6" />
-              <span>Máu Yêu Thương</span>
+              <span>Blood Care</span>
             </CardTitle>
             <p className="text-red-100">Mỗi giọt máu cho đi - Tham gia cộng đồng cứu người của chúng tôi</p>
           </CardHeader>

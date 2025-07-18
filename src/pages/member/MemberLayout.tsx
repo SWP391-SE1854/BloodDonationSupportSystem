@@ -11,12 +11,12 @@ interface MemberLayoutProps {
 
 const MemberLayout = ({ children, currentPage, onNavigate, onLogout, userName }: MemberLayoutProps) => {
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home },
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'donation-request', label: 'Donate', icon: Heart },
-    { id: 'blood-requests', label: 'Blood Requests', icon: FileText },
-    { id: 'health-records', label: 'Health Records', icon: Activity },
-    { id: 'donation-history', label: 'History', icon: History },
+    { id: 'dashboard', label: 'Bảng điều khiển', icon: Home },
+    { id: 'profile', label: 'Hồ sơ', icon: User },
+    { id: 'donation-request', label: 'Hiến máu', icon: Heart },
+    { id: 'blood-requests', label: 'Yêu cầu máu', icon: FileText },
+    { id: 'health-records', label: 'Hồ sơ sức khỏe', icon: Activity },
+    { id: 'donation-history', label: 'Lịch sử hiến máu', icon: History },
   ];
 
   return (
@@ -29,8 +29,8 @@ const MemberLayout = ({ children, currentPage, onNavigate, onLogout, userName }:
               <Heart className="h-6 w-6 text-red-600" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-800">Blood Donation</h1>
-              <p className="text-sm text-gray-500">Member Portal</p>
+              <h1 className="text-xl font-bold text-gray-800">Hiến Máu</h1>
+              <p className="text-sm text-gray-500">Cổng Thành Viên</p>
             </div>
           </div>
         </div>
@@ -58,7 +58,7 @@ const MemberLayout = ({ children, currentPage, onNavigate, onLogout, userName }:
         {/* User info and logout at bottom */}
         <div className="p-4 border-t border-red-100">
           <div className="text-center mb-3 p-2 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-500">Logged in as</p>
+            <p className="text-xs text-gray-500">Đăng nhập với tư cách</p>
             <p className="text-sm font-medium text-gray-700 truncate">{userName}</p>
           </div>
           <button
@@ -66,7 +66,7 @@ const MemberLayout = ({ children, currentPage, onNavigate, onLogout, userName }:
             className="w-full flex items-center justify-center space-x-2 px-3 py-2 text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
           >
             <LogOut className="h-4 w-4" />
-            <span>Logout</span>
+            <span>Đăng xuất</span>
           </button>
         </div>
       </div>

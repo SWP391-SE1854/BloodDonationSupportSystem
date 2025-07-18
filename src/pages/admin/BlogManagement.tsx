@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
-import { BlogService, BlogPost } from '@/services/blog.service';
+import { BlogService } from '@/services/blog.service';
+import type { BlogPost } from '@/types/api';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { CreateBlogPost } from '@/components/CreateBlogPost';
 import {
@@ -22,12 +23,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useAuth } from '@/contexts/AuthContext';
+import { EditBlogPost } from '@/components/EditBlogPost';
 
 const BlogManagement = () => {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [postToDelete, setPostToDelete] = useState<BlogPost | null>(null);
+  const [postToEdit, setPostToEdit] = useState<BlogPost | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -116,7 +119,7 @@ const BlogManagement = () => {
                   <TableCell>{post.user_id}</TableCell>
                   <TableCell>{new Date(post.date).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" onClick={() => setPostToEdit(post)}>
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
@@ -156,6 +159,20 @@ const BlogManagement = () => {
             </AlertDialogFooter>
         </AlertDialogContent>
     </AlertDialog>
+     <Dialog open={postToEdit !== null} onOpenChange={(open) => !open && setPostToEdit(null)}>
+        <DialogContent className="max-w-2xl w-full p-0 bg-transparent border-none shadow-none">
+            {postToEdit && (
+                <EditBlogPost
+                    post={postToEdit}
+                    onPostUpdated={() => {
+                        setPostToEdit(null);
+                        fetchBlogPosts();
+                    }}
+                    onCancel={() => setPostToEdit(null)}
+                />
+            )}
+        </DialogContent>
+    </Dialog>
     </>
   );
 };

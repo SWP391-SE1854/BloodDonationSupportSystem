@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Heart, Calendar, FileText, Activity, Droplet, Bell, AlertCircle, Clock } from 'lucide-react';
+import { Heart, Calendar, FileText, Activity, Droplet, Bell, AlertCircle, Clock, History } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { HealthRecordService, HealthRecord } from '@/services/health-record.service';
 import { DonationHistoryService, DonationHistoryRecord } from '@/services/donation-history.service';
@@ -137,10 +137,20 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
   }, [user]);
 
   useEffect(() => {
-    // For development, using mock data
-    const mockNotifications = NotificationService.getMockNotifications();
-    setNotifications(mockNotifications);
-  }, []);
+    const fetchNotifications = async () => {
+        try {
+            const fetchedNotifications = await NotificationService.getNotifications();
+            setNotifications(fetchedNotifications);
+        } catch (error) {
+            console.error("Failed to fetch notifications:", error);
+            setNotifications([]); // Set to empty array on error
+        }
+    };
+
+    if (user?.id) {
+        fetchNotifications();
+    }
+  }, [user]);
 
   const handleNotificationClick = (notification: Notification) => {
     // Handle notification click based on type
@@ -250,32 +260,29 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
           <div className="flex items-center space-x-4">
             <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="secondary">
-                  <AlertCircle className="mr-2 h-4 w-4" /> Báo cáo sự cố
+                <Button variant="secondary" className="bg-white/80 hover:bg-white/100">
+                  Báo cáo sự cố
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Báo cáo sự cố</DialogTitle>
                   <DialogDescription>
-                    Gặp sự cố? Gửi báo cáo cho quản trị viên của chúng tôi. Chúng tôi sẽ xem xét sớm nhất có thể.
+                    Nếu bạn gặp bất kỳ vấn đề gì, vui lòng cho chúng tôi biết.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="title" className="text-right">
-                      Tiêu đề
-                    </Label>
-                    <Input id="title" value={reportTitle} onChange={(e) => setReportTitle(e.target.value)} className="col-span-3" />
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="report-title">Tiêu đề</Label>
+                    <Input id="report-title" value={reportTitle} onChange={e => setReportTitle(e.target.value)} />
                   </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="message" className="text-right">
-                      Nội dung
-                    </Label>
-                    <Textarea id="message" value={reportMessage} onChange={(e) => setReportMessage(e.target.value)} className="col-span-3" />
+                  <div>
+                    <Label htmlFor="report-message">Nội dung</Label>
+                    <Textarea id="report-message" value={reportMessage} onChange={e => setReportMessage(e.target.value)} />
                   </div>
                 </div>
                 <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsReportDialogOpen(false)}>Hủy</Button>
                   <Button onClick={handleReportProblem}>Gửi báo cáo</Button>
                 </DialogFooter>
               </DialogContent>
@@ -284,43 +291,52 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
               notifications={notifications}
               onNotificationClick={handleNotificationClick}
               onMarkAsRead={handleMarkAsRead}
+              onDismiss={(id) => setNotifications(prev => prev.filter(n => n.id !== id))}
+              onMarkAllAsRead={() => setNotifications(prev => prev.map(n => ({ ...n, read: true })))}
             />
-            <Heart className="h-16 w-16 text-red-200" />
           </div>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {isLoading ? (
-          Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)
-        ) : (
-          memberStats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <div key={index} className="bg-white border border-red-100 rounded-lg p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                  <p className="text-3xl font-bold mt-2">{stat.value}</p>
-                    {stat.description && (
-                      <p className="text-sm text-red-500 mt-1">{stat.description}</p>
-                    )}
-                    {stat.subtext && (
-                      <p className="text-sm text-gray-500 mt-1">{stat.subtext}</p>
-                    )}
-                </div>
-                <div className={`p-3 rounded-lg ${stat.bgColor}`}>
-                  <Icon className={`h-6 w-6 ${stat.color}`} />
-                </div>
-              </div>
-            </div>
-          );
-          })
-        )}
+      {/* Stats Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {memberStats.map((stat, index) => (
+          <Card key={index} className={`shadow-lg border-l-4 ${stat.bgColor.replace('bg-', 'border-')}`}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+              <stat.icon className={`h-5 w-5 ${stat.color}`} />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stat.value}</div>
+              <p className="text-xs text-gray-500">{stat.description}</p>
+              {stat.subtext && <p className="text-xs text-gray-500 mt-1">{stat.subtext}</p>}
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Blood Requests Section */}
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">Tác vụ nhanh</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Button onClick={() => onNavigate('donation-request')} size="lg" className="flex items-center justify-center gap-2">
+            <Heart className="h-5 w-5" />
+            <span>Đặt lịch hiến máu</span>
+          </Button>
+          <Button onClick={() => onNavigate('health-records')} size="lg" variant="outline" className="flex items-center justify-center gap-2">
+            <Activity className="h-5 w-5" />
+            <span>Xem hồ sơ sức khỏe</span>
+          </Button>
+          <Button onClick={() => onNavigate('donation-history')} size="lg" variant="outline" className="flex items-center justify-center gap-2">
+            <History className="h-5 w-5" />
+            <span>Lịch sử hiến máu</span>
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Emergency Blood Requests Section */}
       <Card>
         <CardHeader className="flex justify-between items-center">
           <div>
@@ -362,8 +378,7 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
       {/* Recent Donations Section */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">Lịch Hẹn Gần Đây</CardTitle>
-          <p className="text-sm text-gray-500 mt-1">Các lịch hẹn hiến máu sắp tới và gần đây của bạn.</p>
+          <CardTitle className="text-xl">Lịch hẹn hiến máu gần đây</CardTitle>
         </CardHeader>
         <CardContent>
           {recentDonations.length > 0 ? (
@@ -373,16 +388,16 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
                   <div className="flex items-center">
                     <Clock className="h-5 w-5 text-blue-500 mr-3" />
                     <div>
-                      <p className="font-semibold">Ngày hiến: {format(new Date(donation.donation_date), 'PPP p')}</p>
-                      <Badge variant={donation.status === 'Approved' ? 'default' : 'secondary'}>{donation.status}</Badge>
+                      <p className="font-semibold">Lịch hẹn: {format(new Date(donation.donation_date), 'PPP')} lúc {donation.donation_time}</p>
+                      <p className="text-sm text-gray-600">Trạng thái: <Badge>{donation.status}</Badge></p>
                   </div>
                   </div>
-                  <Button variant="link" size="sm" onClick={() => navigate(`/donations/${donation.donation_id}`)}>Chi tiết</Button>
+                  <Button variant="link" size="sm" onClick={() => navigate(`/donations/${donation.donation_id}`)}>Xem chi tiết</Button>
                 </div>
               ))}
           </div>
           ) : (
-            <p className="text-center text-gray-500 py-4">Không có lịch hẹn hiến máu nào gần đây.</p>
+            <p className="text-center text-gray-500 py-4">Không có lịch hẹn hiến máu nào.</p>
           )}
         </CardContent>
       </Card>

@@ -90,8 +90,10 @@ const MemberProfile = () => {
     try {
       setIsLoading(true);
       const updateData: UpdateUserProfile = {
-        user_id: profileData?.user_id,
+        user_id: profileData?.user_id || 0,
         name: formData.name,
+        email: profileData?.email || '',
+        role: profileData?.role || '',
         phone: formData.phone,
         address: formData.address,
         city: formData.city,
@@ -99,7 +101,7 @@ const MemberProfile = () => {
         dob: formData.dob ? new Date(formData.dob).toISOString() : '',
       };
 
-      const updatedProfile = await UserService.updateMemberProfile({ updatedUser: updateData });
+      const updatedProfile = await UserService.updateMemberProfile(updateData);
       setProfileData(updatedProfile);
     setIsEditing(false);
       

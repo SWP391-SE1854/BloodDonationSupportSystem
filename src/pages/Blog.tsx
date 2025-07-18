@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import BlogService from "@/services/blog.service";
 import NavigationBar from "@/components/NavigationBar";
 import { BlogPost } from "@/types/api";
+import { Link } from "react-router-dom";
 
 export default function Blog() {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
@@ -25,18 +26,19 @@ export default function Blog() {
 
       <div className="max-w-6xl mx-auto py-12 px-4">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Blood Care Blog</h1>
+          <h1 className="text-4xl font-bold mb-4">Blog Blood Care</h1>
           <p className="text-lg text-muted-foreground">
-            Stay informed about blood donation and healthcare
+            Cập nhật thông tin về hiến máu và chăm sóc sức khỏe
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoading ? (
-            <div className="col-span-full text-center text-lg py-12">Loading...</div>
+            <div className="col-span-full text-center text-lg py-12">Đang tải...</div>
           ) : blogPosts.length > 0 ? (
             blogPosts.map((post) => (
-            <Card key={post.blog_id} className="overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
+            <Link to={`/blog/${post.blog_id}`} key={post.blog_id}>
+            <Card className="overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
               <div className="aspect-video relative overflow-hidden">
                 <img
                     src={"/public/placeholder.svg"}
@@ -57,27 +59,28 @@ export default function Blog() {
                 </div>
                 <CardTitle className="line-clamp-2">{post.title}</CardTitle>
                 <CardDescription className="line-clamp-3">
-                    {post.content?.slice(0, 120) || ''}
+                    {post.content?.slice(0, 120) || ''}...
                 </CardDescription>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent className="pt-0 mt-auto">
                 <Button variant="outline" className="w-full group">
-                  Read More
+                  Đọc thêm
                   <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </CardContent>
             </Card>
+            </Link>
             ))
           ) : (
             <div className="col-span-full text-center text-muted-foreground py-12">
-              No blog posts found.
+              Không tìm thấy bài viết nào.
             </div>
           )}
         </div>
 
         <div className="mt-12 text-center">
           <Button size="lg" className="bg-red-500 hover:bg-red-600 text-white">
-            View All Posts
+            Xem tất cả bài viết
           </Button>
         </div>
       </div>

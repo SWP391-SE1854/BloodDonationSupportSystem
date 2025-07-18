@@ -20,6 +20,7 @@ import { StaffService } from '@/services/staff.service';
 import { UserProfile } from '@/services/user.service';
 import { Input } from '@/components/ui/input';
 import { BloodInventoryService } from '@/services/blood-inventory.service';
+import NotificationService from '@/services/notification.service';
 
 // New Type for components
 type BloodComponent = {
@@ -111,9 +112,29 @@ const StaffDonationManagement = () => {
     setIsRejectDialogOpen(true);
   };
 
-  const handleConfirmReject = () => {
-    if (selectedDonation) {
-      handleStatusUpdate(selectedDonation, 'Rejected', rejectionReason);
+  const handleConfirmReject = async () => {
+    if (selectedDonation && rejectionReason) {
+      // First, update the donation status
+      await handleStatusUpdate(selectedDonation, 'Rejected', rejectionReason);
+
+      // Then, send a notification to the user
+      try {
+        await NotificationService.sendStaffNotification({
+          user_id: selectedDonation.user_id,
+          title: 'Yêu cầu hiến máu của bạn đã bị từ chối',
+          message: rejectionReason,
+        });
+        toast({
+          title: 'Đã gửi thông báo',
+          description: 'Thông báo từ chối đã được gửi đến người dùng.',
+        });
+      } catch (error) {
+        toast({
+          title: 'Lỗi gửi thông báo',
+          description: 'Không thể gửi thông báo đến người dùng. Vui lòng thử lại.',
+          variant: 'destructive',
+        });
+      }
     }
     setIsRejectDialogOpen(false);
     setRejectionReason('');

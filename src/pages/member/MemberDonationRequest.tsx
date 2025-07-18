@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { useToast } from "@/components/ui/use-toast";
 import { DonationService } from "@/services/donation.service";
 import { Donation } from "@/types/api";
-import { Heart, Calendar as CalendarIcon, FileText, Send, Clock, CheckCircle, AlertCircle, Stethoscope } from 'lucide-react';
+import { Heart, Calendar as CalendarIcon, FileText, Send, Clock, CheckCircle, AlertCircle, Stethoscope, HeartPulse } from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -21,7 +21,27 @@ import { DonationHistoryService } from '@/services/donation-history.service';
 import { DonationHistoryEntry } from '@/utils/donationConstants';
 import { isEligibleToDonate } from '@/utils/healthValidation';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { permanentDisqualifications, temporaryDisqualifications } from '@/utils/disqualificationReasons';
 import { WrappedResponse } from '@/types/api';
+
+const allergyOptions = [
+  { id: 'antibiotics', label: 'Dị ứng thuốc kháng sinh' },
+  { id: 'aspirin', label: 'Dị ứng Aspirin' },
+  { id: 'seafood', label: 'Dị ứng hải sản' },
+  { id: 'pollen', label: 'Dị ứng phấn hoa' },
+  { id: 'animal_dander', label: 'Dị ứng lông động vật' },
+  { id: 'other', label: 'Khác (ghi rõ ở ghi chú)' },
+];
+
+const medicationOptions = [
+  { id: 'blood_pressure', label: 'Thuốc huyết áp' },
+  { id: 'diabetes', label: 'Thuốc tiểu đường' },
+  { id: 'blood_thinners', label: 'Thuốc chống đông máu' },
+  { id: 'antihistamines', label: 'Thuốc kháng histamin' },
+  { id: 'pain_relievers', label: 'Thuốc giảm đau' },
+  { id: 'other', label: 'Khác (ghi rõ ở ghi chú)' },
+];
 
 function isWrapped<T>(response: T | WrappedResponse<T>): response is WrappedResponse<T> {
   return (response as WrappedResponse<T>).$values !== undefined;
@@ -56,6 +76,8 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
   const [healthRecord, setHealthRecord] = useState<HealthRecord | null>(null);
   const [donationHistory, setDonationHistory] = useState<DonationHistoryEntry[]>([]);
   const [isEligible, setIsEligible] = useState<boolean | null>(null);
+  const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
+  const [selectedMedications, setSelectedMedications] = useState<string[]>([]);
 
   // ==================== Time Slots Configuration ====================
   const timeSlots = Array.from({ length: 10 }, (_, i) => {
@@ -95,7 +117,8 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
           DonationHistoryService.getMemberHistory()
         ]);
         
-        const currentRecord = isWrapped(recordResponse) ? recordResponse.$values[0] : recordResponse;
+        const record = recordResponse as unknown as { $values?: HealthRecord[] };
+        const currentRecord = (record && record.$values && Array.isArray(record.$values)) ? record.$values[0] : recordResponse;
         const currentHistory = isWrapped(historyResponse) ? historyResponse.$values : historyResponse;
         
         setHealthRecord(currentRecord as HealthRecord);
@@ -104,6 +127,8 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
         if (!currentRecord) {
           setIsEligible(false);
         } else {
+          setSelectedAllergies(currentRecord.allergies ? currentRecord.allergies.split(',').map(s => s.trim()) : []);
+          setSelectedMedications(currentRecord.medication ? currentRecord.medication.split(',').map(s => s.trim()) : []);
           const eligibility = isEligibleToDonate(currentRecord, currentHistory);
           setIsEligible(eligibility);
         }
@@ -143,21 +168,34 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
 
     setIsSubmitting(true);
     try {
+      // Step 1: Update health record with allergy and medication info
+      if (healthRecord) {
+        await HealthRecordService.updateMyRecord({
+          ...healthRecord,
+          allergies: selectedAllergies.join(', '),
+          medication: selectedMedications.join(', '),
+        });
+      }
+
+      // Step 2: Create the donation request
       const donationData = {
         donation_date: format(donationDate, 'yyyy-MM-dd'),
         donation_time: donationTime,
-        // The health data is now managed in HealthRecord, so we only send date, time, and note.
         note: note,
       };
       await DonationService.createDonation(donationData);
+
       toast({
         title: "Request Sent!",
         description: `Your donation request for ${format(donationDate!, 'PPP')} has been sent.`,
       });
+
       // Reset form
       setDonationDate(eventDate);
       setDonationTime('');
       setNote('');
+      // We don't reset allergies and medication, as they are part of the health record now
+
       if (!onClose) {
         fetchMemberDonations();
       }
@@ -175,6 +213,20 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
       setIsSubmitting(false);
     }
   };
+
+    const handleAllergyChange = (id: string, checked: boolean) => {
+        setSelectedAllergies(prev =>
+            checked ? [...prev, id] : prev.filter(item => item !== id)
+        );
+    };
+
+    const handleMedicationChange = (id: string, checked: boolean) => {
+        setSelectedMedications(prev =>
+            checked ? [...prev, id] : prev.filter(item => item !== id)
+        );
+    };
+
+    const isSubmitDisabled = isSubmitting;
 
   // ==================== Eligibility Check UI ====================
   if (isEligible === null) {
@@ -282,10 +334,52 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
         />
       </div>
 
+      {/* Health Information Section */}
+      <div className="space-y-4 rounded-lg border bg-blue-50 p-4">
+          <div className="flex items-center gap-2">
+              <Stethoscope className="h-5 w-5 text-blue-600" />
+              <h3 className="text-lg font-semibold text-gray-800">Thông tin sức khỏe bổ sung</h3>
+          </div>
+          <div className="space-y-2">
+              <Label className="font-semibold">Các loại dị ứng đã biết:</Label>
+              <div className="grid grid-cols-2 gap-2">
+                  {allergyOptions.map(item => (
+                      <div key={item.id} className="flex items-center space-x-2">
+                          <Checkbox
+                              id={`allergy-${item.id}`}
+                              checked={selectedAllergies.includes(item.id)}
+                              onCheckedChange={(checked) => handleAllergyChange(item.id, !!checked)}
+                          />
+                          <label htmlFor={`allergy-${item.id}`} className="text-sm font-medium">
+                              {item.label}
+                          </label>
+                      </div>
+                  ))}
+              </div>
+          </div>
+          <div className="space-y-2">
+              <Label className="font-semibold">Các loại thuốc đang sử dụng gần đây:</Label>
+              <div className="grid grid-cols-2 gap-2">
+                  {medicationOptions.map(item => (
+                      <div key={item.id} className="flex items-center space-x-2">
+                          <Checkbox
+                              id={`medication-${item.id}`}
+                              checked={selectedMedications.includes(item.id)}
+                              onCheckedChange={(checked) => handleMedicationChange(item.id, !!checked)}
+                          />
+                          <label htmlFor={`medication-${item.id}`} className="text-sm font-medium">
+                              {item.label}
+                          </label>
+                      </div>
+                  ))}
+              </div>
+          </div>
+      </div>
+
       {/* Form Actions */}
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitDisabled}>
           {isSubmitting ? (
             <>
               <CheckCircle className="mr-2 h-4 w-4 animate-spin" />
@@ -338,7 +432,7 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
           </CardHeader>
           <CardContent>
             {isFetching ? (
-              <div className="text-center">Loading...</div>
+              <div className="text-center">Đang tải...</div>
             ) : activeDonations.length === 0 ? (
               <div className="text-center text-gray-500">No active donation requests</div>
             ) : (
