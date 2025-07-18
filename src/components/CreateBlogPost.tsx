@@ -34,8 +34,8 @@ export function CreateBlogPost({ onPostCreated, onCancel }: CreateBlogPostProps)
 
     if (!user?.id) {
       toast({
-        title: 'Error',
-        description: 'User not found. Please log in again.',
+        title: 'Lỗi',
+        description: 'Không tìm thấy người dùng. Vui lòng đăng nhập lại.',
         variant: 'destructive',
       });
       setIsLoading(false);
@@ -49,15 +49,15 @@ export function CreateBlogPost({ onPostCreated, onCancel }: CreateBlogPostProps)
         content: formData.content
       });
       toast({
-        title: 'Success',
-        description: 'Blog post created successfully!',
+        title: 'Thành công',
+        description: 'Tạo bài viết thành công!',
       });
       setFormData({ title: '', content: '', imageUrl: '' });
       onPostCreated?.();
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to create blog post. Please try again.',
+        title: 'Lỗi',
+        description: 'Tạo bài viết thất bại. Vui lòng thử lại.',
         variant: 'destructive',
       });
     } finally {
@@ -68,45 +68,45 @@ export function CreateBlogPost({ onPostCreated, onCancel }: CreateBlogPostProps)
   return (
     <Card className="w-full max-w-md mx-auto shadow-lg border border-gray-200">
       <CardHeader className="p-4">
-        <CardTitle className="text-lg">Create New Blog Post</CardTitle>
+        <CardTitle className="text-lg">Tạo bài viết mới</CardTitle>
         <CardDescription className="text-xs">
-          Share important updates, tips, or stories with the community. Fill out the details below to publish a new blog post.
+          Chia sẻ các cập nhật, mẹo hoặc câu chuyện quan trọng với cộng đồng. Điền vào các chi tiết dưới đây để xuất bản một bài viết mới.
         </CardDescription>
       </CardHeader>
       <CardContent className="p-4">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
-            <Label htmlFor="title" className="text-sm">Title</Label>
+            <Label htmlFor="title" className="text-sm">Tiêu đề</Label>
             <Input
               id="title"
               value={formData.title}
               onChange={(e) => handleInputChange('title', e.target.value)}
-              placeholder="Enter post title"
+              placeholder="Nhập tiêu đề bài viết"
               required
               className="text-sm"
             />
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="content" className="text-sm">Content</Label>
+            <Label htmlFor="content" className="text-sm">Nội dung</Label>
             <Textarea
               id="content"
               value={formData.content}
               onChange={(e) => handleInputChange('content', e.target.value)}
-              placeholder="Write your blog post content here..."
+              placeholder="Viết nội dung bài viết của bạn tại đây..."
               className="min-h-[120px] text-sm"
               required
             />
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="imageUrl" className="text-sm">Image URL</Label>
+            <Label htmlFor="imageUrl" className="text-sm">URL hình ảnh</Label>
             <div className="flex flex-col sm:flex-row gap-2 items-start">
               <Input
                 id="imageUrl"
                 value={formData.imageUrl}
                 onChange={(e) => handleInputChange('imageUrl', e.target.value)}
-                placeholder="Enter image URL (optional)"
+                placeholder="Nhập URL hình ảnh (tùy chọn)"
                 type="url"
                 className="text-sm"
               />
@@ -118,8 +118,8 @@ export function CreateBlogPost({ onPostCreated, onCancel }: CreateBlogPostProps)
                     className="w-full h-full object-cover"
                     onError={() => {
                       toast({
-                        title: 'Error',
-                        description: 'Invalid image URL',
+                        title: 'Lỗi',
+                        description: 'URL hình ảnh không hợp lệ',
                         variant: 'destructive',
                       });
                       handleInputChange('imageUrl', '');
@@ -129,7 +129,7 @@ export function CreateBlogPost({ onPostCreated, onCancel }: CreateBlogPostProps)
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Optional: Add a visual to your post by providing an image URL.
+              Tùy chọn: Thêm hình ảnh vào bài viết của bạn bằng cách cung cấp một URL hình ảnh.
             </p>
           </div>
 
@@ -142,17 +142,17 @@ export function CreateBlogPost({ onPostCreated, onCancel }: CreateBlogPostProps)
                 disabled={isLoading}
                 className="text-sm"
               >
-                Cancel
+                Hủy
               </Button>
             )}
             <Button type="submit" disabled={isLoading} className="font-semibold text-sm">
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  Đang tạo...
                 </>
               ) : (
-                'Create Post'
+                'Tạo bài viết'
               )}
             </Button>
           </div>
