@@ -3,7 +3,19 @@ import { API_ENDPOINTS } from './api.config';
 // import { Notification } from '@/components/ui/NotificationBell';
 
 export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+  donation_request_id?: number;
+  type: 'event' | 'alert' | 'info' | 'request' | 'system';
+  link?: string;
+}
+
+interface ApiNotification {
   notification_id: string;
+  title: string;
   message: string;
   read_status: boolean;
   created_at: string;
@@ -12,10 +24,25 @@ export interface Notification {
 }
 
 export class NotificationService {
+  private static transform(notification: ApiNotification): Notification {
+    return {
+      id: String(notification.notification_id),
+      title: notification.title,
+      message: notification.message,
+      read: notification.read_status,
+      createdAt: notification.created_at,
+      donation_request_id: notification.donation_request_id,
+      type: notification.type || 'info',
+    };
+  }
+
   static async getNotifications(): Promise<Notification[]> {
     try {
-      const response = await api.get<{ $values: Notification[] }>(API_ENDPOINTS.GET_USER_NOTIFICATIONS);
-      return response.data.$values || [];
+      const response = await api.get<{ $values: ApiNotification[] }>(API_ENDPOINTS.GET_USER_NOTIFICATIONS);
+      if (response.data && response.data.$values) {
+        return response.data.$values.map(this.transform);
+      }
+      return [];
     } catch (error) {
       console.error('Error fetching notifications:', error);
       throw error;
@@ -24,7 +51,7 @@ export class NotificationService {
 
   static async markAsRead(notificationId: string): Promise<void> {
     try {
-    await api.put(API_ENDPOINTS.MARK_NOTIFICATION_AS_READ(notificationId));
+      await api.put(API_ENDPOINTS.MARK_NOTIFICATION_AS_READ(notificationId));
     } catch (error) {
       console.error('Error marking notification as read:', error);
       throw error;
@@ -45,7 +72,8 @@ export class NotificationService {
 
   static async dismissNotification(notificationId: string): Promise<void> {
     try {
-      await api.delete(API_ENDPOINTS.NOTIFICATIONS.DISMISS(notificationId));
+      // Assuming there is an endpoint for dismissing
+      // await api.delete(`/api/notification/member/${notificationId}`);
     } catch (error) {
       console.error('Error dismissing notification:', error);
       throw error;
@@ -87,7 +115,13 @@ export class NotificationService {
 
   static async sendStaffNotification(data: { user_id: string; title: string; message: string }): Promise<void> {
     try {
-      await api.post(API_ENDPOINTS.CREATE_STAFF, data);
+      await api.post(API_ENDPOINTS.CREATE_STAFF, {
+        user_id: parseInt(data.user_id, 10),
+        title: data.title,
+        message: data.message,
+        read_status: false,
+        sent_date: new Date().toISOString(),
+      });
     } catch (error) {
       console.error('Error sending staff notification:', error);
       throw error;
