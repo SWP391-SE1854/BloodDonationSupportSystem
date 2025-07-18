@@ -6,16 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-
-export interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: 'event' | 'alert' | 'info' | 'request' | 'system';
-  createdAt: string;
-  read: boolean;
-  link?: string;
-}
+import { Notification } from '@/types/api';
 
 interface NotificationBellProps {
   notifications: Notification[];

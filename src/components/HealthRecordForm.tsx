@@ -22,14 +22,14 @@ interface HealthRecordFormProps {
 
 const HealthRecordForm: React.FC<HealthRecordFormProps> = ({ isOpen, onClose, onSave, initialData }) => {
   const { toast } = useToast();
-  const [formData, setFormData] = useState<Partial<HealthRecord>>(initialData || {});
+  const [formData, setFormData] = useState<Partial<HealthRecord>>(initialData || { eligibility_status: true });
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const { user } = useAuth();
   const userRole = user?.role;
 
   useEffect(() => {
-    setFormData(initialData || {});
+    setFormData(initialData || { eligibility_status: true });
     setErrors([]);
     setTouched({});
   }, [initialData]);
@@ -145,25 +145,25 @@ const HealthRecordForm: React.FC<HealthRecordFormProps> = ({ isOpen, onClose, on
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="allergies">Dị Ứng</Label>
+            <Label htmlFor="allergies">Dị Ứng (nếu có)</Label>
             <Textarea 
               id="allergies" 
+              placeholder="Liệt kê các dị ứng của bạn, cách nhau bằng dấu phẩy"
               value={formData.allergies || ''} 
               onChange={e => handleInputChange('allergies', e.target.value)}
               className={getFieldError('allergies') ? 'border-red-500' : ''}
-              placeholder="Nhập thông tin về dị ứng (nếu có)"
             />
             {renderError('allergies')}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="medication">Thuốc Đang Sử Dụng</Label>
+            <Label htmlFor="medication">Bệnh Nền (nếu có)</Label>
             <Textarea 
               id="medication" 
+              placeholder="Liệt kê các bệnh nền của bạn, cách nhau bằng dấu phẩy"
               value={formData.medication || ''} 
               onChange={e => handleInputChange('medication', e.target.value)}
               className={getFieldError('medication') ? 'border-red-500' : ''}
-              placeholder="Nhập thông tin về thuốc đang sử dụng (nếu có)"
             />
             {renderError('medication')}
           </div>

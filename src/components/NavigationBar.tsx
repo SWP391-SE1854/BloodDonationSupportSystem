@@ -47,7 +47,7 @@ const NavigationBar = ({ fixed = false }: NavigationBarProps) => {
               <Heart className="h-8 w-8 text-red-500" />
             </div>
             <span className="text-2xl font-bold text-gray-800 group-hover:text-red-500 transition-colors duration-300">
-              Blood Care
+              Blood Care 
             </span>
           </Link>
 
