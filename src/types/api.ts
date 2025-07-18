@@ -141,6 +141,8 @@ export interface Donation {
     donation_id: number;
     user_id: string;
     donation_date: string;
+    donation_time?: string;
+    note?: string;
     status: 'Pending' | 'Approved' | 'Completed' | 'Rejected' | 'Cancelled' | 'Processed';
     location?: string;
     component?: string;
@@ -150,4 +152,19 @@ export interface Donation {
 
 export interface WrappedResponse<T> {
   $values: T;
+}
+
+export interface Notification {
+  id: string; // unified id
+  title: string;
+  message: string;
+  type: 'event' | 'alert' | 'info' | 'request' | 'system';
+  createdAt: string;
+  read: boolean;
+  link?: string;
+  // Optionally include legacy fields for compatibility
+  notification_id?: string;
+  read_status?: boolean;
+  created_at?: string;
+  donation_request_id?: number;
 }

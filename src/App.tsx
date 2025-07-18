@@ -16,6 +16,7 @@ import UserManagement from "./pages/admin/UserManagement";
 import { AuthProvider } from "./contexts/AuthContext";
 import MemberPortal from "./pages/member/MemberPortal";
 import Blog from './pages/Blog';
+import BlogPostPage from './pages/BlogPostPage';
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:blog_id" element={<BlogPostPage />} />
             <Route
               path="/profile/*"
               element={
