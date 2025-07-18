@@ -6,6 +6,7 @@ namespace BloodDonationSystem.DataAccess.Entities
     public class Notification
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int notification_id { get; set; }
         public int user_id { get; set; }
         public string title { get; set; } = string.Empty;
