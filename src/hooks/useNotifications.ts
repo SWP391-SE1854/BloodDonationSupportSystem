@@ -1,26 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
-// import { Notification } from '@/components/ui/NotificationBell';
-import NotificationService from '@/services/notification.service';
-
-export interface Notification {
-  notification_id: string;
-  message: string;
-  read_status: boolean;
-  created_at: string;
-  donation_request_id?: number;
-  type?: 'event' | 'alert' | 'info' | 'request' | 'system';
-}
-
+import NotificationService, { Notification } from '@/services/notification.service';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function useNotifications() {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchNotifications = useCallback(async () => {
+    if (!user) {
+      setNotifications([]);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
     try {
-      setIsLoading(true);
-      setError(null);
       const data = await NotificationService.getNotifications();
       setNotifications(data);
     } catch (err) {
@@ -29,7 +25,7 @@ export function useNotifications() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchNotifications();
