@@ -30,7 +30,16 @@ export const registerSchema = z.object({
   address: z.string()
     .min(1, "Address cannot be empty")
     .min(5, "Address is required"),
-  dateOfBirth: z.string().min(1, "Date of birth cannot be empty"),
+  dateOfBirth: z.string().min(1, "Date of birth cannot be empty").refine((val) => {
+    const today = new Date();
+    const birthDate = new Date(val);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    return age >= 18 && age <= 60;
+  }, "You must be between 18 and 60 years old"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -57,5 +66,14 @@ export const profileUpdateSchema = z.object({
   address: z.string()
     .min(1, "Address cannot be empty")
     .min(5, "Address is required"),
-  dob: z.string().min(1, "Date of birth cannot be empty"),
+  dob: z.string().min(1, "Date of birth cannot be empty").refine((val) => {
+    const today = new Date();
+    const birthDate = new Date(val);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    return age >= 18 && age <= 60;
+  }, "You must be between 18 and 60 years old"),
 }); 

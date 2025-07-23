@@ -24,11 +24,38 @@ export const DonorEligibilityCriteria = {
   BMI: {
     MIN: 18.5,
     MAX: 35
+  },
+  AGE: {
+    MIN: 18,
+    MAX: 60
   }
 };
 
-export const validateHealthRecord = (data: Partial<HealthRecord>, donationHistory?: DonationHistoryEntry[]): ValidationResult => {
+export const validateHealthRecord = (data: Partial<HealthRecord>, donationHistory?: DonationHistoryEntry[], dob?: string | null): ValidationResult => {
   const errors: ValidationError[] = [];
+
+  // Age validation
+  if (dob) {
+    const today = new Date();
+    const birthDate = new Date(dob);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    if (age < DonorEligibilityCriteria.AGE.MIN) {
+      errors.push({
+        field: 'age',
+        message: `You must be at least ${DonorEligibilityCriteria.AGE.MIN} years old to donate.`
+      });
+    }
+    if (age > DonorEligibilityCriteria.AGE.MAX) {
+      errors.push({
+        field: 'age',
+        message: `You must be at most ${DonorEligibilityCriteria.AGE.MAX} years old to donate.`
+      });
+    }
+  }
 
   // Weight validation
   if (typeof data.weight !== 'undefined') {
@@ -117,7 +144,7 @@ export const isEligibleToDonate = (healthRecord: Partial<HealthRecord>, donation
   }
 
   // If no override is set, perform the automated checks.
-  const validation = validateHealthRecord(healthRecord, donationHistory);
+  const validation = validateHealthRecord(healthRecord, donationHistory, healthRecord.user?.dob);
   if (!validation.isValid) {
     return false;
   }
