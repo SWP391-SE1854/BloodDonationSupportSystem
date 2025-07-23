@@ -3,10 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import { BlogService } from '@/services/blog.service';
 import { Loader2 } from 'lucide-react';
 import type { BlogPost } from '@/types/api';
+import { Label } from '@/components/ui/label';
 
 interface EditBlogPostProps {
   post: BlogPost;
@@ -20,7 +21,16 @@ export function EditBlogPost({ post, onPostUpdated, onCancel }: EditBlogPostProp
   const [formData, setFormData] = useState({
     title: post.title,
     content: post.content,
+    image: post.image || '',
   });
+
+  useEffect(() => {
+    setFormData({
+        title: post.title,
+        content: post.content,
+        image: post.image || '',
+    });
+  }, [post]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -56,9 +66,7 @@ export function EditBlogPost({ post, onPostUpdated, onCancel }: EditBlogPostProp
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="title" className="text-sm font-medium">
-              Tiêu đề
-            </label>
+            <Label htmlFor="title">Tiêu đề</Label>
             <Input
               id="title"
               value={formData.title}
@@ -69,9 +77,7 @@ export function EditBlogPost({ post, onPostUpdated, onCancel }: EditBlogPostProp
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="content" className="text-sm font-medium">
-              Nội dung
-            </label>
+            <Label htmlFor="content">Nội dung</Label>
             <Textarea
               id="content"
               value={formData.content}
@@ -80,6 +86,26 @@ export function EditBlogPost({ post, onPostUpdated, onCancel }: EditBlogPostProp
               className="min-h-[200px]"
               required
             />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="image">URL hình ảnh</Label>
+            <Input
+              id="image"
+              value={formData.image}
+              onChange={(e) => handleInputChange('image', e.target.value)}
+              placeholder="Nhập URL hình ảnh (tùy chọn)"
+              type="url"
+            />
+             {formData.image && (
+                <div className="relative mt-2 w-40 h-40 border rounded-md overflow-hidden bg-gray-50 flex items-center justify-center">
+                  <img
+                    src={formData.image}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
           </div>
 
           <div className="flex justify-end gap-2">

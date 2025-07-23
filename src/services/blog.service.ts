@@ -6,6 +6,8 @@ export interface CreateBlogPost {
   user_id: number;
   title: string;
   content: string;
+  url?: string;
+  image?: string;
 }
 
 export class BlogService {
@@ -51,7 +53,7 @@ export class BlogService {
 
   static async deleteBlogPost(id: number): Promise<void> {
     try {
-      await api.delete(API_ENDPOINTS.BLOG_POST.DELETE(id));
+      await api.delete(API_ENDPOINTS.BLOG_POST.DELETE, { params: { id } });
     } catch (error) {
       console.error(`Error deleting blog post with id ${id}:`, error);
       throw error;

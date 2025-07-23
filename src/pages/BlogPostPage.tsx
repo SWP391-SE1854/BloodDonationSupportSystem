@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, User, ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
@@ -15,7 +15,7 @@ export default function BlogPostPage() {
   useEffect(() => {
     if (blog_id) {
       BlogService.getBlogPostById(Number(blog_id))
-        .then((post) => setPost(post))
+        .then((data) => setPost(data))
         .catch((error) => {
           console.error("Error fetching blog post:", error);
           setPost(null);
@@ -28,49 +28,49 @@ export default function BlogPostPage() {
     <div className="min-h-screen bg-gray-50">
       <NavigationBar />
 
-      <div className="max-w-4xl mx-auto py-12 px-4">
-        <div className="mb-8">
-          <Link to="/blog">
-            <Button variant="outline">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Quay lại Blog
-            </Button>
-          </Link>
-        </div>
-
-        {isLoading ? (
-          <div className="text-center text-lg py-12">Đang tải bài viết...</div>
-        ) : post ? (
-          <Card className="overflow-hidden">
-            <div className="aspect-video relative overflow-hidden">
-              <img
-                src={"/public/placeholder.svg"}
-                alt={post.title}
-                className="object-cover w-full h-full"
-              />
+      <div className="py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+            <div className="mb-8">
+            <Link to="/blog" className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700">
+                <ArrowLeft className="w-5 h-5 mr-2" />
+                Quay lại Blog
+            </Link>
             </div>
-            <CardHeader>
-              <CardTitle className="text-3xl font-bold">{post.title}</CardTitle>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
-                <span className="flex items-center gap-1.5">
-                  <Calendar className="h-4 w-4" />
-                  {new Date(post.date).toLocaleDateString()}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <User className="h-4 w-4" />
-                  {post.User?.name || `User #${post.user_id}`}
-                </span>
-              </div>
-            </CardHeader>
-            <CardContent className="prose max-w-none prose-lg">
-              {post.content}
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="text-center text-red-500 py-12">
-            Không tìm thấy bài viết hoặc đã có lỗi xảy ra.
-          </div>
-        )}
+
+            {isLoading ? (
+            <div className="text-center text-lg py-12">Đang tải bài viết...</div>
+            ) : post ? (
+            <article className="bg-white shadow-lg rounded-lg overflow-hidden">
+                {post.image && (
+                    <img
+                        className="h-96 w-full object-cover"
+                        src={post.image}
+                        alt={post.title}
+                    />
+                )}
+                <div className="p-8">
+                    <h1 className="text-4xl font-extrabold text-gray-900 leading-tight mb-4">{post.title}</h1>
+                    <div className="flex items-center gap-6 text-sm text-gray-500 mb-6">
+                        <div className="flex items-center gap-2">
+                            <User className="h-5 w-5 text-gray-400" />
+                            <span>Admin</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Calendar className="h-5 w-5 text-gray-400" />
+                            <time dateTime={post.date}>{new Date(post.date).toLocaleDateString('vi-VN')}</time>
+                        </div>
+                    </div>
+                    <div className="prose prose-lg max-w-none text-gray-600">
+                        {post.content}
+                    </div>
+                </div>
+            </article>
+            ) : (
+            <div className="text-center text-red-500 py-12">
+                Không tìm thấy bài viết hoặc đã có lỗi xảy ra.
+            </div>
+            )}
+        </div>
       </div>
     </div>
   );

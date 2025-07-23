@@ -4,9 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import { BlogService } from '@/services/blog.service';
-import { ImageIcon, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface CreateBlogPostProps {
@@ -21,7 +21,7 @@ export function CreateBlogPost({ onPostCreated, onCancel }: CreateBlogPostProps)
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    imageUrl: ''
+    image: ''
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -46,13 +46,14 @@ export function CreateBlogPost({ onPostCreated, onCancel }: CreateBlogPostProps)
       await BlogService.createBlogPost({
         user_id: Number(user.id),
         title: formData.title,
-        content: formData.content
+        content: formData.content,
+        image: formData.image
       });
       toast({
         title: 'Thành công',
         description: 'Tạo bài viết thành công!',
       });
-      setFormData({ title: '', content: '', imageUrl: '' });
+      setFormData({ title: '', content: '', image: '' });
       onPostCreated?.();
     } catch (error) {
       toast({
@@ -66,14 +67,13 @@ export function CreateBlogPost({ onPostCreated, onCancel }: CreateBlogPostProps)
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto shadow-lg border border-gray-200">
-      <CardHeader className="p-4">
-        <CardTitle className="text-lg">Tạo bài viết mới</CardTitle>
-        <CardDescription className="text-xs">
-          Chia sẻ các cập nhật, mẹo hoặc câu chuyện quan trọng với cộng đồng. Điền vào các chi tiết dưới đây để xuất bản một bài viết mới.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="p-4">
+    <div className="p-6">
+      <div className="mb-4">
+        <h2 className="text-2xl font-bold">Tạo bài viết mới</h2>
+        <p className="text-sm text-muted-foreground">
+          Chia sẻ các cập nhật, mẹo hoặc câu chuyện quan trọng với cộng đồng.
+        </p>
+      </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
             <Label htmlFor="title" className="text-sm">Tiêu đề</Label>
@@ -100,20 +100,20 @@ export function CreateBlogPost({ onPostCreated, onCancel }: CreateBlogPostProps)
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="imageUrl" className="text-sm">URL hình ảnh</Label>
+            <Label htmlFor="image" className="text-sm">URL hình ảnh</Label>
             <div className="flex flex-col sm:flex-row gap-2 items-start">
               <Input
-                id="imageUrl"
-                value={formData.imageUrl}
-                onChange={(e) => handleInputChange('imageUrl', e.target.value)}
+                id="image"
+                value={formData.image}
+                onChange={(e) => handleInputChange('image', e.target.value)}
                 placeholder="Nhập URL hình ảnh (tùy chọn)"
                 type="url"
                 className="text-sm"
               />
-              {formData.imageUrl && (
+              {formData.image && (
                 <div className="relative w-20 h-20 border rounded-md overflow-hidden bg-gray-50 flex items-center justify-center">
                   <img
-                    src={formData.imageUrl}
+                    src={formData.image}
                     alt="Preview"
                     className="w-full h-full object-cover"
                     onError={() => {
@@ -122,7 +122,7 @@ export function CreateBlogPost({ onPostCreated, onCancel }: CreateBlogPostProps)
                         description: 'URL hình ảnh không hợp lệ',
                         variant: 'destructive',
                       });
-                      handleInputChange('imageUrl', '');
+                      handleInputChange('image', '');
                     }}
                   />
                 </div>
@@ -157,7 +157,6 @@ export function CreateBlogPost({ onPostCreated, onCancel }: CreateBlogPostProps)
             </Button>
           </div>
         </form>
-      </CardContent>
-    </Card>
+      </div>
   );
 } 
