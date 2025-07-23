@@ -70,9 +70,13 @@ const MemberBloodRequests = () => {
 
     const compatibleRecipientTypes = compatibilityMap[userBloodTypeName];
     
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     return allRequests.filter(request => {
         const requestedBloodTypeName = getBloodTypeName(request.blood_id);
-        return compatibleRecipientTypes.includes(requestedBloodTypeName);
+        const requestDate = new Date(request.request_date);
+        return compatibleRecipientTypes.includes(requestedBloodTypeName) && requestDate >= today;
     });
   }, [healthRecord, allRequests]);
 
@@ -90,24 +94,24 @@ const MemberBloodRequests = () => {
     <>
     <Card>
       <CardHeader>
-        <CardTitle>Compatible Blood Requests</CardTitle>
+        <CardTitle>Yêu cầu hiến máu tương thích</CardTitle>
         <p className="text-sm text-gray-600 mt-1">
-          These are all the active requests compatible with your blood type.
+          Đây là tất cả các yêu cầu hiến máu tương thích với máu của bạn.
         </p>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Blood Type Needed</TableHead>
-              <TableHead>Urgency</TableHead>
-              <TableHead className="text-right">Action</TableHead>
+              <TableHead>Ngày</TableHead>
+              <TableHead>Nhóm máu cần</TableHead>
+              <TableHead>Khẩn cấp</TableHead>
+              <TableHead className="text-right">Hành động</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoadingRequests ? (
-              <TableRow><TableCell colSpan={4} className="text-center">Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={4} className="text-center">Đang tải...</TableCell></TableRow>
             ) : compatibleRequests.length > 0 ? (
               compatibleRequests.map((request) => (
                 <TableRow key={request.request_id}>
@@ -125,7 +129,7 @@ const MemberBloodRequests = () => {
                       size="sm"
                         onClick={() => handleDonateNow(request)}
                     >
-                      Donate Now
+                      Đóng góp ngay
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -133,7 +137,7 @@ const MemberBloodRequests = () => {
             ) : (
               <TableRow>
                 <TableCell colSpan={4} className="text-center">
-                  No compatible blood requests found at this time.
+                  Không tìm thấy yêu cầu hiến máu tương thích với máu của bạn.
                 </TableCell>
               </TableRow>
             )}

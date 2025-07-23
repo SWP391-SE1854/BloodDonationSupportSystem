@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Heart, Calendar, FileText, Activity, Droplet, Bell, AlertCircle, Clock } from 'lucide-react';
+import { Heart, Calendar, FileText, Activity, Droplet, Bell, AlertCircle, Clock, History } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { HealthRecordService, HealthRecord } from '@/services/health-record.service';
 import { DonationHistoryService, DonationHistoryRecord } from '@/services/donation-history.service';
@@ -7,8 +7,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format, differenceInDays } from 'date-fns';
 import { calculateNextEligibleDate, DonationHistoryEntry, getWaitingPeriod, getLatestDonation } from '@/utils/donationConstants';
 import { isEligibleByHistory } from '@/utils/donationConstants';
-import NotificationBell, { Notification } from '@/components/ui/NotificationBell';
-import NotificationService from '@/services/notification.service';
+import NotificationBell from '@/components/NotificationBell';
+import NotificationService, { Notification } from '@/services/notification.service';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BloodRequestService, BloodRequest } from '@/services/blood-request.service';
 import { DonationService } from '@/services/donation.service';
@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
+import MemberDonationRequest from './MemberDonationRequest';
 
 
 const bloodTypes = [
@@ -34,6 +35,14 @@ const getBloodTypeName = (id: string | number | null): string => {
     const stringId = id.toString();
     const bloodType = bloodTypes.find(bt => bt.id === stringId);
     return bloodType ? bloodType.name : 'N/A';
+};
+
+const statusTranslations: { [key: string]: string } = {
+  Pending: 'Đang chờ',
+  Approved: 'Đã duyệt',
+  Completed: 'Đã hoàn thành',
+  Rejected: 'Đã từ chối',
+  Cancelled: 'Đã hủy',
 };
 
 type HistoryServerResponse = DonationHistoryRecord[] | { $values: DonationHistoryRecord[] };
@@ -53,9 +62,12 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [bloodRequests, setBloodRequests] = useState<BloodRequest[]>([]);
+  const [emergencyRequests, setEmergencyRequests] = useState<BloodRequest[]>([]);
   const [recentDonations, setRecentDonations] = useState<Donation[]>([]);
   const navigate = useNavigate();
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<BloodRequest | undefined>(undefined);
   const [reportTitle, setReportTitle] = useState('');
   const [reportMessage, setReportMessage] = useState('');
   const { toast } = useToast();
@@ -114,11 +126,14 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
           ? requestsData 
           : (requestsData as BloodRequestServerResponse).$values || [];
 
-        setBloodRequests(activeRequests.sort((a, b) => {
+        const sortedRequests = activeRequests.sort((a, b) => {
           if (a.emergency_status && !b.emergency_status) return -1;
           if (!a.emergency_status && b.emergency_status) return 1;
           return new Date(b.request_date).getTime() - new Date(a.request_date).getTime();
-        }));
+        });
+
+        setBloodRequests(sortedRequests);
+        setEmergencyRequests(sortedRequests.filter(r => r.emergency_status));
 
         // Filter and sort recent donations
         const sortedDonations = donationsData
@@ -137,36 +152,20 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
   }, [user]);
 
   useEffect(() => {
-    // For development, using mock data
-    const mockNotifications = NotificationService.getMockNotifications();
-    setNotifications(mockNotifications);
-  }, []);
+    const fetchNotifications = async () => {
+        try {
+            const fetchedNotifications = await NotificationService.getNotifications();
+            setNotifications(fetchedNotifications);
+        } catch (error) {
+            console.error("Failed to fetch notifications:", error);
+            setNotifications([]); // Set to empty array on error
+        }
+    };
 
-  const handleNotificationClick = (notification: Notification) => {
-    // Handle notification click based on type
-    switch (notification.type) {
-      case 'event':
-        onNavigate('donation-request');
-        break;
-      case 'request':
-        onNavigate('donation-request');
-        break;
-      case 'system':
-        onNavigate('health-records');
-        break;
+    if (user?.id) {
+        fetchNotifications();
     }
-  };
-
-  const handleMarkAsRead = async (notificationId: string) => {
-    try {
-      await NotificationService.markAsRead(notificationId);
-      setNotifications(prev =>
-        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
-      );
-    } catch (error) {
-      console.error('Failed to mark notification as read:', error);
-    }
-  };
+  }, [user]);
 
   const handleReportProblem = async () => {
     if (!reportTitle || !reportMessage) {
@@ -226,12 +225,25 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
     }
   ];
 
-  const handleScheduleDonation = () => {
-    navigate('/member/donation-request');
+  const getStatusBadgeVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
+    switch (status) {
+      case 'Approved':
+        return 'default';
+      case 'Pending':
+        return 'secondary';
+      default:
+        return 'outline';
+    }
   };
 
-  const handleViewAllRequests = () => {
-    navigate('/member/blood-requests');
+  const handleDonateNow = (request: BloodRequest) => {
+    setSelectedRequest(request);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedRequest(undefined);
   };
 
   if (isLoading) {
@@ -250,92 +262,81 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
           <div className="flex items-center space-x-4">
             <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="secondary">
-                  <AlertCircle className="mr-2 h-4 w-4" /> Báo cáo sự cố
+                <Button variant="secondary" className="bg-white/80 hover:bg-white/100">
+                  Báo cáo sự cố
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Báo cáo sự cố</DialogTitle>
                   <DialogDescription>
-                    Gặp sự cố? Gửi báo cáo cho quản trị viên của chúng tôi. Chúng tôi sẽ xem xét sớm nhất có thể.
+                    Nếu bạn gặp bất kỳ vấn đề gì, vui lòng cho chúng tôi biết.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="title" className="text-right">
-                      Tiêu đề
-                    </Label>
-                    <Input id="title" value={reportTitle} onChange={(e) => setReportTitle(e.target.value)} className="col-span-3" />
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="report-title">Tiêu đề</Label>
+                    <Input id="report-title" value={reportTitle} onChange={e => setReportTitle(e.target.value)} />
                   </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="message" className="text-right">
-                      Nội dung
-                    </Label>
-                    <Textarea id="message" value={reportMessage} onChange={(e) => setReportMessage(e.target.value)} className="col-span-3" />
+                  <div>
+                    <Label htmlFor="report-message">Nội dung</Label>
+                    <Textarea id="report-message" value={reportMessage} onChange={e => setReportMessage(e.target.value)} />
                   </div>
                 </div>
                 <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsReportDialogOpen(false)}>Hủy</Button>
                   <Button onClick={handleReportProblem}>Gửi báo cáo</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
-            <NotificationBell
-              notifications={notifications}
-              onNotificationClick={handleNotificationClick}
-              onMarkAsRead={handleMarkAsRead}
-            />
-            <Heart className="h-16 w-16 text-red-200" />
+            <NotificationBell />
           </div>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {isLoading ? (
-          Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)
-        ) : (
-          memberStats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <div key={index} className="bg-white border border-red-100 rounded-lg p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                  <p className="text-3xl font-bold mt-2">{stat.value}</p>
-                    {stat.description && (
-                      <p className="text-sm text-red-500 mt-1">{stat.description}</p>
-                    )}
-                    {stat.subtext && (
-                      <p className="text-sm text-gray-500 mt-1">{stat.subtext}</p>
-                    )}
-                </div>
-                <div className={`p-3 rounded-lg ${stat.bgColor}`}>
-                  <Icon className={`h-6 w-6 ${stat.color}`} />
-                </div>
-              </div>
-            </div>
-          );
-          })
-        )}
+      {/* Stats Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {memberStats.map((stat, index) => (
+          <Card key={index} className={`shadow-lg border-l-4 ${stat.bgColor.replace('bg-', 'border-')}`}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+              <stat.icon className={`h-5 w-5 ${stat.color}`} />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stat.value}</div>
+              <p className="text-xs text-gray-500">{stat.description}</p>
+              {stat.subtext && <p className="text-xs text-gray-500 mt-1">{stat.subtext}</p>}
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Blood Requests Section */}
+      {/* Quick Actions */}
       <Card>
-        <CardHeader className="flex justify-between items-center">
-          <div>
-            <CardTitle className="text-xl">Yêu Cầu Máu Khẩn Cấp</CardTitle>
-            <p className="text-sm text-gray-500 mt-1">Các yêu cầu máu khẩn cấp trong khu vực của bạn. Sự giúp đỡ của bạn là rất cần thiết!</p>
-          </div>
-          <Button onClick={handleScheduleDonation}>
-            <Calendar className="mr-2 h-4 w-4" />
-            Đặt Lịch Hiến Máu
+        <CardHeader>
+          <CardTitle className="text-xl">Tác vụ nhanh</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Button onClick={() => onNavigate('health-records')} size="lg" variant="outline" className="flex items-center justify-center gap-2">
+            <Activity className="h-5 w-5" />
+            <span>Xem hồ sơ sức khỏe</span>
           </Button>
+          <Button onClick={() => onNavigate('donation-history')} size="lg" variant="outline" className="flex items-center justify-center gap-2">
+            <History className="h-5 w-5" />
+            <span>Lịch sử hiến máu</span>
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Emergency Blood Requests Section */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Yêu Cầu Máu Khẩn Cấp</CardTitle>
         </CardHeader>
         <CardContent>
-          {bloodRequests.length > 0 ? (
+          {emergencyRequests.length > 0 ? (
             <div className="space-y-3">
-              {bloodRequests.slice(0, 3).map(req => (
+              {emergencyRequests.map(req => (
                 <div key={req.request_id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
                   <div className="flex items-center">
                     {req.emergency_status && <AlertCircle className="h-5 w-5 text-red-500 mr-3"/>}
@@ -344,14 +345,9 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
                       <p className="text-sm text-gray-600">Ngày yêu cầu: {format(new Date(req.request_date), 'PPP')}</p>
                   </div>
                   </div>
-                  <Button variant="link" size="sm" onClick={() => navigate(`/requests/${req.request_id}`)}>Chi tiết</Button>
+                  <Button onClick={() => handleDonateNow(req)}>Đóng góp ngay</Button>
                 </div>
               ))}
-              {bloodRequests.length > 3 && (
-                <Button variant="secondary" className="w-full mt-2" onClick={handleViewAllRequests}>
-                  Xem Tất Cả Yêu Cầu
-                </Button>
-              )}
             </div>
           ) : (
             <p className="text-center text-gray-500 py-4">Không có yêu cầu máu khẩn cấp nào.</p>
@@ -359,30 +355,37 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
         </CardContent>
       </Card>
 
+      {isModalOpen && selectedRequest && (
+        <MemberDonationRequest
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          eventDate={selectedRequest.request_date}
+          requestId={selectedRequest.request_id.toString()}
+        />
+      )}
+
       {/* Recent Donations Section */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">Lịch Hẹn Gần Đây</CardTitle>
-          <p className="text-sm text-gray-500 mt-1">Các lịch hẹn hiến máu sắp tới và gần đây của bạn.</p>
+          <CardTitle className="text-xl">Lịch hẹn hiến máu gần đây</CardTitle>
         </CardHeader>
         <CardContent>
           {recentDonations.length > 0 ? (
-            <div className="space-y-3">
+            <ul className="space-y-3">
               {recentDonations.map(donation => (
-                <div key={donation.donation_id} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                  <div className="flex items-center">
-                    <Clock className="h-5 w-5 text-blue-500 mr-3" />
+                <li key={donation.donation_id} className="flex items-center justify-between p-2 rounded-md hover:bg-gray-50">
                     <div>
-                      <p className="font-semibold">Ngày hiến: {format(new Date(donation.donation_date), 'PPP p')}</p>
-                      <Badge variant={donation.status === 'Approved' ? 'default' : 'secondary'}>{donation.status}</Badge>
+                    <p className="font-semibold">Ngày: {format(new Date(donation.donation_date), 'PPP')}</p>
+                    <p className="text-sm text-gray-500">Ghi chú: {donation.note || 'Không có'}</p>
                   </div>
-                  </div>
-                  <Button variant="link" size="sm" onClick={() => navigate(`/donations/${donation.donation_id}`)}>Chi tiết</Button>
-                </div>
+                  <Badge variant={getStatusBadgeVariant(donation.status)}>
+                    {statusTranslations[donation.status] || donation.status}
+                  </Badge>
+                </li>
               ))}
-          </div>
+            </ul>
           ) : (
-            <p className="text-center text-gray-500 py-4">Không có lịch hẹn hiến máu nào gần đây.</p>
+            <p className="text-center text-gray-500">Bạn không có yêu cầu nào đang hoạt động.</p>
           )}
         </CardContent>
       </Card>

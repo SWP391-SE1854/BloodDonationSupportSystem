@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { HealthRecord, HealthRecordService } from '@/services/health-record.service';
 import { DonationHistoryService } from '@/services/donation-history.service';
+import { UserService, UserProfile } from '@/services/user.service';
 import HealthRecordForm from '@/components/HealthRecordForm';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CheckCircle, PlusCircle, Calendar, Heart } from 'lucide-react';
@@ -11,7 +12,18 @@ import { format, differenceInDays } from 'date-fns';
 import { calculateNextEligibleDate, DonationHistoryEntry, getWaitingPeriod } from '@/utils/donationConstants';
 import { isEligibleToDonate } from '@/utils/healthValidation';
 import axios from 'axios';
-import { getBloodTypeName } from '@/utils/bloodTypes';
+
+// Data from BloodTypeSelect component
+const bloodTypes = [
+    { id: "1", name: "A+" }, { id: "2", name: "A-" }, { id: "3", name: "B+" },
+    { id: "4", name: "B-" }, { id: "5", name: "AB+" }, { id: "6", name: "AB-" },
+    { id: "7", name: "O+" }, { id: "8", name: "O-" }
+];
+
+const getBloodTypeName = (id: string | number) => {
+    const bloodType = bloodTypes.find(bt => bt.id === id.toString());
+    return bloodType ? bloodType.name : 'N/A';
+};
 
 type HealthRecordResponse = HealthRecord | { $values: HealthRecord[] };
 type DonationHistoryResponse = DonationHistoryEntry[] | { $values: DonationHistoryEntry[] };
@@ -19,6 +31,7 @@ type DonationHistoryResponse = DonationHistoryEntry[] | { $values: DonationHisto
 const MemberHealthRecords = () => {
   const { toast } = useToast();
   const [healthRecord, setHealthRecord] = useState<HealthRecord | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [donationHistory, setDonationHistory] = useState<DonationHistoryEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -49,9 +62,10 @@ const MemberHealthRecords = () => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const [recordData, historyData] = await Promise.all([
+        const [recordData, historyData, profileData] = await Promise.all([
           HealthRecordService.getMyRecord() as Promise<HealthRecordResponse>,
-          DonationHistoryService.getMemberHistory() as Promise<DonationHistoryResponse>
+          DonationHistoryService.getMemberHistory() as Promise<DonationHistoryResponse>,
+          UserService.getMemberProfile()
         ]);
 
         // Handle health record response
@@ -60,6 +74,8 @@ const MemberHealthRecords = () => {
         } else if (recordData && !('$values' in recordData)) {
           setHealthRecord(recordData as HealthRecord);
         }
+
+        setUserProfile(profileData);
 
         // Handle donation history
         if (historyData && '$values' in historyData) {
@@ -77,6 +93,30 @@ const MemberHealthRecords = () => {
     };
     fetchData();
   }, [toast]);
+
+  useEffect(() => {
+    // Auto-update eligibility status if the waiting period has passed
+    if (healthRecord && !healthRecord.eligibility_status && isEligible) {
+      const updateStatus = async () => {
+        try {
+          const updatedRecord = await HealthRecordService.updateMyRecord({ 
+            ...healthRecord,
+            eligibility_status: true 
+          });
+          setHealthRecord(updatedRecord);
+          toast({
+            title: 'Trạng thái được cập nhật',
+            description: 'Bạn đã đủ điều kiện để hiến máu trở lại!',
+            variant: 'default'
+          });
+        } catch (error) {
+          // Silently fail or log error, as this is a background update
+          console.error("Failed to auto-update eligibility status:", error);
+        }
+      };
+      updateStatus();
+    }
+  }, [healthRecord, isEligible, toast]);
 
   const handleSave = async (data: Partial<HealthRecord>) => {
     try {
@@ -113,6 +153,7 @@ const MemberHealthRecords = () => {
           isOpen={isFormOpen} 
           onClose={() => setIsFormOpen(false)} 
           onSave={handleSave} 
+          userProfile={userProfile}
         />
       </div>
     );
@@ -187,7 +228,7 @@ const MemberHealthRecords = () => {
         />
         <InfoCard 
           title="Bệnh nền" 
-          value={healthRecord.disease || 'Không có'} 
+          value={healthRecord.medication || 'Không có'} 
         />
       </div>
 
@@ -196,6 +237,7 @@ const MemberHealthRecords = () => {
         onClose={() => setIsFormOpen(false)} 
         onSave={handleSave}
         initialData={healthRecord} 
+        userProfile={userProfile}
       />
     </div>
   );

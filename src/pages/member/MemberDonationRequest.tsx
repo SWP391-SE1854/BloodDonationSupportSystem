@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { useToast } from "@/components/ui/use-toast";
 import { DonationService } from "@/services/donation.service";
 import { Donation } from "@/types/api";
-import { Heart, Calendar as CalendarIcon, FileText, Send, Clock, CheckCircle, AlertCircle, Stethoscope } from 'lucide-react';
+import { Heart, Calendar as CalendarIcon, FileText, Send, Clock, CheckCircle, AlertCircle, Stethoscope, HeartPulse } from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -21,7 +21,35 @@ import { DonationHistoryService } from '@/services/donation-history.service';
 import { DonationHistoryEntry } from '@/utils/donationConstants';
 import { isEligibleToDonate } from '@/utils/healthValidation';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { permanentDisqualifications, temporaryDisqualifications } from '@/utils/disqualificationReasons';
 import { WrappedResponse } from '@/types/api';
+
+const allergyOptions = [
+  { id: 'antibiotics', label: 'Dị ứng thuốc kháng sinh' },
+  { id: 'aspirin', label: 'Dị ứng Aspirin' },
+  { id: 'seafood', label: 'Dị ứng hải sản' },
+  { id: 'pollen', label: 'Dị ứng phấn hoa' },
+  { id: 'animal_dander', label: 'Dị ứng lông động vật' },
+  { id: 'other', label: 'Khác (ghi rõ ở ghi chú)' },
+];
+
+const medicationOptions = [
+  { id: 'blood_pressure', label: 'Thuốc huyết áp' },
+  { id: 'diabetes', label: 'Thuốc tiểu đường' },
+  { id: 'blood_thinners', label: 'Thuốc chống đông máu' },
+  { id: 'antihistamines', label: 'Thuốc kháng histamin' },
+  { id: 'pain_relievers', label: 'Thuốc giảm đau' },
+  { id: 'other', label: 'Khác (ghi rõ ở ghi chú)' },
+];
+
+const statusTranslations: { [key: string]: string } = {
+  Pending: 'Đang chờ',
+  Approved: 'Đã duyệt',
+  Completed: 'Đã hoàn thành',
+  Rejected: 'Đã từ chối',
+  Cancelled: 'Đã hủy',
+};
 
 function isWrapped<T>(response: T | WrappedResponse<T>): response is WrappedResponse<T> {
   return (response as WrappedResponse<T>).$values !== undefined;
@@ -56,6 +84,8 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
   const [healthRecord, setHealthRecord] = useState<HealthRecord | null>(null);
   const [donationHistory, setDonationHistory] = useState<DonationHistoryEntry[]>([]);
   const [isEligible, setIsEligible] = useState<boolean | null>(null);
+  const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
+  const [selectedMedications, setSelectedMedications] = useState<string[]>([]);
 
   // ==================== Time Slots Configuration ====================
   const timeSlots = Array.from({ length: 10 }, (_, i) => {
@@ -71,8 +101,8 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
       setActiveDonations(allDonations.filter((d: Donation) => d.status === 'Pending' || d.status === 'Approved'));
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Could not fetch your active donations.",
+        title: "Lỗi",
+        description: "Không thể tải các yêu cầu hiến máu đang hoạt động của bạn.",
         variant: "destructive",
       });
     } finally {
@@ -95,7 +125,8 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
           DonationHistoryService.getMemberHistory()
         ]);
         
-        const currentRecord = isWrapped(recordResponse) ? recordResponse.$values[0] : recordResponse;
+        const record = recordResponse as unknown as { $values?: HealthRecord[] };
+        const currentRecord = (record && record.$values && Array.isArray(record.$values)) ? record.$values[0] : recordResponse;
         const currentHistory = isWrapped(historyResponse) ? historyResponse.$values : historyResponse;
         
         setHealthRecord(currentRecord as HealthRecord);
@@ -104,6 +135,8 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
         if (!currentRecord) {
           setIsEligible(false);
         } else {
+          setSelectedAllergies(currentRecord.allergies ? currentRecord.allergies.split(',').map(s => s.trim()) : []);
+          setSelectedMedications(currentRecord.medication ? currentRecord.medication.split(',').map(s => s.trim()) : []);
           const eligibility = isEligibleToDonate(currentRecord, currentHistory);
           setIsEligible(eligibility);
         }
@@ -123,8 +156,8 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
     e.preventDefault();
     if (!donationDate || !donationTime) {
       toast({
-        title: "Validation Error",
-        description: "Please select a date and time for your donation.",
+        title: "Lỗi xác thực",
+        description: "Vui lòng chọn ngày và giờ để hiến máu.",
         variant: "destructive",
       });
       return;
@@ -134,8 +167,8 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
     const today = new Date(new Date().setHours(0, 0, 0, 0));
     if (donationDate < today) {
       toast({
-        title: "Invalid Date",
-        description: "Cannot schedule a donation for a past date.",
+        title: "Ngày không hợp lệ",
+        description: "Không thể đặt lịch hiến máu cho một ngày trong quá khứ.",
         variant: "destructive",
       });
       return;
@@ -143,21 +176,34 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
 
     setIsSubmitting(true);
     try {
+      // Step 1: Update health record with allergy and medication info
+      if (healthRecord) {
+        await HealthRecordService.updateMyRecord({
+          ...healthRecord,
+          allergies: selectedAllergies.join(', '),
+          medication: selectedMedications.join(', '),
+        });
+      }
+
+      // Step 2: Create the donation request
       const donationData = {
         donation_date: format(donationDate, 'yyyy-MM-dd'),
         donation_time: donationTime,
-        // The health data is now managed in HealthRecord, so we only send date, time, and note.
         note: note,
       };
       await DonationService.createDonation(donationData);
+
       toast({
-        title: "Request Sent!",
-        description: `Your donation request for ${format(donationDate!, 'PPP')} has been sent.`,
+        title: "Gửi yêu cầu thành công!",
+        description: `Yêu cầu hiến máu của bạn cho ngày ${format(donationDate!, 'PPP')} đã được gửi đi.`,
       });
+
       // Reset form
       setDonationDate(eventDate);
       setDonationTime('');
       setNote('');
+      // We don't reset allergies and medication, as they are part of the health record now
+
       if (!onClose) {
         fetchMemberDonations();
       }
@@ -165,9 +211,9 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
 
     } catch (error) {
       console.error("Failed to create donation:", error);
-      const errorMessage = (error instanceof Error) ? error.message : 'There was an error submitting your request.';
+      const errorMessage = (error instanceof Error) ? error.message : 'Đã có lỗi xảy ra khi gửi yêu cầu của bạn.';
       toast({
-        title: "Request Failed",
+        title: "Yêu cầu thất bại",
         description: errorMessage,
         variant: "destructive"
       });
@@ -176,30 +222,55 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
     }
   };
 
+    const handleAllergyChange = (id: string, checked: boolean) => {
+        setSelectedAllergies(prev =>
+            checked ? [...prev, id] : prev.filter(item => item !== id)
+        );
+    };
+
+    const handleMedicationChange = (id: string, checked: boolean) => {
+        setSelectedMedications(prev =>
+            checked ? [...prev, id] : prev.filter(item => item !== id)
+        );
+    };
+
+    const isSubmitDisabled = isSubmitting;
+
+    const getStatusBadgeVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
+        switch (status) {
+          case 'Approved':
+            return 'default';
+          case 'Pending':
+            return 'secondary';
+          default:
+            return 'outline';
+        }
+    };
+
   // ==================== Eligibility Check UI ====================
   if (isEligible === null) {
-    return <p>Checking eligibility...</p>;
+    return <p>Đang kiểm tra điều kiện...</p>;
   }
 
   if (!isEligible) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Not Eligible to Donate</CardTitle>
+          <CardTitle>Không đủ điều kiện hiến máu</CardTitle>
         </CardHeader>
         <CardContent>
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Cannot Make a Donation Request</AlertTitle>
+            <AlertTitle>Không thể tạo yêu cầu hiến máu</AlertTitle>
             <AlertDescription>
               {healthRecord
-                ? "Your health record indicates you are not currently eligible to donate. Please review your health information or contact us for more details."
-                : "You must have a health record on file to make a donation request."}
+                ? "Hồ sơ sức khỏe của bạn cho thấy bạn hiện không đủ điều kiện để hiến máu. Vui lòng xem lại thông tin sức khỏe của bạn hoặc liên hệ với chúng tôi để biết thêm chi tiết."
+                : "Bạn phải có hồ sơ sức khỏe để tạo yêu cầu hiến máu."}
             </AlertDescription>
           </Alert>
           <Button asChild className="mt-4">
             <Link to="/member/health-records">
-              {healthRecord ? 'View My Health Record' : 'Create My Health Record'}
+              {healthRecord ? 'Xem hồ sơ sức khỏe' : 'Tạo hồ sơ sức khỏe'}
             </Link>
           </Button>
         </CardContent>
@@ -215,7 +286,7 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
         <div className="space-y-2">
           <div className="flex items-center gap-2 mb-1">
             <CalendarIcon className="h-4 w-4 text-red-500" />
-            <label className="text-sm font-medium text-gray-700">Donation Date</label>
+            <label className="text-sm font-medium text-gray-700">Ngày hiến máu</label>
           </div>
           {eventDate ? (
             <Input 
@@ -232,7 +303,7 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
                   className={`w-full justify-start text-left font-normal border-red-200 ${!donationDate && "text-muted-foreground"}`}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {donationDate ? format(donationDate, "PPP") : <span>Select date</span>}
+                  {donationDate ? format(donationDate, "PPP") : <span>Chọn ngày</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -252,11 +323,11 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
         <div className="space-y-2">
           <div className="flex items-center gap-2 mb-1">
             <Clock className="h-4 w-4 text-red-500" />
-            <label className="text-sm font-medium text-gray-700">Donation Time</label>
+            <label className="text-sm font-medium text-gray-700">Giờ hiến máu</label>
           </div>
           <Select onValueChange={setDonationTime} value={donationTime}>
             <SelectTrigger className="w-full border-red-200">
-              <SelectValue placeholder="Select time" />
+              <SelectValue placeholder="Chọn giờ" />
             </SelectTrigger>
             <SelectContent>
               {timeSlots.map(time => (
@@ -271,30 +342,72 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <FileText className="h-4 w-4 text-red-500" />
-          <label htmlFor="note" className="text-sm font-medium text-gray-700">Additional Notes</label>
+          <label htmlFor="note" className="text-sm font-medium text-gray-700">Ghi chú bổ sung</label>
         </div>
         <Textarea
           id="note"
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="Any other information you want to share..."
+          placeholder="Bất kỳ thông tin nào khác bạn muốn chia sẻ..."
           className="border-red-200"
         />
       </div>
 
+      {/* Health Information Section */}
+      <div className="space-y-4 rounded-lg border bg-blue-50 p-4">
+          <div className="flex items-center gap-2">
+              <Stethoscope className="h-5 w-5 text-blue-600" />
+              <h3 className="text-lg font-semibold text-gray-800">Thông tin sức khỏe bổ sung</h3>
+          </div>
+          <div className="space-y-2">
+              <Label className="font-semibold">Các loại dị ứng đã biết:</Label>
+              <div className="grid grid-cols-2 gap-2">
+                  {allergyOptions.map(item => (
+                      <div key={item.id} className="flex items-center space-x-2">
+                          <Checkbox
+                              id={`allergy-${item.id}`}
+                              checked={selectedAllergies.includes(item.id)}
+                              onCheckedChange={(checked) => handleAllergyChange(item.id, !!checked)}
+                          />
+                          <label htmlFor={`allergy-${item.id}`} className="text-sm font-medium">
+                              {item.label}
+                          </label>
+                      </div>
+                  ))}
+              </div>
+          </div>
+          <div className="space-y-2">
+              <Label className="font-semibold">Các loại thuốc đang sử dụng gần đây:</Label>
+              <div className="grid grid-cols-2 gap-2">
+                  {medicationOptions.map(item => (
+                      <div key={item.id} className="flex items-center space-x-2">
+                          <Checkbox
+                              id={`medication-${item.id}`}
+                              checked={selectedMedications.includes(item.id)}
+                              onCheckedChange={(checked) => handleMedicationChange(item.id, !!checked)}
+                          />
+                          <label htmlFor={`medication-${item.id}`} className="text-sm font-medium">
+                              {item.label}
+                          </label>
+                      </div>
+                  ))}
+              </div>
+          </div>
+      </div>
+
       {/* Form Actions */}
       <DialogFooter>
-        <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="button" variant="outline" onClick={onClose}>Hủy</Button>
+        <Button type="submit" disabled={isSubmitDisabled}>
           {isSubmitting ? (
             <>
               <CheckCircle className="mr-2 h-4 w-4 animate-spin" />
-              Submitting...
+              Đang gửi...
             </>
           ) : (
             <>
               <Send className="mr-2 h-4 w-4" />
-              Submit Request
+              Gửi yêu cầu
             </>
           )}
         </Button>
@@ -308,7 +421,7 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
         <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-2xl">
             <DialogHeader>
-            <DialogTitle>Schedule Blood Donation</DialogTitle>
+            <DialogTitle>Đặt lịch hiến máu</DialogTitle>
             </DialogHeader>
             {FormContent}
           </DialogContent>
@@ -322,7 +435,7 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Heart className="h-6 w-6 text-red-500" />
-            Schedule Blood Donation
+            Đặt lịch hiến máu
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -334,13 +447,13 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
       {!onClose && (
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Your Active Donation Requests</CardTitle>
+            <CardTitle>Các yêu cầu hiến máu đang hoạt động của bạn</CardTitle>
           </CardHeader>
           <CardContent>
             {isFetching ? (
-              <div className="text-center">Loading...</div>
+              <div className="text-center">Đang tải...</div>
             ) : activeDonations.length === 0 ? (
-              <div className="text-center text-gray-500">No active donation requests</div>
+              <div className="text-center text-gray-500">Không có yêu cầu hiến máu nào đang hoạt động</div>
             ) : (
               <div className="space-y-4">
                 {activeDonations.map((donation) => (
@@ -348,12 +461,14 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="font-medium">
-                            Scheduled for: {format(new Date(donation.donation_date), 'PPP')} at {donation.donation_time}
+                          <p className="text-sm text-gray-500 mt-1">
+                            Trạng thái:{' '}
+                            <Badge variant={getStatusBadgeVariant(donation.status)}>
+                                {statusTranslations[donation.status]}
+                            </Badge>
                           </p>
-                          <p className="text-sm text-gray-500 mt-1">Status: {donation.status}</p>
                           {donation.note && (
-                            <p className="text-sm text-gray-600 mt-2">Note: {donation.note}</p>
+                            <p className="text-sm text-gray-600 mt-2">Ghi chú: {donation.note}</p>
                           )}
                         </div>
                       </div>
