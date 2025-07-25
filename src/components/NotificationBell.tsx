@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from './ui/button';
 import { useNotifications } from '@/hooks/useNotifications';
+import { format } from 'date-fns';
 
 const NotificationBell = () => {
     const { notifications, unreadCount, markAsRead } = useNotifications();
@@ -46,7 +47,7 @@ const NotificationBell = () => {
                                     <p>{notification.message}</p>
                                 )}
                                 <p className="text-xs text-muted-foreground">
-                                    {new Date(notification.created_at).toLocaleString()}
+                                    {format(new Date(notification.sent_date), 'PPP p')}
                                 </p>
                 </div>
               </DropdownMenuItem>
