@@ -42,7 +42,9 @@ export class BloodInventoryService {
     }
 
     static async update(id: number, unitData: Partial<BloodInventoryUnit>): Promise<BloodInventoryUnit> {
-        const response = await api.put(API_ENDPOINTS.BLOOD_INVENTORY.UPDATE(id), unitData);
+        const response = await api.put(API_ENDPOINTS.BLOOD_INVENTORY.UPDATE, unitData, {
+            params: { id }
+        });
         return response.data;
     }
 

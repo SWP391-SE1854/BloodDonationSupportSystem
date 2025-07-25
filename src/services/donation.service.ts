@@ -80,7 +80,8 @@ export class DonationService {
 
   static async getMemberDonations(): Promise<Donation[]> {
     try {
-      const response = await api.get<{ $values: Donation[] }>(API_ENDPOINTS.DONATIONS.GET_MEMBER_DONATIONS);
+      // Corrected endpoint to fetch member's donation history.
+      const response = await api.get<{ $values: Donation[] }>(API_ENDPOINTS.DONATION_HISTORY.GET_MEMBER_HISTORY);
       return response.data?.$values || response.data || [];
     } catch (error) {
       console.error('Error fetching member donations:', error);

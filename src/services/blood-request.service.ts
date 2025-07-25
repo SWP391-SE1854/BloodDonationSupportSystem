@@ -67,7 +67,10 @@ export class BloodRequestService {
     // This is now a public endpoint
     static async getAllBloodRequests(): Promise<BloodRequest[]> {
         const response = await publicApi.get(API_ENDPOINTS.BLOOD_REQUEST.GET_ALL);
-        return response.data;
+        if (response.data && response.data.$values) {
+            return response.data.$values;
+        }
+        return Array.isArray(response.data) ? response.data : [];
     }
 
     // This is now a public endpoint

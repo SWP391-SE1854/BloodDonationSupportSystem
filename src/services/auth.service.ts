@@ -3,7 +3,7 @@ import { signInWithEmailAndPassword, signOut as firebaseSignOut } from 'firebase
 import axios from 'axios';
 import { AxiosError } from 'axios';
 import { API_BASE_URL } from '@/config/api';
-import { ENDPOINTS } from './api.config';
+import { API_ENDPOINTS } from './api.config';
 import { LoginRequest, RegisterRequest, AuthResponse } from '@/types/api';
 
 export class AuthError extends Error {
@@ -16,7 +16,7 @@ export class AuthError extends Error {
 class AuthService {
   async login(email: string, password: string): Promise<AuthResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/firebase-login`, {
+      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.AUTH.FIREBASE_LOGIN}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -38,7 +38,7 @@ class AuthService {
 
   async register(userData: RegisterRequest): Promise<AuthResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.AUTH.REGISTER}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -60,7 +60,7 @@ class AuthService {
 
   async loginWithFirebase(firebaseToken: string): Promise<AuthResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/firebase-login`, {
+      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.AUTH.FIREBASE_LOGIN}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -82,7 +82,7 @@ class AuthService {
 
   async refreshToken(refreshToken: string): Promise<AuthResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
+      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.AUTH.REFRESH_TOKEN}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -3,14 +3,12 @@ import { API_ENDPOINTS } from './api.config';
 // import { Notification } from '@/components/ui/NotificationBell';
 
 export interface Notification {
-  id: string;
+  notification_id: string;
   title: string;
   message: string;
-  read: boolean;
-  createdAt: string;
+  read_status: boolean;
+  sent_date: string;
   donation_request_id?: number;
-  type: 'event' | 'alert' | 'info' | 'request' | 'system';
-  link?: string;
 }
 
 interface ApiNotification {
@@ -18,21 +16,19 @@ interface ApiNotification {
   title: string;
   message: string;
   read_status: boolean;
-  created_at: string;
+  sent_date: string;
   donation_request_id?: number;
-  type?: 'event' | 'alert' | 'info' | 'request' | 'system';
 }
 
 export class NotificationService {
   private static transform(notification: ApiNotification): Notification {
     return {
-      id: String(notification.notification_id),
+      notification_id: String(notification.notification_id),
       title: notification.title,
       message: notification.message,
-      read: notification.read_status,
-      createdAt: notification.created_at,
+      read_status: notification.read_status,
+      sent_date: notification.sent_date,
       donation_request_id: notification.donation_request_id,
-      type: notification.type || 'info',
     };
   }
 
@@ -83,7 +79,6 @@ export class NotificationService {
   static async createNotification(data: {
     title: string;
     message: string;
-    type?: Notification['type'];
     userId?: string;
   }): Promise<Notification> {
     try {
