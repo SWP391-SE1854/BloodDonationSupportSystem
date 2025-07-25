@@ -37,7 +37,7 @@ export const API_ENDPOINTS = {
     GET_BY_ID: (id: number) => `/blog/${id}`,
     CREATE: '/blog',
     UPDATE: (id: number) => `/blog/${id}`,
-    DELETE: (id: number) => `/blog/${id}`,
+    DELETE: '/blog',
   },
 
   // Donation endpoints
@@ -100,11 +100,11 @@ export const API_ENDPOINTS = {
 
   // Health Record endpoints
   HEALTH_RECORD: {
+    GET_ALL_HEALTH_RECORDS: '/healthrecord/all',
     GET_USER_HEALTH_RECORD: '/healthrecord/view',
+    GET_HEALTH_RECORD_BY_USER_ID: (userId: string) => `/healthrecord/user/${userId}`,
     CREATE_HEALTH_RECORD: '/healthrecord/member',
     UPDATE_MY_RECORD: '/healthrecord/member',
-  GET_ALL_HEALTH_RECORDS: '/healthrecord/all',
-    GET_HEALTH_RECORD_BY_USER_ID: (userId: string) => `/healthrecord/${userId}`,
   UPDATE_HEALTH_RECORD: (id: string) => `/healthrecord/${id}`,
   },
 
@@ -120,7 +120,7 @@ export const API_ENDPOINTS = {
     GET_ALL: '/blood-inventory/all',
     GET_BY_ID: (id: number) => `/blood-inventory/${id}`,
     CREATE: '/blood-inventory/add-blood',
-    UPDATE: (id: number) => `/blood-inventory/update-blood/${id}`,
+    UPDATE: '/blood-inventory/update-blood',
     DELETE: (id: number) => `/blood-inventory/delete-blood?id=${id}`,
     ADD_BLOOD: '/blood-inventory/add-blood',
   },
