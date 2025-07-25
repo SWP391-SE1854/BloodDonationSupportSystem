@@ -13,8 +13,8 @@ import {
   Shield
 } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { PieChart as RechartsPieChart, Cell, ResponsiveContainer } from "recharts";
-import { useEffect, useState } from "react";
+import { PieChart as RechartsPieChart, Cell, ResponsiveContainer, Pie, Legend } from "recharts";
+import { useEffect, useState, useMemo } from "react";
 import { AdminService } from "@/services/admin.service";
 import { UserProfile } from "@/services/user.service";
 import { BloodInventoryService } from "@/services/blood-inventory.service";
@@ -23,6 +23,7 @@ import { DonationService } from "@/services/donation.service";
 import { Donation } from "@/types/api";
 import { BloodRequestService } from "@/services/blood-request.service";
 import { BloodRequest } from "@/types/api";
+import { getBloodTypeName } from "@/utils/bloodTypes";
 
 const AdminDashboard = () => {
   const [totalMembers, setTotalMembers] = useState(0);
@@ -61,9 +62,22 @@ const AdminDashboard = () => {
     fetchData();
   }, []);
 
-  const bloodTypeData = inventory.map((item, index) => ({
-    name: item.blood_type,
-    value: item.quantity_cc,
+  const groupedInventory = useMemo(() => {
+    const grouped = inventory.reduce((acc, item) => {
+      const bloodTypeName = getBloodTypeName(item.blood_type);
+      if (bloodTypeName !== 'N/A') {
+        if (!acc[bloodTypeName]) {
+          acc[bloodTypeName] = { name: bloodTypeName, value: 0 };
+        }
+        acc[bloodTypeName].value += item.quantity;
+      }
+      return acc;
+    }, {} as Record<string, { name: string, value: number }>);
+    return Object.values(grouped);
+  }, [inventory]);
+
+  const bloodTypeData = groupedInventory.map((item, index) => ({
+    ...item,
     color: ["#ef4444", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#14b8a6", "#f97316"][index % 8]
   }));
 
@@ -111,7 +125,7 @@ const AdminDashboard = () => {
             <Droplets className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{inventory.reduce((acc, item) => acc + item.quantity_cc, 0)}</div>
+            <div className="text-2xl font-bold">{inventory.reduce((acc, item) => acc + item.quantity, 0)}</div>
             <p className="text-xs text-muted-foreground">Có sẵn trong kho (cc)</p>
           </CardContent>
         </Card>
@@ -140,11 +154,9 @@ const AdminDashboard = () => {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="overview">Tổng quan</TabsTrigger>
           <TabsTrigger value="donations">Lượt hiến máu</TabsTrigger>
-          <TabsTrigger value="inventory">Kho máu</TabsTrigger>
-          <TabsTrigger value="members">Thành viên</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -159,11 +171,12 @@ const AdminDashboard = () => {
                   <ResponsiveContainer width="100%" height="100%">
                     <RechartsPieChart>
                       <ChartTooltip content={<ChartTooltipContent />} />
-                      <RechartsPieChart data={bloodTypeData} cx="50%" cy="50%" outerRadius={80}>
+                      <Pie data={bloodTypeData} cx="50%" cy="50%" outerRadius={80} dataKey="value" nameKey="name">
                         {bloodTypeData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
-                      </RechartsPieChart>
+                      </Pie>
+                      <Legend />
                     </RechartsPieChart>
                   </ResponsiveContainer>
                 </ChartContainer>
@@ -178,14 +191,14 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {inventory.map((blood, index) => (
+                {groupedInventory.map((blood, index) => (
                   <div key={index} className="flex items-center justify-between p-3 border rounded">
                     <div className="flex items-center space-x-2">
                       <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-bold text-red-600">{blood.blood_type}</span>
+                        <span className="text-sm font-bold text-red-600">{blood.name}</span>
                       </div>
                       <div>
-                        <p className="font-medium text-sm">{blood.quantity_cc}</p>
+                        <p className="font-medium text-sm">{blood.value}</p>
                         <p className="text-xs text-gray-600">cc</p>
                       </div>
                     </div>
@@ -241,8 +254,8 @@ const AdminDashboard = () => {
                 <TableBody>
                   {inventory.map((item) => (
                     <TableRow key={item.unit_id}>
-                      <TableCell>{item.blood_type}</TableCell>
-                      <TableCell>{item.quantity_cc}</TableCell>
+                      <TableCell>{getBloodTypeName(item.blood_type)}</TableCell>
+                      <TableCell>{item.quantity}</TableCell>
                       <TableCell>{new Date(item.expiration_date).toLocaleDateString()}</TableCell>
                     </TableRow>
                   ))}
@@ -263,20 +276,18 @@ const AdminDashboard = () => {
                   <TableRow>
                     <TableHead>Tên</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Điện thoại</TableHead>
+                    <TableHead>Vai trò</TableHead>
                     <TableHead>Trạng thái</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.filter(u => u.role === 'Member').map((user) => (
+                  {users.map((user) => (
                     <TableRow key={user.user_id}>
                       <TableCell>{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
-                      <TableCell>{user.phone}</TableCell>
+                      <TableCell><Badge>{user.role}</Badge></TableCell>
                       <TableCell>
-                        <Badge className={user.status === 'Active' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}>
-                          {user.status === 'Active' ? 'Hoạt động' : 'Vô hiệu hóa'}
-                        </Badge>
+                        <Badge className="bg-green-100 text-green-800">Active</Badge>
                       </TableCell>
                     </TableRow>
                   ))}
