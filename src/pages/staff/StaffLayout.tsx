@@ -15,7 +15,6 @@ const StaffLayout = ({ children, currentPage, onNavigate, onLogout, userName }: 
     { id: 'donations', label: 'Quản lý Hiến máu', icon: Heart },
     { id: 'requests', label: 'Yêu cầu máu', icon: ClipboardList },
     { id: 'inventory', label: 'Kho máu', icon: FlaskConical },
-    { id: 'usage-report', label: 'Báo cáo sử dụng', icon: BarChart },
     { id: 'history', label: 'Lịch sử hiến máu', icon: History },
     { id: 'records', label: 'Hồ sơ sức khỏe', icon: Newspaper },
     { id: 'profile', label: 'Hồ sơ', icon: User },
