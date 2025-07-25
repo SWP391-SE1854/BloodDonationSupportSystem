@@ -8,8 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { DonationService } from '@/services/donation.service';
-import { Donation } from '@/types/api';
 
 const bloodTypeMap: Record<string, number> = {
     "A+": 1, "A-": 2, "B+": 3, "B-": 4,
@@ -28,6 +26,17 @@ const statusTranslations: { [key: string]: string } = {
     'Used': 'Đã sử dụng'
 };
 
+const formatDate = (dateString: string | undefined | null): string => {
+    if (!dateString) {
+        return 'N/A';
+    }
+    try {
+        return new Date(dateString).toLocaleDateString();
+    } catch (error) {
+        return 'Invalid Date';
+    }
+};
+
 const BloodInventory = () => {
     const queryClient = useQueryClient();
     const { toast } = useToast();
@@ -38,16 +47,6 @@ const BloodInventory = () => {
         queryKey: ['bloodInventory'],
         queryFn: BloodInventoryService.getAll,
     });
-
-    const { data: donations, isLoading: isLoadingDonations } = useQuery<Donation[], Error>({
-        queryKey: ['allDonations'],
-        queryFn: DonationService.getAllDonations
-    });
-
-    const donationMap = useMemo(() => {
-        if (!donations) return new Map<number, Donation>();
-        return new Map(donations.map(d => [d.donation_id, d]));
-    }, [donations]);
 
     const updateStatusMutation = useMutation({
         mutationFn: ({ unitId, data }: { unitId: number; data: Partial<BloodInventoryUnit> }) => 
@@ -97,7 +96,6 @@ const BloodInventory = () => {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Mã hiến tặng</TableHead>
-                            <TableHead>Ngày hiến</TableHead>
                             <TableHead>Loại máu</TableHead>
                             <TableHead>Thành phần</TableHead>
                             <TableHead>Số lượng (cc)</TableHead>
@@ -107,20 +105,19 @@ const BloodInventory = () => {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {isLoadingInventory || isLoadingDonations ? (
+                        {isLoadingInventory ? (
                             <TableRow><TableCell colSpan={8} className="text-center">Đang tải...</TableCell></TableRow>
                         ) : filteredInventory.length > 0 ? (
                             filteredInventory.map((unit) => (
                                 <TableRow key={unit.unit_id} className={unit.status === 'Used' ? 'bg-gray-100 text-muted-foreground' : ''}>
                                     <TableCell>{unit.donation_id}</TableCell>
-                                    <TableCell>{donationMap.get(unit.donation_id)?.donation_date ? new Date(donationMap.get(unit.donation_id)!.donation_date).toLocaleDateString() : 'N/A'}</TableCell>
                                     <TableCell>{getBloodTypeName(unit.blood_type)}</TableCell>
                                     <TableCell>{unit.component || 'N/A'}</TableCell>
                                     <TableCell>{unit.quantity}</TableCell>
                                     <TableCell>
                                         <Badge variant={unit.status === 'Available' ? 'default' : 'secondary'}>{statusTranslations[unit.status] || unit.status}</Badge>
                                     </TableCell>
-                                    <TableCell>{new Date(unit.expiration_date).toLocaleDateString()}</TableCell>
+                                    <TableCell>{formatDate(unit.expiration_date)}</TableCell>
                                     {(userRole === 'Admin' || userRole === 'Staff') && (
                                         <TableCell>
                                             {unit.status === 'Available' && (
