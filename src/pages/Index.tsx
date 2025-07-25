@@ -30,11 +30,12 @@ const Index = () => {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
         </div>
         <div className="relative z-10 max-w-3xl mx-auto px-4 text-center animate-fade-in-up">
-          <h1 className="text-5xl md:text-7xl font-extrabold text-white leading-tight mb-6 tracking-tight drop-shadow-lg">
-            <span className="block">MỖI <span className="text-red-400 animate-bounce-in">GIỌT MÁU</span> ĐỀU QUÝ GIÁ</span>
+            <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 tracking-tight drop-shadow-lg">
+              <span className="block mb-2">MỖI <span className="text-red-400 animate-bounce-in">GIỌT MÁU</span></span>
+              <span className="block">MỘT TẤM LÒNG</span>
           </h1>
           <p className="text-2xl text-white/90 mb-8 max-w-2xl mx-auto font-light animate-fade-in-up animation-delay-300">
-            Tham gia cộng đồng cứu người của chúng tôi. Mỗi lần hiến máu có thể cứu sống đến ba người. Hãy trở thành người hùng ngay hôm nay.
+          Tham gia cộng đồng của chúng tôi. Mỗi lần hiến máu có thể cứu sống đến ba người. Hãy trở thành người hùng ngay hôm nay.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up animation-delay-500">
             <Link to="/register">
@@ -54,28 +55,28 @@ const Index = () => {
       {/* How it Works Section */}
       <section className="py-20 bg-white">
         <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-10 text-center">Cách Hoạt Động</h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-10 text-center">Quy Trình Hoạt Động</h2>
           <div className="grid md:grid-cols-3 gap-10">
             <div className="text-center group">
               <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                 <Users className="h-10 w-10 text-red-500" />
               </div>
               <h3 className="text-2xl font-semibold mb-2 text-gray-800">Đăng Ký</h3>
-              <p className="text-gray-600 leading-relaxed">Đăng ký và trở thành một phần của cộng đồng cứu người của chúng tôi. Quy trình đăng ký nhanh chóng và dễ dàng.</p>
+              <p className="text-gray-600 leading-relaxed">Đăng ký và trở thành một phần của cộng đồng cứu người của chúng tôi. Quá trình đăng ký nhanh chóng và dễ dàng.</p>
             </div>
             <div className="text-center group">
               <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                 <MapPin className="h-10 w-10 text-red-500" />
               </div>
-              <h3 className="text-2xl font-semibold mb-2 text-gray-800">Tìm Người Hiến</h3>
-              <p className="text-gray-600 leading-relaxed">Kết nối với những người hiến máu gần bạn khi bạn cần. Đối sánh và thông báo theo thời gian thực.</p>
+              <h3 className="text-2xl font-semibold mb-2 text-gray-800">Tìm Người Hiến Máu</h3>
+              <p className="text-gray-600 leading-relaxed">Kết nối với những người hiến máu ở gần khi bạn cần máu. Kết nối và thông báo theo thời gian thực.</p>
             </div>
             <div className="text-center group">
               <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                 <Heart className="h-10 w-10 text-red-500" />
               </div>
-              <h3 className="text-2xl font-semibold mb-2 text-gray-800">Cứu Người</h3>
-              <p className="text-gray-600 leading-relaxed">Tạo sự khác biệt bằng cách hiến máu và cứu người. Theo dõi tác động và lịch sử hiến máu của bạn.</p>
+              <h3 className="text-2xl font-semibold mb-2 text-gray-800">Đi hiến máu</h3>
+              <p className="text-gray-600 leading-relaxed">Tạo nên sự khác biệt bằng cách hiến máu. Theo dõi tác động và lịch sử hiến máu của bạn.</p>
             </div>
           </div>
         </div>
@@ -94,7 +95,7 @@ const Index = () => {
             <div className="flex flex-col items-center">
               <Award className="h-12 w-12 text-red-500 mb-4 animate-bounce animation-delay-300" />
               <span className="text-4xl font-bold text-gray-800">8,900</span>
-              <span className="text-lg text-gray-600">Số Người Được Cứu</span>
+              <span className="text-lg text-gray-600">Người Được Cứu</span>
             </div>
             <div className="flex flex-col items-center">
               <Heart className="h-12 w-12 text-red-500 mb-4 animate-bounce animation-delay-500" />
@@ -116,8 +117,8 @@ const Index = () => {
                 className="bg-gray-50 rounded-xl shadow-lg p-8 flex flex-col items-center animate-fade-in-up transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:bg-red-50"
               >
                 <Quote className="h-8 w-8 text-red-400 mb-4" />
-                <p className="text-lg text-gray-700 italic mb-4">“{i === 1 ? 'Việc hiến máu thật đáng ngạc nhiên là dễ dàng và đó là một trải nghiệm thực sự bổ ích!'
-                : i === 2 ? 'Tôi cần máu gấp và cộng đồng này đã thực sự cứu mạng tôi. Tôi không thể cảm ơn họ đủ.' 
+                <p className="text-lg text-gray-700 italic mb-4">“{i === 1 ? 'Việc hiến máu thật đáng ngạc nhiên là dễ dàng và đó là một trải nghiệm thực sự bổ ích!' 
+                : i === 2 ? 'Tôi cần máu gấp và cộng đồng này thực sự đã cứu mạng tôi. Tôi không thể cảm ơn họ đủ.' 
                 : 'Các nhân viên đã làm cho quá trình này thực sự thú vị và tôi chắc chắn sẽ hiến máu lần nữa.'}”</p>
                 <span className="font-semibold text-gray-800">{i === 1 ? 'Alex N.' : i === 2 ? 'Maria P.' : 'John D.'}</span>
                 <span className="text-sm text-gray-500">{i === 1 ? 'Người Hiến Máu' : i === 2 ? 'Người Nhận Máu' : 'Người Hiến Máu'}</span> 
@@ -156,7 +157,7 @@ const Index = () => {
             </div>
             <div>
               <h3 className="text-xl font-semibold text-gray-800 mb-2">Tôi có thể hiến máu bao lâu một lần?</h3>
-              <p className="text-gray-600">Bạn thường có thể hiến máu toàn phần sau mỗi 56 ngày. Các loại hình hiến tặng khác có thể có khoảng thời gian khác nhau.</p>
+              <p className="text-gray-600">Bạn thường có thể hiến máu toàn phần mỗi 56 ngày. Các loại hình hiến tặng khác có thể có khoảng thời gian khác nhau.</p>
             </div>
             <div>
               <h3 className="text-xl font-semibold text-gray-800 mb-2">Hiến máu có an toàn không?</h3>
