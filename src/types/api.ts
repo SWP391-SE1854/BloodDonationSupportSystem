@@ -141,6 +141,8 @@ export interface Donation {
     donation_id: number;
     user_id: string;
     donation_date: string;
+    donation_time?: string;
+    note?: string;
     status: 'Pending' | 'Approved' | 'Completed' | 'Rejected' | 'Cancelled' | 'Processed';
     location?: string;
     component?: string;
