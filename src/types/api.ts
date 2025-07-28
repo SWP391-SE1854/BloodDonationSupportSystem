@@ -131,6 +131,7 @@ export interface BlogPost {
   user_id: number;
   date: string;
   title: string;
+  image?: string;
   content: string;
   User?: {
     name?: string;
@@ -152,4 +153,20 @@ export interface Donation {
 
 export interface WrappedResponse<T> {
   $values: T;
+}
+
+export interface Notification {
+  id: string; // unified id
+  title: string;
+  message: string;
+  sent_date: string;
+  type: 'event' | 'alert' | 'info' | 'request' | 'system';
+  createdAt: string;
+  read: boolean;
+  link?: string;
+  // Optionally include legacy fields for compatibility
+  notification_id?: string;
+  read_status?: boolean;
+  created_at?: string;
+  donation_request_id?: number;
 }

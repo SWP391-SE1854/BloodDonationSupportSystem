@@ -40,6 +40,7 @@ const Login = () => {
     password: ""
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
   const [showReset, setShowReset] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
@@ -63,6 +64,10 @@ const Login = () => {
       }
       setErrors(newErrors);
     }
+  };
+
+  const handleBlur = (field: string) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
   };
 
   const validateForm = () => {
@@ -179,7 +184,7 @@ const Login = () => {
           <CardHeader className="text-center bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-t-lg">
             <CardTitle className="text-2xl font-bold flex items-center justify-center space-x-2">
               <Heart className="h-6 w-6" />
-              <span>Máu Yêu Thương</span>
+              <span>Blood Care</span>
             </CardTitle>
             <p className="text-red-100">Mỗi giọt máu cho đi - Tham gia cộng đồng cứu người của chúng tôi</p>
           </CardHeader>
@@ -210,7 +215,7 @@ const Login = () => {
                   placeholder="Nhập email của bạn"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
-                  required
+                  onBlur={() => handleBlur("email")}
                   disabled={isLoading}
                   className={
                     errors.email
@@ -220,7 +225,7 @@ const Login = () => {
                       : ""
                   }
                 />
-                {errors.email && (
+                {touched.email && errors.email && (
                   <p id="email-error" className="text-red-500 text-xs mt-1">{errors.email}</p>
                 )}
               </div>
@@ -238,7 +243,7 @@ const Login = () => {
                     placeholder="Nhập mật khẩu của bạn"
                     value={formData.password}
                     onChange={(e) => handleInputChange("password", e.target.value)}
-                    required
+                    onBlur={() => handleBlur("password")}
                     disabled={isLoading}
                     className={
                       errors.password
@@ -258,7 +263,7 @@ const Login = () => {
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
-                {errors.password && (
+                {touched.password && errors.password && (
                   <p id="password-error" className="text-red-500 text-xs mt-1">{errors.password}</p>
                 )}
                 <div className="text-right mt-1">
