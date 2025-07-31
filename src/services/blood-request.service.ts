@@ -8,6 +8,7 @@ interface NestedLocation {
   longitude: number;
 }
 
+// This represents the detailed User object we might get from the backend
 interface User {
   user_id: number;
   name: string;
@@ -22,23 +23,29 @@ interface User {
   location: NestedLocation;
 }
 
-// Interface matching the C# backend entity
+// Interface matching the backend entity for GET requests
 export interface BloodRequest {
   request_id: number;
-  user_id: number | null;
-  blood_id: string | null;
+  user_id: number;
+  blood_id: number;
   emergency_status: boolean;
   request_date: string;
-  location_id: number | null;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  // The 'user' object is optional because it might not be included in all API responses,
+  // but it's not needed for creating a new request.
   user?: User; 
-  location?: NestedLocation;
 }
 
-// Data for creating a new request
-export type BloodRequestFormData = Pick<BloodRequest, 'user_id' | 'blood_id' | 'emergency_status' | 'location_id'>;
+// Data for creating a new request - this MUST match what the backend endpoint expects
+export interface CreateBloodRequestData {
+    user_id: number;
+    blood_id: number;
+    emergency_status: boolean;
+    request_date: string;
+}
 
 // Data for updating a request
-export type UpdateBloodRequestData = Partial<Omit<BloodRequest, 'request_id' | 'request_date' | 'user' | 'location'>>;
+export type UpdateBloodRequestData = Partial<Omit<BloodRequest, 'request_id' | 'user'>>;
 
 export interface BloodRequestStatus {
   status: 'Pending' | 'Approved' | 'Rejected';
@@ -60,7 +67,10 @@ export class BloodRequestService {
     // This is now a public endpoint
     static async getAllBloodRequests(): Promise<BloodRequest[]> {
         const response = await publicApi.get(API_ENDPOINTS.BLOOD_REQUEST.GET_ALL);
-        return response.data;
+        if (response.data && response.data.$values) {
+            return response.data.$values;
+        }
+        return Array.isArray(response.data) ? response.data : [];
     }
 
     // This is now a public endpoint
@@ -70,7 +80,7 @@ export class BloodRequestService {
     }
 
     // This requires authentication
-    static async createBloodRequest(data: BloodRequestFormData): Promise<BloodRequest> {
+    static async createBloodRequest(data: CreateBloodRequestData): Promise<BloodRequest> {
         const response = await api.post<BloodRequest>('/bloodrequest/new', data);
         return response.data;
     }

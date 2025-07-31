@@ -11,54 +11,6 @@ const DonationHistory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const donations = [
-    {
-      id: 1,
-      date: '2025-05-15',
-      location: 'City Medical Center',
-      component: 'Whole Blood',
-      quantity: 450,
-      status: 'completed',
-      donationId: 'DON-2025-001'
-    },
-    {
-      id: 2,
-      date: '2025-03-10',
-      location: 'Community Health Center',
-      component: 'Platelets',
-      quantity: 300,
-      status: 'completed',
-      donationId: 'DON-2025-002'
-    },
-    {
-      id: 3,
-      date: '2025-01-22',
-      location: 'Regional Blood Bank',
-      component: 'Whole Blood',
-      quantity: 450,
-      status: 'completed',
-      donationId: 'DON-2025-003'
-    },
-    {
-      id: 4,
-      date: '2024-11-18',
-      location: 'University Hospital',
-      component: 'Plasma',
-      quantity: 600,
-      status: 'completed',
-      donationId: 'DON-2024-004'
-    },
-    {
-      id: 5,
-      date: '2024-09-05',
-      location: 'City Medical Center',
-      component: 'Whole Blood',
-      quantity: 450,
-      status: 'completed',
-      donationId: 'DON-2024-005'
-    }
-  ];
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return 'bg-green-600';

@@ -1,29 +1,38 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Heart, Users, Target, Award, BarChart, Globe, UserCheck, Calendar } from "lucide-react";
+import { Heart, Users, Target, Award, BarChart, Globe, UserCheck, Calendar, Linkedin } from "lucide-react";
 import { UserProfileDropdown } from "@/components/UserProfileDropdown";
+import Footer from '@/components/Footer';
 import { useAuth } from "@/contexts/AuthContext";
 import NavigationBar from "@/components/NavigationBar";
+import { useState } from "react";
+import { useEffect, useRef, useState as useReactState } from 'react';
 
 const teamMembers = [
   {
-    name: "Dr. Sarah Johnson",
-    role: "Medical Director",
+    name: "Bác sĩ An",
+    role: "Giám đốc Y khoa",
     image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400",
-    description: "Leading our medical initiatives with 15+ years of experience in transfusion medicine."
+    description: "Dẫn đầu các sáng kiến y tế của chúng tôi với hơn 15 năm kinh nghiệm về truyền máu.",
+    quote: "Mỗi giọt máu cho đi là một cuộc đời ở lại. Sứ mệnh này đối với tôi vô cùng sâu sắc.",
+    linkedin: "https://linkedin.com/in/sarahjohnson"
   },
   {
-    name: "Michael Chen",
-    role: "Operations Manager",
+    name: "Anh Minh",
+    role: "Quản lý Vận hành",
     image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400",
-    description: "Ensuring smooth operations and coordination between blood banks and hospitals."
+    description: "Đảm bảo hoạt động trơn tru và phối hợp giữa các ngân hàng máu và bệnh viện.",
+    quote: "Đằng sau mỗi lần hiến máu thành công là một đội ngũ làm việc không mệt mỏi vì hy vọng.",
+    linkedin: "https://linkedin.com/in/michaelchen"
   },
   {
-    name: "Dr. Emily Wilson",
-    role: "Research Head",
+    name: "Tiến sĩ Chi",
+    role: "Trưởng phòng Nghiên cứu",
     image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400",
-    description: "Spearheading research initiatives in blood banking and donation technologies."
+    description: "Đi đầu các sáng kiến nghiên cứu về công nghệ ngân hàng máu và hiến máu.",
+    quote: "Sự đổi mới trong chăm sóc máu có nghĩa là nhiều cuộc đời được chạm tới, nhiều gia đình được giúp đỡ hơn.",
+    linkedin: "https://linkedin.com/in/emilywilson"
   }
 ];
 
@@ -31,46 +40,56 @@ const stats = [
   {
     icon: UserCheck,
     value: "50,000+",
-    label: "Registered Donors"
+    label: "Người hiến máu đã đăng ký"
   },
   {
     icon: Calendar,
     value: "1,000+",
-    label: "Monthly Donations"
+    label: "Lượt hiến máu hàng tháng"
   },
   {
     icon: Globe,
     value: "100+",
-    label: "Partner Hospitals"
+    label: "Bệnh viện đối tác"
   },
   {
     icon: Award,
     value: "10+",
-    label: "Years of Service"
+    label: "Năm phục vụ"
   }
 ];
 
 const AboutUs = () => {
   const { isAuthenticated } = useAuth();
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-red-50">
       <NavigationBar />
 
       {/* Hero Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-5xl font-bold text-gray-800 mb-6">
-            Our Mission to Save Lives
+      <section
+        className="relative py-20 px-4 flex items-center justify-center min-h-[400px]"
+        style={{
+          backgroundImage: `url('https://www.aamc.org/sites/default/files/styles/scale_and_crop_1200_x_666/public/Workforce%20Report%201200x666.jpg?itok=wkKO8t-E')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+        aria-label="Blood Care Hero Section"
+      >
+        {/* Overlay for contrast */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/70" aria-hidden="true" />
+        <div className="relative z-10 max-w-6xl mx-auto text-center flex flex-col items-center justify-center w-full">
+          <h1 className="text-5xl font-bold text-white mb-6 drop-shadow-lg" style={{ textShadow: '0 2px 16px rgba(0,0,0,0.7)' }}>
+            Sứ mệnh cứu người của chúng tôi
           </h1>
-          <p className="text-xl text-gray-600 mb-12 max-w-3xl mx-auto">
-            Blood Care is dedicated to connecting blood donors with those in need,
-            making the process of blood donation more accessible and efficient than ever before.
+          <p className="text-xl text-gray-100 mb-12 max-w-3xl mx-auto drop-shadow-md" style={{ textShadow: '0 1px 8px rgba(0,0,0,0.6)' }}>
+            Máu Yêu Thương tận tâm kết nối người hiến máu với những người cần máu, giúp quá trình hiến máu trở nên dễ tiếp cận và hiệu quả hơn bao giờ hết.
           </p>
           <div className="flex justify-center gap-4">
             <Link to="/register">
-              <Button className="bg-red-500 hover:bg-red-600 text-white px-8 py-6 text-lg">
-                Join Our Mission
+              <Button className="bg-red-500 hover:bg-red-600 text-white px-8 py-6 text-lg shadow-xl focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black">
+                Tham gia sứ mệnh
               </Button>
             </Link>
           </div>
@@ -82,17 +101,17 @@ const AboutUs = () => {
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl font-bold mb-6">Our Vision & Mission</h2>
+              <h2 className="text-3xl font-bold mb-6">Tầm nhìn & Sứ mệnh</h2>
               <div className="space-y-6">
                 <div className="flex gap-4">
                   <div className="flex-shrink-0">
                     <Target className="h-8 w-8 text-red-500" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold mb-2">Vision</h3>
+                    <h3 className="text-xl font-semibold mb-2">Tầm nhìn</h3>
                     <p className="text-gray-600">
-                      To create a world where no life is lost due to lack of blood availability,
-                      connecting donors and recipients seamlessly through technology.
+                      Tạo ra một thế giới nơi không có sự sống nào bị mất đi do thiếu máu,
+                      kết nối người hiến và người nhận một cách liền mạch thông qua công nghệ.
                     </p>
                   </div>
                 </div>
@@ -101,80 +120,166 @@ const AboutUs = () => {
                     <Users className="h-8 w-8 text-red-500" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold mb-2">Mission</h3>
+                    <h3 className="text-xl font-semibold mb-2">Sứ mệnh</h3>
                     <p className="text-gray-600">
-                      To build and maintain a robust network of blood donors and healthcare
-                      facilities, ensuring timely access to safe blood for all who need it.
+                      Xây dựng và duy trì một mạng lưới mạnh mẽ gồm những người hiến máu và các cơ sở y tế,
+                      đảm bảo việc tiếp cận máu an toàn kịp thời cho tất cả những người cần.
                     </p>
                   </div>
                 </div>
               </div>
             </div>
             <div className="relative">
-              <div className="w-full h-96 bg-gradient-to-br from-red-100 to-pink-200 rounded-3xl flex items-center justify-center">
-                <Heart className="h-32 w-32 text-red-400" />
+              <div className="w-full h-96 bg-gradient-to-br from-red-100 to-pink-200 rounded-3xl flex items-center justify-center overflow-hidden shadow-lg">
+                <img
+                  src="https://media.istockphoto.com/id/1415405974/photo/blood-donor-at-donation-with-bouncy-ball-holding-in-hand.jpg?s=612x612&w=0&k=20&c=j0nkmkJxIP6U6TsI3yTq8iuc0Ufhq6xoW4FSMlKaG6A="
+                  alt="Blood donor at donation with bouncy ball holding in hand. Photo by istockphoto."
+                  className="object-cover w-full h-full opacity-90"
+                  style={{ borderRadius: '1.5rem' }}
+                />
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* Impact Story Section */}
+      <section className="py-16 bg-gradient-to-br from-pink-100 to-red-100">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl font-bold mb-6">Một cuộc đời được cứu: Câu chuyện có thật</h2>
+          <div className="flex flex-col md:flex-row items-center gap-8">
+            <img
+              src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400"
+              alt="Priya, một người nhận máu biết ơn, đang mỉm cười với con trai."
+              className="rounded-full w-40 h-40 object-cover border-4 border-red-200 shadow-lg"
+            />
+            <blockquote className="text-lg text-gray-700 italic">
+              “Khi con trai tôi cần máu gấp, Máu Yêu Thương đã kết nối chúng tôi với một người hiến máu chỉ trong vài phút. Lòng nhân ái và tốc độ của họ đã cứu sống con tôi.”
+              <br />
+              <span className="block mt-4 font-semibold text-red-500">— Chị Lan, Người mẹ & Người ủng hộ</span>
+            </blockquote>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section with animated numbers */}
       <section className="py-16 bg-gradient-to-r from-red-500 to-pink-500 text-white">
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="flex justify-center mb-4">
-                  <stat.icon className="h-8 w-8" />
+              <AnimatedStat key={index} icon={stat.icon} value={stat.value} label={stat.label} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Team Section with interactive cards */}
+      <section className="py-16 bg-white">
+        <div className="max-w-6xl mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12">Đội ngũ lãnh đạo của chúng tôi</h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            {teamMembers.map((member, index) => (
+              <div
+                key={index}
+                className={`overflow-hidden transition-transform transform hover:scale-105 hover:shadow-2xl focus-within:ring-2 focus-within:ring-red-400 cursor-pointer border border-gray-100 rounded-xl bg-white shadow-md ${expandedIndex === index ? 'ring-2 ring-red-400' : ''}`}
+                tabIndex={0}
+                aria-label={`Learn more about ${member.name}`}
+                onClick={() => setExpandedIndex(expandedIndex === index ? null : index)}
+                onKeyDown={e => { if (e.key === 'Enter') setExpandedIndex(expandedIndex === index ? null : index); }}
+              >
+                <div className="aspect-square relative overflow-hidden">
+                  <img
+                    src={member.image}
+                    alt={`Portrait of ${member.name}, ${member.role}`}
+                    className="object-cover w-full h-full"
+                  />
                 </div>
-                <div className="text-3xl font-bold mb-2">{stat.value}</div>
-                <div className="text-red-100">{stat.label}</div>
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-semibold mb-2 text-gray-900">{member.name}</h3>
+                  <p className="text-red-500 mb-3">{member.role}</p>
+                  <p className="text-gray-600 mb-2">{member.description}</p>
+                  {expandedIndex === index && (
+                    <div className="mt-4 border-t pt-4">
+                      <blockquote className="italic text-gray-700 mb-2">“{member.quote}”</blockquote>
+                      <div className="flex gap-2 mt-2 justify-center">
+                        <a href={member.linkedin} aria-label={`LinkedIn profile of ${member.name}`} target="_blank" rel="noopener noreferrer">
+                          <Linkedin className="text-blue-700 hover:text-blue-900" />
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Team Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Our Leadership Team</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {teamMembers.map((member, index) => (
-              <Card key={index} className="overflow-hidden">
-                <div className="aspect-square relative overflow-hidden">
-                  <img
-                    src={member.image}
-                    alt={member.name}
-                    className="object-cover w-full h-full"
-                  />
-                </div>
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-semibold mb-2">{member.name}</h3>
-                  <p className="text-red-500 mb-3">{member.role}</p>
-                  <p className="text-gray-600">{member.description}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Footer */}
-      <footer className="bg-gray-800 text-white py-8">
-        <div className="max-w-6xl mx-auto px-4 text-center">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <Heart className="h-6 w-6 text-red-500" />
-            <span className="text-xl font-bold">Blood Care</span>
-          </div>
-          <p className="text-gray-400">
-            Every drop counts - Join our life-saving community
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
 
-export default AboutUs; 
+export default AboutUs;
+
+// AnimatedStat component for animated numbers
+function AnimatedStat({ icon: Icon, value, label }: { icon: React.ElementType, value: string, label: string }) {
+  const [displayValue, setDisplayValue] = useState('0');
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const start = 0;
+    const end = parseInt(value.replace(/\D/g, ''));
+    if (isNaN(end)) {
+      setDisplayValue(value);
+      return;
+    }
+    let current = start;
+    const duration = 1200;
+    const step = Math.max(1, Math.floor(end / 60));
+    let startTime: number | null = null;
+    function animate(ts: number) {
+      if (!startTime) startTime = ts;
+      const progress = ts - startTime;
+      current = Math.min(end, Math.floor((progress / duration) * end));
+      setDisplayValue(current.toLocaleString());
+      if (progress < duration && current < end) {
+        requestAnimationFrame(animate);
+      } else {
+        setDisplayValue(end.toLocaleString() + '+');
+      }
+    }
+    requestAnimationFrame(animate);
+    // eslint-disable-next-line
+  }, [value]);
+  return (
+    <div ref={ref} className="text-center group">
+      <div className="flex justify-center mb-4">
+        <Icon className="h-8 w-8" />
+      </div>
+      <div
+        className="text-3xl font-bold mb-2 text-white group-hover:animate-bounce-in-line focus-within:animate-bounce-in-line transition-colors duration-200"
+        style={{ color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.18)' }}
+        tabIndex={-1}
+        aria-label={displayValue}
+      >
+        {displayValue}
+      </div>
+      <div className="text-red-100 font-medium">{label}</div>
+    </div>
+  );
+}
+
+// Add the bounce animation to the page
+<style>{`
+@keyframes bounce-in-line {
+  0%, 100% { transform: translateY(0); }
+  20% { transform: translateY(-18%); }
+  40% { transform: translateY(0); }
+  60% { transform: translateY(-10%); }
+  80% { transform: translateY(0); }
+}
+.animate-bounce-in-line {
+  animation: bounce-in-line 0.7s cubic-bezier(.68,-0.55,.27,1.55);
+}
+`}</style> 

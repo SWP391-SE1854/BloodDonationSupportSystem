@@ -115,6 +115,21 @@ export class AdminService {
     }
   }
 
+  // Update user status (admin only)
+  static async updateUserStatus(id: number, status: 'Active' | 'Disabled'): Promise<UserProfile> {
+    try {
+      // This assumes the backend can update status via the general update endpoint.
+      // A dedicated endpoint like /api/users/{id}/status might be better in the future.
+      const response = await api.put<UserProfile>(API_ENDPOINTS.USER.UPDATE_USER(id), { status });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error(`Error updating status for user ${id}:`, error.message);
+      }
+      throw error;
+    }
+  }
+
   // Delete user (admin only) - if your backend supports it
   static async deleteUser(id: number): Promise<void> {
     try {

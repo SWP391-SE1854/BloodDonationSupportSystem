@@ -9,12 +9,19 @@ import { useMemo } from 'react';
 
 type DonationHistoryServerResponse = DonationHistoryRecord[] | { $values: DonationHistoryRecord[] };
 
+const statusTranslations: { [key: string]: string } = {
+  Pending: 'Đang chờ',
+  Approved: 'Đã duyệt',
+  Completed: 'Đã hoàn thành',
+  Rejected: 'Đã từ chối',
+  Cancelled: 'Đã hủy',
+};
+
 const MemberDonationHistory = () => {
   const { data: donations, isLoading, isError, error } = useQuery<DonationHistoryRecord[], Error>({
     queryKey: ['memberDonationHistory'],
     queryFn: async () => {
       const response: DonationHistoryServerResponse = await DonationHistoryService.getMemberHistory();
-      console.log("Raw donation history from API:", response);
       if (response && '$values' in response) {
         return Array.isArray(response.$values) ? response.$values : [];
       }
@@ -22,18 +29,15 @@ const MemberDonationHistory = () => {
     },
   });
 
-  const filteredDonations = useMemo(() => {
-    if (!donations) return [];
-    const finalStatuses = ['Completed', 'Rejected', 'Cancelled'];
-    return donations.filter(donation => finalStatuses.includes(donation.status));
-  }, [donations]);
-
   const getStatusBadgeVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
     switch (status) {
       case 'Completed':
         return 'default';
+      case 'Approved':
+        return 'secondary';
+      case 'Pending':
+        return 'outline';
       case 'Rejected':
-        return 'destructive';
       case 'Cancelled':
         return 'destructive';
       default:
@@ -44,8 +48,8 @@ const MemberDonationHistory = () => {
   if (isError) {
     return (
       <Alert variant="destructive">
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{error?.message || 'Failed to fetch donation history.'}</AlertDescription>
+        <AlertTitle>Lỗi</AlertTitle>
+        <AlertDescription>{error?.message || 'Không thể tải lịch sử hiến máu.'}</AlertDescription>
       </Alert>
     );
   }
@@ -53,17 +57,17 @@ const MemberDonationHistory = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>My Donation History</CardTitle>
-        <p className="text-sm text-muted-foreground">A record of your past donation activities.</p>
+        <CardTitle>Lịch Sử Hiến Máu Của Tôi</CardTitle>
+        <p className="text-sm text-muted-foreground">Hồ sơ về các hoạt động hiến máu đã qua của bạn.</p>
       </CardHeader>
       <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Location</TableHead>
-              <TableHead>Quantity (ml)</TableHead>
-              <TableHead>Status</TableHead>
+                <TableHead>Ngày</TableHead>
+                <TableHead>Địa điểm</TableHead>
+              <TableHead>Số lượng (ml)</TableHead>
+              <TableHead>Trạng thái</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -73,21 +77,23 @@ const MemberDonationHistory = () => {
                   <TableCell colSpan={4}><Skeleton className="h-8 w-full" /></TableCell>
                 </TableRow>
               ))
-            ) : filteredDonations.length > 0 ? (
-              filteredDonations.map((donation) => (
+            ) : donations && donations.length > 0 ? (
+              donations.map((donation) => (
                 <TableRow key={donation.donation_id}>
                   <TableCell>{new Date(donation.donation_date).toLocaleDateString()}</TableCell>
                   <TableCell>{donation.location}</TableCell>
                   <TableCell>{donation.quantity}</TableCell>
                   <TableCell>
-                    <Badge variant={getStatusBadgeVariant(donation.status)}>{donation.status}</Badge>
+                    <Badge variant={getStatusBadgeVariant(donation.status)}>
+                      {statusTranslations[donation.status] || donation.status}
+                    </Badge>
                   </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
                 <TableCell colSpan={4} className="text-center">
-                  You have no completed, rejected, or cancelled donations.
+                  Bạn chưa có lịch sử hiến máu.
                   </TableCell>
                 </TableRow>
               )}

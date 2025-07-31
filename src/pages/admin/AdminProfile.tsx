@@ -7,14 +7,14 @@ const AdminProfile = () => {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-6">Admin Profile</h1>
+      <h1 className="text-3xl font-bold mb-6">Hồ sơ Admin</h1>
       <Card>
         <CardHeader>
-          <CardTitle>Your Information</CardTitle>
+          <CardTitle>Thông tin của bạn</CardTitle>
         </CardHeader>
         <CardContent>
           <p><strong>Email:</strong> {user?.email}</p>
-          <p><strong>Display Name:</strong> {user?.displayName || 'Not set'}</p>
+          <p><strong>Tên hiển thị:</strong> {user?.displayName || 'Chưa đặt'}</p>
         </CardContent>
       </Card>
     </div>

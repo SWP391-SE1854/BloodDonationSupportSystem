@@ -1,10 +1,28 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Heart, Calendar, FileText, Activity, Droplet } from 'lucide-react';
+import { Heart, Calendar, FileText, Activity, Droplet, Bell, AlertCircle, Clock, History } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { HealthRecordService, HealthRecord } from '@/services/health-record.service';
 import { DonationHistoryService, DonationHistoryRecord } from '@/services/donation-history.service';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, differenceInDays } from 'date-fns';
+import { calculateNextEligibleDate, DonationHistoryEntry, getWaitingPeriod, getLatestDonation } from '@/utils/donationConstants';
+import { isEligibleByHistory } from '@/utils/donationConstants';
+import NotificationBell from '@/components/NotificationBell';
+import NotificationService, { Notification } from '@/services/notification.service';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BloodRequestService, BloodRequest } from '@/services/blood-request.service';
+import { DonationService } from '@/services/donation.service';
+import { Donation } from '@/types/api';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/components/ui/use-toast';
+import MemberDonationRequest from './MemberDonationRequest';
+
 
 const bloodTypes = [
     { id: "1", name: "A+" }, { id: "2", name: "A-" }, { id: "3", name: "B+" },
@@ -19,10 +37,22 @@ const getBloodTypeName = (id: string | number | null): string => {
     return bloodType ? bloodType.name : 'N/A';
 };
 
+const statusTranslations: { [key: string]: string } = {
+  Pending: 'Đang chờ',
+  Approved: 'Đã duyệt',
+  Completed: 'Đã hoàn thành',
+  Rejected: 'Đã từ chối',
+  Cancelled: 'Đã hủy',
+};
+
 type HistoryServerResponse = DonationHistoryRecord[] | { $values: DonationHistoryRecord[] };
 
 interface MemberDashboardProps {
   onNavigate: (page: string) => void;
+}
+
+interface BloodRequestServerResponse {
+  $values?: BloodRequest[];
 }
 
 const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
@@ -30,6 +60,36 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
   const [healthRecord, setHealthRecord] = useState<HealthRecord | null>(null);
   const [history, setHistory] = useState<DonationHistoryRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [bloodRequests, setBloodRequests] = useState<BloodRequest[]>([]);
+  const [emergencyRequests, setEmergencyRequests] = useState<BloodRequest[]>([]);
+  const [recentDonations, setRecentDonations] = useState<Donation[]>([]);
+  const navigate = useNavigate();
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<BloodRequest | undefined>(undefined);
+  const [reportTitle, setReportTitle] = useState('');
+  const [reportMessage, setReportMessage] = useState('');
+  const { toast } = useToast();
+
+  // Calculate total completed donations
+  const totalDonations = useMemo(() => {
+    return history.filter(donation => donation.status.toLowerCase() === 'completed').length;
+  }, [history]);
+
+  // Calculate eligibility and waiting period
+  const { isEligible, lastDonation, waitingPeriod, nextEligibleDate } = useMemo(() => {
+    const nextDate = calculateNextEligibleDate(history as DonationHistoryEntry[]);
+    const latestDonation = getLatestDonation(history as DonationHistoryEntry[]);
+    const componentWaitingPeriod = latestDonation ? getWaitingPeriod(latestDonation.component) : 0;
+
+    return {
+      isEligible: isEligibleByHistory(history as DonationHistoryEntry[]),
+      lastDonation: latestDonation,
+      waitingPeriod: componentWaitingPeriod,
+      nextEligibleDate: nextDate ? format(nextDate, 'PPP') : 'Now'
+    };
+  }, [history]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -42,6 +102,10 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
       try {
         const historyPromise = DonationHistoryService.getMemberHistory() as Promise<HistoryServerResponse>;
         const healthRecordPromise = HealthRecordService.getMyRecord();
+        const [requestsData, donationsData] = await Promise.all([
+          BloodRequestService.getAllBloodRequests(),
+          DonationService.getMemberDonations()
+        ]);
 
         const [historyData, recordData] = await Promise.all([historyPromise, healthRecordPromise]);
 
@@ -57,6 +121,27 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
           setHealthRecord(recordData);
         }
 
+        // Filter and sort blood requests
+        const activeRequests = Array.isArray(requestsData) 
+          ? requestsData 
+          : (requestsData as BloodRequestServerResponse).$values || [];
+
+        const sortedRequests = activeRequests.sort((a, b) => {
+          if (a.emergency_status && !b.emergency_status) return -1;
+          if (!a.emergency_status && b.emergency_status) return 1;
+          return new Date(b.request_date).getTime() - new Date(a.request_date).getTime();
+        });
+
+        setBloodRequests(sortedRequests);
+        setEmergencyRequests(sortedRequests.filter(r => r.emergency_status));
+
+        // Filter and sort recent donations
+        const sortedDonations = donationsData
+          .filter(d => d.status === 'Pending' || d.status === 'Approved')
+          .sort((a, b) => new Date(b.donation_date).getTime() - new Date(a.donation_date).getTime())
+          .slice(0, 5);
+        setRecentDonations(sortedDonations);
+
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       } finally {
@@ -66,146 +151,244 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
     fetchData();
   }, [user]);
 
-  const nextEligibleDays = healthRecord?.last_donation ? Math.max(0, 90 - differenceInDays(new Date(), new Date(healthRecord.last_donation))) : 0;
+  useEffect(() => {
+    const fetchNotifications = async () => {
+        try {
+            const fetchedNotifications = await NotificationService.getNotifications();
+            setNotifications(fetchedNotifications);
+        } catch (error) {
+            console.error("Failed to fetch notifications:", error);
+            setNotifications([]); // Set to empty array on error
+        }
+    };
+
+    if (user?.id) {
+        fetchNotifications();
+    }
+  }, [user]);
+
+  const handleReportProblem = async () => {
+    if (!reportTitle || !reportMessage) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng nhập cả tiêu đề và nội dung.",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      await NotificationService.sendProblemReportToAdmins({
+        title: reportTitle,
+        message: reportMessage,
+      });
+      toast({
+        title: "Thành công",
+        description: "Báo cáo của bạn đã được gửi đến quản trị viên.",
+      });
+      setIsReportDialogOpen(false);
+      setReportTitle('');
+      setReportMessage('');
+    } catch (error) {
+      toast({
+        title: "Lỗi",
+        description: "Không thể gửi báo cáo. Vui lòng thử lại.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const memberStats = [
-    { title: 'Total Donations', value: healthRecord?.donation_count ?? 'N/A', icon: Heart, color: 'text-red-600', bgColor: 'bg-red-100' },
-    { title: 'Blood Type', value: healthRecord ? getBloodTypeName(healthRecord.blood_type) : 'N/A', icon: Droplet, color: 'text-blue-600', bgColor: 'bg-blue-100' },
-    { title: 'Next Eligible', value: nextEligibleDays > 0 ? `${nextEligibleDays} days` : 'Now', icon: Calendar, color: 'text-green-600', bgColor: 'bg-green-100' },
+    { 
+      title: 'Tổng Số Lần Hiến', 
+      value: totalDonations, 
+      icon: Heart, 
+      color: 'text-red-600', 
+      bgColor: 'bg-red-100' 
+    },
+    { 
+      title: 'Nhóm Máu', 
+      value: healthRecord ? getBloodTypeName(healthRecord.blood_type) : 'N/A', 
+      icon: Droplet, 
+      color: 'text-blue-600', 
+      bgColor: 'bg-blue-100' 
+    },
+    { 
+      title: 'Lần Hiến Tiếp Theo', 
+      value: isEligible ? 'Ngay bây giờ' : `${waitingPeriod} ngày`, 
+      description: lastDonation 
+        ? `Lần hiến gần nhất (${lastDonation.component}): ${format(new Date(lastDonation.donation_date), 'PPP')}` 
+        : 'Chưa có lần hiến nào',
+      subtext: !isEligible ? `Đủ điều kiện vào: ${nextEligibleDate}` : 'Bạn đủ điều kiện hiến máu',
+      icon: Calendar, 
+      color: isEligible ? 'text-green-600' : 'text-red-600', 
+      bgColor: isEligible ? 'bg-green-100' : 'bg-red-100' 
+    }
   ];
 
-  const recentDonations = history.slice(0, 2);
+  const getStatusBadgeVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
+    switch (status) {
+      case 'Approved':
+        return 'default';
+      case 'Pending':
+        return 'secondary';
+      default:
+        return 'outline';
+    }
+  };
+
+  const handleDonateNow = (request: BloodRequest) => {
+    setSelectedRequest(request);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedRequest(undefined);
+  };
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-96">Đang tải...</div>;
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Section */}
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Welcome Section with Notification Bell */}
       <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-lg p-6 text-white">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Welcome, {user?.displayName ?? 'Member'}!</h1>
-            <p className="text-red-100 text-lg">Thank you for being a life-saving donor</p>
+            <h1 className="text-3xl font-bold mb-2">Xin chào, {user?.displayName ?? 'Thành viên'}!</h1>
+            <p className="text-red-100 text-lg">Cảm ơn bạn đã tham gia hiến máu cứu người.</p>
           </div>
-          <Heart className="h-16 w-16 text-red-200" />
+          <div className="flex items-center space-x-4">
+            <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="secondary" className="bg-white/80 hover:bg-white/100">
+                  Báo cáo sự cố
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Báo cáo sự cố</DialogTitle>
+                  <DialogDescription>
+                    Nếu bạn gặp bất kỳ vấn đề gì, vui lòng cho chúng tôi biết.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="report-title">Tiêu đề</Label>
+                    <Input id="report-title" value={reportTitle} onChange={e => setReportTitle(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label htmlFor="report-message">Nội dung</Label>
+                    <Textarea id="report-message" value={reportMessage} onChange={e => setReportMessage(e.target.value)} />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsReportDialogOpen(false)}>Hủy</Button>
+                  <Button onClick={handleReportProblem}>Gửi báo cáo</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            <NotificationBell />
+          </div>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {isLoading ? (
-          Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)
-        ) : (
-          memberStats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <div key={index} className="bg-white border border-red-100 rounded-lg p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                  <p className="text-3xl font-bold mt-2">{stat.value}</p>
-                </div>
-                <div className={`p-3 rounded-lg ${stat.bgColor}`}>
-                  <Icon className={`h-6 w-6 ${stat.color}`} />
-                </div>
-              </div>
-            </div>
-          );
-          })
-        )}
+      {/* Stats Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {memberStats.map((stat, index) => (
+          <Card key={index} className={`shadow-lg border-l-4 ${stat.bgColor.replace('bg-', 'border-')}`}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+              <stat.icon className={`h-5 w-5 ${stat.color}`} />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stat.value}</div>
+              <p className="text-xs text-gray-500">{stat.description}</p>
+              {stat.subtext && <p className="text-xs text-gray-500 mt-1">{stat.subtext}</p>}
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white border border-red-100 rounded-lg p-6 hover:shadow-md transition-shadow">
-          <div className="mb-4">
-            <div className="flex items-center space-x-2 mb-2">
-              <Heart className="h-5 w-5 text-red-600" />
-              <span className="font-semibold">Create Donation Request</span>
-            </div>
-            <p className="text-sm text-gray-600">Schedule your next blood donation</p>
-          </div>
-          <button 
-            onClick={() => onNavigate('donation-request')}
-            className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
-          >
-            Request Donation
-          </button>
-        </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">Tác vụ nhanh</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Button onClick={() => onNavigate('health-records')} size="lg" variant="outline" className="flex items-center justify-center gap-2">
+            <Activity className="h-5 w-5" />
+            <span>Xem hồ sơ sức khỏe</span>
+          </Button>
+          <Button onClick={() => onNavigate('donation-history')} size="lg" variant="outline" className="flex items-center justify-center gap-2">
+            <History className="h-5 w-5" />
+            <span>Lịch sử hiến máu</span>
+          </Button>
+        </CardContent>
+      </Card>
 
-        <div className="bg-white border border-green-100 rounded-lg p-6 hover:shadow-md transition-shadow">
-          <div className="mb-4">
-            <div className="flex items-center space-x-2 mb-2">
-              <Activity className="h-5 w-5 text-green-600" />
-              <span className="font-semibold">Health Records</span>
+      {/* Emergency Blood Requests Section */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Yêu Cầu Máu Khẩn Cấp</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {emergencyRequests.length > 0 ? (
+            <div className="space-y-3">
+              {emergencyRequests.map(req => (
+                <div key={req.request_id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                  <div className="flex items-center">
+                    {req.emergency_status && <AlertCircle className="h-5 w-5 text-red-500 mr-3"/>}
+                    <div>
+                      <p className="font-semibold">Cần nhóm máu: {getBloodTypeName(req.blood_id)}</p>
+                      <p className="text-sm text-gray-600">Ngày yêu cầu: {format(new Date(req.request_date), 'PPP')}</p>
+                  </div>
+                  </div>
+                  <Button onClick={() => handleDonateNow(req)}>Đóng góp ngay</Button>
+                </div>
+              ))}
             </div>
-            <p className="text-sm text-gray-600">View your health information</p>
-          </div>
-          <button 
-            onClick={() => onNavigate('health-records')}
-            className="w-full border border-green-200 text-green-600 hover:bg-green-50 px-4 py-2 rounded-lg transition-colors"
-          >
-            View Records
-          </button>
-        </div>
-
-        <div className="bg-white border border-blue-100 rounded-lg p-6 hover:shadow-md transition-shadow">
-          <div className="mb-4">
-            <div className="flex items-center space-x-2 mb-2">
-              <FileText className="h-5 w-5 text-blue-600" />
-              <span className="font-semibold">Donation History</span>
-            </div>
-            <p className="text-sm text-gray-600">Track your donations</p>
-          </div>
-          <button 
-            onClick={() => onNavigate('donation-history')}
-            className="w-full border border-blue-200 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg transition-colors"
-          >
-            View History
-          </button>
-        </div>
-      </div>
-
-      {/* Recent Donations */}
-      <div className="bg-white border border-red-100 rounded-lg">
-        <div className="p-6 border-b border-gray-100">
-          <div className="flex items-center space-x-2">
-            <Heart className="h-5 w-5 text-red-600" />
-            <span className="font-semibold">Recent Donations</span>
-          </div>
-          <p className="text-sm text-gray-600 mt-1">Your latest donation activities</p>
-        </div>
-        <div className="p-6">
-          {isLoading ? (
-            <Skeleton className="h-24 w-full" />
           ) : (
-          <div className="space-y-4">
-              {recentDonations.length > 0 ? (
-                recentDonations.map((donation) => (
-              <div key={donation.donation_id} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className="p-2 bg-red-100 rounded-lg">
-                    <Heart className="h-4 w-4 text-red-600" />
-                  </div>
-                  <div>
-                        <p className="font-medium text-gray-900">{`Donation #${donation.donation_id}`}</p>
-                    <p className="text-sm text-gray-500">{donation.location}</p>
-                        <p className="text-xs text-gray-400">{format(new Date(donation.donation_date), 'PPP')}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm capitalize">
-                    {donation.status}
-                  </span>
-                  <p className="text-sm text-gray-500 mt-1">{donation.quantity}ml</p>
-                </div>
-              </div>
-                ))
-              ) : (
-                <p className="text-center text-gray-500">No recent donations found.</p>
-              )}
-          </div>
+            <p className="text-center text-gray-500 py-4">Không có yêu cầu máu khẩn cấp nào.</p>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
+
+      {isModalOpen && selectedRequest && (
+        <MemberDonationRequest
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          eventDate={selectedRequest.request_date}
+          requestId={selectedRequest.request_id.toString()}
+        />
+      )}
+
+      {/* Recent Donations Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">Lịch hẹn hiến máu gần đây</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {recentDonations.length > 0 ? (
+            <ul className="space-y-3">
+              {recentDonations.map(donation => (
+                <li key={donation.donation_id} className="flex items-center justify-between p-2 rounded-md hover:bg-gray-50">
+                    <div>
+                    <p className="font-semibold">Ngày: {format(new Date(donation.donation_date), 'PPP')}</p>
+                    <p className="text-sm text-gray-500">Ghi chú: {donation.note || 'Không có'}</p>
+                  </div>
+                  <Badge variant={getStatusBadgeVariant(donation.status)}>
+                    {statusTranslations[donation.status] || donation.status}
+                  </Badge>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-center text-gray-500">Bạn không có yêu cầu nào đang hoạt động.</p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

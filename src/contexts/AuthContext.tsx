@@ -169,11 +169,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(userData);
         
         if (role === 'Admin') {
-          navigate('/admin/profile');
+          navigate('/admin/dashboard');
         } else if (role === 'Staff') {
-          navigate('/staff');
+          navigate('/staff/dashboard');
         } else {
-          navigate('/member');
+          navigate('/member/dashboard');
         }
         
         toast({

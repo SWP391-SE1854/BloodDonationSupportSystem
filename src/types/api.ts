@@ -40,9 +40,7 @@ export interface BloodRequest {
   patientName: string;
   bloodType: string;
   urgency: 'Critical' | 'High' | 'Medium' | 'Low';
-  unitsNeeded: number;
-  hospital: string;
-  requestTime: string;
+  quantity_cc: number;
   status: 'Pending' | 'In Progress' | 'Completed';
   contactPhone: string;
   assignedDonorId?: string;
@@ -76,9 +74,10 @@ export interface BloodInventory {
 export interface BloodInventoryUnit {
   unit_id: number;
   donation_id: number;
-  blood_type: number; // This is a foreign key ID
+  blood_type: number | string; // Can be string for creation, number when read
+  component: string; // e.g., 'Whole Blood', 'Red Cells', 'Platelets'
   status: 'Available' | 'Reserved' | 'Expired' | 'Used';
-  quantity: number; // in ml
+  quantity: number; // in cc
   expiration_date: string; // ISO 8601 format
 }
 
@@ -132,6 +131,7 @@ export interface BlogPost {
   user_id: number;
   date: string;
   title: string;
+  image?: string;
   content: string;
   User?: {
     name?: string;
@@ -139,14 +139,34 @@ export interface BlogPost {
 }
 
 export interface Donation {
-  donation_id: number;
-  user_id: string;
-  donation_date: string;
-  donation_time: string;
-  component: 'Whole Blood' | 'Platelets' | 'Power Red';
-  quantity: number;
-  location: string;
-  note?: string;
-  status: 'Pending' | 'Approved' | 'Completed' | 'Rejected' | 'Cancelled';
-  created_at: string;
+    donation_id: number;
+    user_id: string;
+    donation_date: string;
+    donation_time?: string;
+    note?: string;
+    status: 'Pending' | 'Approved' | 'Completed' | 'Rejected' | 'Cancelled' | 'Processed';
+    location?: string;
+    component?: string;
+    rejection_reason?: string;
+    amount_ml?: number;
+}
+
+export interface WrappedResponse<T> {
+  $values: T;
+}
+
+export interface Notification {
+  id: string; // unified id
+  title: string;
+  message: string;
+  sent_date: string;
+  type: 'event' | 'alert' | 'info' | 'request' | 'system';
+  createdAt: string;
+  read: boolean;
+  link?: string;
+  // Optionally include legacy fields for compatibility
+  notification_id?: string;
+  read_status?: boolean;
+  created_at?: string;
+  donation_request_id?: number;
 }

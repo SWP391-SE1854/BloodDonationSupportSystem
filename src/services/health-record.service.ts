@@ -1,17 +1,33 @@
 import api from './api.service';
 import { API_ENDPOINTS } from './api.config';
+import { DonationComponent, calculateNextEligibleDate, DonationHistoryEntry } from '@/utils/donationConstants';
+import { DonationHistoryService } from './donation-history.service';
+
+export interface User {
+  user_id: number;
+  name: string;
+  email: string;
+  phone: string;
+  dob: string;
+  role: string;
+  address: string;
+  city: string;
+  district: string;
+}
 
 export interface HealthRecord {
-    record_id: number;
-    user_id: number;
-    weight: number;
-    height: number;
-    blood_type: string;
-    allergies: string;
-    medication: string;
-    last_donation: string;
-    eligibility_status: boolean | null;
-    donation_count: number;
+  record_id: number;
+  user_id: number;
+  weight: number;
+  height: number;
+  blood_type: string;
+  heart_rate?: number;
+  allergies: string;
+  medication: string;
+  last_donation: string;
+  eligibility_status: boolean;
+  donation_count: number;
+  user?: User;
 }
 
 export class HealthRecordService {
@@ -45,14 +61,49 @@ export class HealthRecordService {
     return response.data;
   }
 
-  static async updateUserDonationStats(userId: string, donationDate: string): Promise<HealthRecord> {
-    const currentRecord = await this.getRecordByUserId(userId);
-    const updatedRecord: HealthRecord = {
-      ...currentRecord,
-      donation_count: (currentRecord.donation_count || 0) + 1,
-      last_donation: donationDate,
-    };
-    return this.updateRecord(userId, updatedRecord);
+  static async updateUserDonationStats(userId: string, donationDate: string, component: DonationComponent): Promise<HealthRecord> {
+    try {
+      // First get the current record and donation history for the specific user
+      const [currentRecord, donationHistory] = await Promise.all([
+        this.getRecordByUserId(userId),
+        DonationHistoryService.getUserHistory(parseInt(userId, 10))
+      ]);
+
+      // Create history entry for the new donation
+      const newDonation: DonationHistoryEntry = {
+        donation_id: 0, // This will be set by the backend
+        user_id: parseInt(userId),
+        donation_date: donationDate,
+        component: component,
+        status: 'Completed'
+      };
+
+      // Combine existing history with new donation
+      const updatedHistory = [...(Array.isArray(donationHistory) ? donationHistory : []), newDonation];
+      
+      // Calculate next eligible date based on full history
+      const nextEligibleDate = calculateNextEligibleDate(updatedHistory);
+      const isCurrentlyEligible = nextEligibleDate ? new Date() >= nextEligibleDate : true;
+      
+      // Update the record
+      const updateData: Partial<HealthRecord> = {
+        donation_count: (currentRecord.donation_count || 0) + 1,
+        last_donation: donationDate,
+        eligibility_status: isCurrentlyEligible,
+        // Preserve all other fields
+        weight: currentRecord.weight,
+        height: currentRecord.height,
+        blood_type: currentRecord.blood_type,
+        allergies: currentRecord.allergies,
+        medication: currentRecord.medication
+      };
+
+      // Update the record using the record_id
+      return await this.updateRecord(currentRecord.record_id.toString(), updateData);
+    } catch (error) {
+      console.error('Error updating user donation stats:', error);
+      throw error;
+    }
   }
 }
 

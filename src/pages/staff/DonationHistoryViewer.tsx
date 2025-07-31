@@ -7,13 +7,11 @@ import { AdminService } from '@/services/admin.service';
 import { StaffService } from '@/services/staff.service';
 import { UserProfile } from '@/services/user.service';
 import DonationHistoryService, { DonationHistoryRecord } from '@/services/donation-history.service';
-import { useUserRole } from '@/hooks/useUserRole';
 
 type UserResponse = UserProfile[] | { $values: UserProfile[] };
 
 const DonationHistoryViewer: React.FC = () => {
   const { toast } = useToast();
-  const currentUserRole = useUserRole();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
@@ -23,14 +21,7 @@ const DonationHistoryViewer: React.FC = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        let allUsers: UserResponse;
-        if (currentUserRole === 'Admin') {
-          allUsers = await AdminService.getAllUsers();
-        } else if (currentUserRole === 'Staff') {
-          allUsers = await StaffService.getAllMembers();
-        } else {
-          allUsers = [];
-        }
+        const allUsers: UserResponse = await StaffService.getAllMembers();
         
         if (allUsers && !Array.isArray(allUsers) && '$values' in allUsers) {
           setUsers(allUsers.$values);
@@ -44,10 +35,8 @@ const DonationHistoryViewer: React.FC = () => {
         setUsers([]);
       }
     };
-    if (currentUserRole) {
     fetchUsers();
-    }
-  }, [currentUserRole, toast]);
+  }, [toast]);
 
   const handleUserSelect = async (user: UserProfile) => {
     setSelectedUser(user);

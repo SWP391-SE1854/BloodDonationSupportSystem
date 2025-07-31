@@ -48,8 +48,8 @@ const MemberProfile = () => {
     } catch (error) {
       console.error('Error fetching profile data:', error);
       toast({
-        title: "Error",
-        description: "Failed to load profile data",
+        title: "Lỗi",
+        description: "Không thể tải dữ liệu hồ sơ",
         variant: "destructive",
       });
     } finally {
@@ -90,12 +90,15 @@ const MemberProfile = () => {
     try {
       setIsLoading(true);
       const updateData: UpdateUserProfile = {
+        user_id: profileData?.user_id || 0,
         name: formData.name,
+        email: profileData?.email || '',
+        role: profileData?.role || '',
         phone: formData.phone,
         address: formData.address,
         city: formData.city,
         district: formData.district,
-        dob: formData.dob,
+        dob: formData.dob ? new Date(formData.dob).toISOString() : '',
       };
 
       const updatedProfile = await UserService.updateMemberProfile(updateData);
@@ -103,14 +106,14 @@ const MemberProfile = () => {
     setIsEditing(false);
       
       toast({
-        title: "Profile Updated",
-        description: "Your profile has been successfully updated.",
+        title: "Hồ Sơ Đã Được Cập Nhật",
+        description: "Thông tin hồ sơ của bạn đã được cập nhật thành công.",
       });
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
-        title: "Error",
-        description: "Failed to update profile",
+        title: "Lỗi",
+        description: "Không thể cập nhật hồ sơ",
         variant: "destructive",
       });
     } finally {
@@ -140,7 +143,7 @@ const MemberProfile = () => {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600">Loading profile...</p>
+            <p className="mt-2 text-gray-600">Đang tải hồ sơ...</p>
           </div>
         </div>
       </div>
@@ -152,9 +155,9 @@ const MemberProfile = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <p className="text-gray-600">No profile data available</p>
+            <p className="text-gray-600">Không có dữ liệu hồ sơ</p>
             <Button onClick={fetchProfileData} className="mt-2">
-              Retry
+              Thử lại
             </Button>
           </div>
         </div>
@@ -166,8 +169,8 @@ const MemberProfile = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Member Profile</h1>
-          <p className="text-gray-600 mt-2">Manage your personal information</p>
+          <h1 className="text-3xl font-bold text-gray-900">Hồ Sơ Thành Viên</h1>
+          <p className="text-gray-600 mt-2">Quản lý thông tin cá nhân của bạn</p>
         </div>
         <div className="flex gap-2">
         {!isEditing ? (
@@ -177,7 +180,7 @@ const MemberProfile = () => {
               disabled={isLoading}
           >
               <Edit3 className="h-4 w-4 mr-2" />
-              Edit Profile
+              Chỉnh Sửa Hồ Sơ
             </Button>
         ) : (
           <div className="flex space-x-2">
@@ -187,7 +190,7 @@ const MemberProfile = () => {
                 disabled={isLoading}
             >
                 <Save className="h-4 w-4 mr-2" />
-                {isLoading ? "Saving..." : "Save"}
+                {isLoading ? "Đang lưu..." : "Lưu"}
               </Button>
               <Button
               onClick={handleCancel}
@@ -196,7 +199,7 @@ const MemberProfile = () => {
                 disabled={isLoading}
             >
                 <X className="h-4 w-4 mr-2" />
-                Cancel
+                Hủy
               </Button>
           </div>
         )}
@@ -207,7 +210,7 @@ const MemberProfile = () => {
         {/* Profile Picture Section */}
         <Card className="border-red-100">
           <CardHeader>
-            <CardTitle>Profile Picture</CardTitle>
+            <CardTitle>Ảnh Đại Diện</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center space-y-4">
             <div className="w-32 h-32 bg-red-100 rounded-full flex items-center justify-center">
@@ -215,11 +218,11 @@ const MemberProfile = () => {
             </div>
             <div className="text-center">
               <h3 className="font-semibold text-lg">{profileData.name}</h3>
-              <p className="text-sm text-gray-500">Member ID: {profileData.user_id}</p>
-              <p className="text-sm text-gray-500">Role: {profileData.role}</p>
+              <p className="text-sm text-gray-500">Mã Thành Viên: {profileData.user_id}</p>
+              <p className="text-sm text-gray-500">Vai trò: {profileData.role}</p>
             </div>
             <Button variant="outline" className="border-red-200 text-red-600 hover:bg-red-50">
-              Change Photo
+              Thay đổi ảnh
             </Button>
           </CardContent>
         </Card>
@@ -227,13 +230,13 @@ const MemberProfile = () => {
         {/* Personal Information */}
         <Card className="lg:col-span-2 border-red-100">
           <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
-            <CardDescription>Your basic personal details</CardDescription>
+            <CardTitle>Thông Tin Cá Nhân</CardTitle>
+            <CardDescription>Chi tiết thông tin cá nhân của bạn</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">Họ và Tên</Label>
                 {isEditing ? (
                   <div>
                     <Input
@@ -248,39 +251,19 @@ const MemberProfile = () => {
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
-                    <User className="h-4 w-4 text-gray-400" />
-                    <span>{profileData.name}</span>
-                  </div>
+                  <p className="pt-2 text-gray-700">{profileData.name}</p>
                 )}
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                {isEditing ? (
-                  <div>
-                    <Input
-                      id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                      className={`border-red-200 focus:border-red-500 ${errors.email ? "border-red-500" : ""}`}
-                      disabled={isLoading}
-                  />
-                    {errors.email && (
-                      <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
-                    <Mail className="h-4 w-4 text-gray-400" />
-                    <span>{profileData.email}</span>
-                  </div>
-                )}
+                <Label htmlFor="email">Địa chỉ Email</Label>
+                <p className="pt-2 text-gray-500">{profileData.email}</p>
+                <p className="text-xs text-gray-400">Địa chỉ email không thể thay đổi.</p>
               </div>
+            </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone">Số Điện Thoại</Label>
                 {isEditing ? (
                   <div>
                     <Input
@@ -295,15 +278,11 @@ const MemberProfile = () => {
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
-                    <Phone className="h-4 w-4 text-gray-400" />
-                    <span>{profileData.phone || 'Not provided'}</span>
-                  </div>
+                  <p className="pt-2 text-gray-700">{profileData.phone}</p>
                 )}
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="dob">Date of Birth</Label>
+                <Label htmlFor="dob">Ngày Sinh</Label>
                 {isEditing ? (
                   <div>
                     <Input
@@ -319,85 +298,69 @@ const MemberProfile = () => {
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
-                    <Calendar className="h-4 w-4 text-gray-400" />
-                    <span>{profileData.dob ? new Date(profileData.dob).toLocaleDateString() : 'Not provided'}</span>
-                  </div>
+                  <p className="pt-2 text-gray-700">{profileData.dob ? new Date(profileData.dob).toLocaleDateString() : ''}</p>
                 )}
               </div>
             </div>
 
-            <div className="space-y-4">
-              <h4 className="font-semibold text-gray-900">Address Information</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="address">Address</Label>
-                  {isEditing ? (
-                    <div>
-                      <Input
-                        id="address"
-                      value={formData.address}
-                      onChange={(e) => handleInputChange('address', e.target.value)}
-                        className={`border-red-200 focus:border-red-500 ${errors.address ? "border-red-500" : ""}`}
-                        disabled={isLoading}
-                    />
-                      {errors.address && (
-                        <p className="text-red-500 text-sm mt-1">{errors.address}</p>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
-                      <MapPin className="h-4 w-4 text-gray-400" />
-                      <span>{profileData.address || 'Not provided'}</span>
-                    </div>
+            <div className="space-y-2">
+              <Label htmlFor="address">Địa Chỉ</Label>
+              {isEditing ? (
+                <div>
+                  <Input
+                    id="address"
+                  value={formData.address}
+                  onChange={(e) => handleInputChange('address', e.target.value)}
+                    className={`border-red-200 focus:border-red-500 ${errors.address ? "border-red-500" : ""}`}
+                    disabled={isLoading}
+                />
+                  {errors.address && (
+                    <p className="text-red-500 text-sm mt-1">{errors.address}</p>
                   )}
                 </div>
+              ) : (
+                <p className="pt-2 text-gray-700">{profileData.address}</p>
+              )}
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="city">City</Label>
-                  {isEditing ? (
-                    <div>
-                      <Input
-                        id="city"
-                      value={formData.city}
-                      onChange={(e) => handleInputChange('city', e.target.value)}
-                        className={`border-red-200 focus:border-red-500 ${errors.city ? "border-red-500" : ""}`}
-                        disabled={isLoading}
-                    />
-                      {errors.city && (
-                        <p className="text-red-500 text-sm mt-1">{errors.city}</p>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
-                      <MapPin className="h-4 w-4 text-gray-400" />
-                      <span>{profileData.city || 'Not provided'}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="district">District</Label>
-                  {isEditing ? (
-                    <div>
-                      <Input
-                        id="district"
-                      value={formData.district}
-                      onChange={(e) => handleInputChange('district', e.target.value)}
-                        className={`border-red-200 focus:border-red-500 ${errors.district ? "border-red-500" : ""}`}
-                        disabled={isLoading}
-                    />
-                      {errors.district && (
-                        <p className="text-red-500 text-sm mt-1">{errors.district}</p>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
-                      <MapPin className="h-4 w-4 text-gray-400" />
-                      <span>{profileData.district || 'Not provided'}</span>
-                    </div>
-                  )}
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="city">Thành Phố</Label>
+                {isEditing ? (
+                  <div>
+                    <Input
+                      id="city"
+                    value={formData.city}
+                    onChange={(e) => handleInputChange('city', e.target.value)}
+                      className={`border-red-200 focus:border-red-500 ${errors.city ? "border-red-500" : ""}`}
+                      disabled={isLoading}
+                  />
+                    {errors.city && (
+                      <p className="text-red-500 text-sm mt-1">{errors.city}</p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="pt-2 text-gray-700">{profileData.city}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="district">Quận/Huyện</Label>
+                {isEditing ? (
+                  <div>
+                    <Input
+                      id="district"
+                    value={formData.district}
+                    onChange={(e) => handleInputChange('district', e.target.value)}
+                      className={`border-red-200 focus:border-red-500 ${errors.district ? "border-red-500" : ""}`}
+                      disabled={isLoading}
+                  />
+                    {errors.district && (
+                      <p className="text-red-500 text-sm mt-1">{errors.district}</p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="pt-2 text-gray-700">{profileData.district}</p>
+                )}
               </div>
             </div>
           </CardContent>

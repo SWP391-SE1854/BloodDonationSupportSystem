@@ -4,6 +4,7 @@ import { Heart, Users, MapPin, Phone, Mail, Clock, ThumbsUp, Award, Quote, Chevr
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import NavigationBar from "@/components/NavigationBar";
+import Footer from '@/components/Footer';
 
 const Index = () => {
   const { isAuthenticated } = useAuth();
@@ -29,21 +30,22 @@ const Index = () => {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
         </div>
         <div className="relative z-10 max-w-3xl mx-auto px-4 text-center animate-fade-in-up">
-          <h1 className="text-5xl md:text-7xl font-extrabold text-white leading-tight mb-6 tracking-tight drop-shadow-lg">
-            <span className="block">EVERY <span className="text-red-400 animate-bounce-in">DROP</span> COUNTS</span>
+            <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 tracking-tight drop-shadow-lg">
+              <span className="block mb-2">MỖI <span className="text-red-400 animate-bounce-in">GIỌT MÁU</span></span>
+              <span className="block">MỘT TẤM LÒNG</span>
           </h1>
           <p className="text-2xl text-white/90 mb-8 max-w-2xl mx-auto font-light animate-fade-in-up animation-delay-300">
-            Join our life-saving community. Every donation can save up to three lives. Be a hero today.
+          Tham gia cộng đồng của chúng tôi. Mỗi lần hiến máu có thể cứu sống đến ba người. Hãy trở thành người hùng ngay hôm nay.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up animation-delay-500">
             <Link to="/register">
               <Button className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 text-lg font-bold shadow-lg hover:shadow-red-500/25 transition-all duration-300 transform hover:scale-105" size="lg">
-                Register Now
+                Đăng Ký Ngay
               </Button>
             </Link>
             <Link to="/login">
               <Button variant="outline" className="border-2 border-white text-black hover:text-red-600 px-8 py-3 text-lg font-medium transition-all duration-300 transform hover:scale-105" size="lg">
-                Login
+                Đăng Nhập
               </Button>
             </Link>
           </div>
@@ -53,28 +55,28 @@ const Index = () => {
       {/* How it Works Section */}
       <section className="py-20 bg-white">
         <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-10 text-center">How It Works</h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-10 text-center">Quy Trình Hoạt Động</h2>
           <div className="grid md:grid-cols-3 gap-10">
             <div className="text-center group">
               <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                 <Users className="h-10 w-10 text-red-500" />
               </div>
-              <h3 className="text-2xl font-semibold mb-2 text-gray-800">Register</h3>
-              <p className="text-gray-600 leading-relaxed">Sign up and become part of our life-saving community. Quick and easy registration process.</p>
+              <h3 className="text-2xl font-semibold mb-2 text-gray-800">Đăng Ký</h3>
+              <p className="text-gray-600 leading-relaxed">Đăng ký và trở thành một phần của cộng đồng cứu người của chúng tôi. Quá trình đăng ký nhanh chóng và dễ dàng.</p>
             </div>
             <div className="text-center group">
               <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                 <MapPin className="h-10 w-10 text-red-500" />
               </div>
-              <h3 className="text-2xl font-semibold mb-2 text-gray-800">Find Donors</h3>
-              <p className="text-gray-600 leading-relaxed">Connect with nearby donors when you need blood. Real-time matching and notifications.</p>
+              <h3 className="text-2xl font-semibold mb-2 text-gray-800">Tìm Người Hiến Máu</h3>
+              <p className="text-gray-600 leading-relaxed">Kết nối với những người hiến máu ở gần khi bạn cần máu. Kết nối và thông báo theo thời gian thực.</p>
             </div>
             <div className="text-center group">
               <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                 <Heart className="h-10 w-10 text-red-500" />
               </div>
-              <h3 className="text-2xl font-semibold mb-2 text-gray-800">Save Lives</h3>
-              <p className="text-gray-600 leading-relaxed">Make a difference by donating blood and saving lives. Track your impact and donation history.</p>
+              <h3 className="text-2xl font-semibold mb-2 text-gray-800">Đi hiến máu</h3>
+              <p className="text-gray-600 leading-relaxed">Tạo nên sự khác biệt bằng cách hiến máu. Theo dõi tác động và lịch sử hiến máu của bạn.</p>
             </div>
           </div>
         </div>
@@ -83,22 +85,22 @@ const Index = () => {
       {/* Our Impact Section */}
       <section className="py-20 bg-gradient-to-br from-red-50 to-white">
         <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-10 text-center">Our Impact</h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-10 text-center">Tác Động Của Chúng Tôi</h2>
           <div className="grid md:grid-cols-3 gap-10 text-center">
             <div className="flex flex-col items-center">
               <ThumbsUp className="h-12 w-12 text-red-500 mb-4 animate-bounce" />
               <span className="text-4xl font-bold text-gray-800">12,345</span>
-              <span className="text-lg text-gray-600">Donations Made</span>
+              <span className="text-lg text-gray-600">Lượt Hiến Máu</span>
             </div>
             <div className="flex flex-col items-center">
               <Award className="h-12 w-12 text-red-500 mb-4 animate-bounce animation-delay-300" />
               <span className="text-4xl font-bold text-gray-800">8,900</span>
-              <span className="text-lg text-gray-600">Lives Saved</span>
+              <span className="text-lg text-gray-600">Người Được Cứu</span>
             </div>
             <div className="flex flex-col items-center">
               <Heart className="h-12 w-12 text-red-500 mb-4 animate-bounce animation-delay-500" />
               <span className="text-4xl font-bold text-gray-800">2,100</span>
-              <span className="text-lg text-gray-600">Active Donors</span>
+              <span className="text-lg text-gray-600">Người Hiến Máu Tích Cực</span>
             </div>
           </div>
         </div>
@@ -107,7 +109,7 @@ const Index = () => {
       {/* Testimonials Section */}
       <section className="py-20 bg-white">
         <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-10 text-center">What Our Donors Say</h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-10 text-center">Người Hiến Máu Nói Gì</h2>
           <div className="grid md:grid-cols-3 gap-10">
             {[1,2,3].map((i) => (
               <div
@@ -115,11 +117,11 @@ const Index = () => {
                 className="bg-gray-50 rounded-xl shadow-lg p-8 flex flex-col items-center animate-fade-in-up transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:bg-red-50"
               >
                 <Quote className="h-8 w-8 text-red-400 mb-4" />
-                <p className="text-lg text-gray-700 italic mb-4">“{i === 1 ? 'Donating blood was suprisingly easy and it was a really rewarding experience!' 
-                : i === 2 ? 'I needed blood urgently and this community genuinely saved my life. I can\'t thank them enough.' 
-                : 'The staffs made the process really enjoyable and I would definitely donate again.'}”</p>
+                <p className="text-lg text-gray-700 italic mb-4">“{i === 1 ? 'Việc hiến máu thật đáng ngạc nhiên là dễ dàng và đó là một trải nghiệm thực sự bổ ích!' 
+                : i === 2 ? 'Tôi cần máu gấp và cộng đồng này thực sự đã cứu mạng tôi. Tôi không thể cảm ơn họ đủ.' 
+                : 'Các nhân viên đã làm cho quá trình này thực sự thú vị và tôi chắc chắn sẽ hiến máu lần nữa.'}”</p>
                 <span className="font-semibold text-gray-800">{i === 1 ? 'Alex N.' : i === 2 ? 'Maria P.' : 'John D.'}</span>
-                <span className="text-sm text-gray-500">{i === 1 ? 'Donor' : i === 2 ? 'Recipient' : 'Donor'}</span> 
+                <span className="text-sm text-gray-500">{i === 1 ? 'Người Hiến Máu' : i === 2 ? 'Người Nhận Máu' : 'Người Hiến Máu'}</span> 
               </div>
             ))}
           </div>
@@ -128,17 +130,17 @@ const Index = () => {
 
       {/* Call to Action Section */}
       <section className="py-16 bg-gradient-to-br from-red-100 to-pink-50 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Ready to Make a Difference?</h2>
-        <p className="text-lg text-gray-600 mb-8">Register now or log in to join our community of heroes.</p>
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Sẵn Sàng Tạo Nên Sự Khác Biệt?</h2>
+        <p className="text-lg text-gray-600 mb-8">Đăng ký ngay hoặc đăng nhập để tham gia cộng đồng những người hùng của chúng tôi.</p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Link to="/register">
             <Button className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 text-lg font-bold shadow-lg hover:shadow-red-500/25 transition-all duration-300 transform hover:scale-105" size="lg">
-              Register
+              Đăng Ký
             </Button>
           </Link>
           <Link to="/login">
             <Button variant="outline" className="border-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-8 py-3 text-lg font-medium transition-all duration-300 transform hover:scale-105" size="lg">
-              Login
+              Đăng Nhập
             </Button>
           </Link>
         </div>
@@ -147,57 +149,29 @@ const Index = () => {
       {/* FAQ Section */}
       <section className="py-20 bg-white">
         <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-10 text-center">Frequently Asked Questions</h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-10 text-center">Các Câu Hỏi Thường Gặp</h2>
           <div className="space-y-8">
             <div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">Who can donate blood?</h3>
-              <p className="text-gray-600">Most healthy adults can donate blood. There are some eligibility requirements regarding age, weight, and health status.</p>
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">Ai có thể hiến máu?</h3>
+              <p className="text-gray-600">Hầu hết người trưởng thành khỏe mạnh đều có thể hiến máu. Có một số yêu cầu về độ tuổi, cân nặng và tình trạng sức khỏe.</p>
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">How often can I donate?</h3>
-              <p className="text-gray-600">You can typically donate whole blood every 56 days. Other types of donations may have different intervals.</p>
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">Tôi có thể hiến máu bao lâu một lần?</h3>
+              <p className="text-gray-600">Bạn thường có thể hiến máu toàn phần mỗi 56 ngày. Các loại hình hiến tặng khác có thể có khoảng thời gian khác nhau.</p>
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">Is blood donation safe?</h3>
-              <p className="text-gray-600">Yes! Blood donation is a safe process. All equipment is sterile and used only once.</p>
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">Hiến máu có an toàn không?</h3>
+              <p className="text-gray-600">Có! Hiến máu là một quá trình an toàn. Tất cả các thiết bị đều được tiệt trùng và chỉ sử dụng một lần.</p>
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">What should I do before donating?</h3>
-              <p className="text-gray-600">Eat a healthy meal, drink plenty of water, and bring a photo ID. Avoid strenuous activity before and after donating.</p>
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">Tôi nên làm gì trước khi hiến máu?</h3>
+              <p className="text-gray-600">Ăn một bữa ăn lành mạnh, uống nhiều nước và mang theo giấy tờ tùy thân có ảnh. Tránh hoạt động gắng sức trước và sau khi hiến máu.</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-3 mb-6">
-              <div className="p-2 bg-red-500 rounded-full">
-                <Heart className="h-8 w-8 text-white" />
-              </div>
-              <span className="text-3xl font-bold">Blood Care</span>
-            </div>
-            <p className="text-gray-400 text-lg mb-6">
-              Every drop counts - Join our life-saving community
-            </p>
-            <div className="flex justify-center space-x-8 text-sm text-gray-400 mb-6">
-              <Link to="/about" className="hover:text-white transition-colors duration-300">About Us</Link>
-              <Link to="/blog" className="hover:text-white transition-colors duration-300">Blog</Link>
-              <Link to="/register" className="hover:text-white transition-colors duration-300">Register</Link>
-            </div>
-            <div className="flex justify-center space-x-4 mb-8">
-              <a href="#" className="hover:text-red-400"><Facebook className="h-6 w-6" /></a>
-              <a href="#" className="hover:text-red-400"><Twitter className="h-6 w-6" /></a>
-              <a href="#" className="hover:text-red-400"><Instagram className="h-6 w-6" /></a>
-            </div>
-            <div className="mt-8 pt-8 border-t border-gray-800 text-gray-500">
-              <p>&copy; 2024 Blood Care. All rights reserved. Making a difference, one donation at a time.</p>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       {/* Custom CSS for animations */}
       <style>{`

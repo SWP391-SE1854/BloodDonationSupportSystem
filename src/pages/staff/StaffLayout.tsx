@@ -1,5 +1,5 @@
 import React from 'react';
-import { HeartPulse, User, LogOut, Home, Droplet, Newspaper, History, LayoutDashboard, ClipboardList, Heart, FlaskConical } from 'lucide-react';
+import { HeartPulse, User, LogOut, Home, Droplet, Newspaper, History, LayoutDashboard, ClipboardList, Heart, FlaskConical, BarChart } from 'lucide-react';
 
 interface StaffLayoutProps {
   children: React.ReactNode;
@@ -11,13 +11,13 @@ interface StaffLayoutProps {
 
 const StaffLayout = ({ children, currentPage, onNavigate, onLogout, userName }: StaffLayoutProps) => {
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'donations', label: 'Donation Management', icon: Heart },
-    { id: 'requests', label: 'Blood Requests', icon: ClipboardList },
-    { id: 'inventory', label: 'Blood Inventory', icon: FlaskConical },
-    { id: 'history', label: 'Donation History', icon: History },
-    { id: 'records', label: 'Health Records', icon: Newspaper },
-    { id: 'profile', label: 'Profile', icon: User },
+    { id: 'dashboard', label: 'Bảng điều khiển', icon: LayoutDashboard },
+    { id: 'donations', label: 'Quản lý Hiến máu', icon: Heart },
+    { id: 'requests', label: 'Yêu cầu máu', icon: ClipboardList },
+    { id: 'inventory', label: 'Kho máu', icon: FlaskConical },
+    { id: 'history', label: 'Lịch sử hiến máu', icon: History },
+    { id: 'records', label: 'Hồ sơ sức khỏe', icon: Newspaper },
+    { id: 'profile', label: 'Hồ sơ', icon: User },
   ];
 
   return (
@@ -59,7 +59,7 @@ const StaffLayout = ({ children, currentPage, onNavigate, onLogout, userName }: 
         {/* User info and logout at bottom */}
         <div className="p-4 border-t border-purple-100">
           <div className="text-center mb-3 p-2 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-500">Logged in as</p>
+            <p className="text-xs text-gray-500">Đăng nhập với tư cách</p>
             <p className="text-sm font-medium text-gray-700 truncate">{userName}</p>
           </div>
           <button
@@ -67,7 +67,7 @@ const StaffLayout = ({ children, currentPage, onNavigate, onLogout, userName }: 
             className="w-full flex items-center justify-center space-x-2 px-3 py-2 text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
           >
             <LogOut className="h-4 w-4" />
-            <span>Logout</span>
+            <span>Đăng xuất</span>
           </button>
         </div>
       </div>

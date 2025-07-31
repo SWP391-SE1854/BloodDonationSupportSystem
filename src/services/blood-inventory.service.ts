@@ -25,8 +25,26 @@ export class BloodInventoryService {
         return response.data;
     }
 
+    static async createFromDonation(donationId: number, bloodTypeString: string, components: Array<{ component: string; quantity: number }>): Promise<void> {
+        const creationPromises = components.map(comp => {
+            const payload: Partial<BloodInventoryUnit> = {
+                donation_id: donationId,
+                blood_type: bloodTypeString, // Use the string directly
+                component: comp.component,
+                quantity: comp.quantity,
+                status: 'Available',
+                expiration_date: new Date(new Date().setDate(new Date().getDate() + 42)).toISOString(),
+            };
+            return this.create(payload);
+        });
+
+        await Promise.all(creationPromises);
+    }
+
     static async update(id: number, unitData: Partial<BloodInventoryUnit>): Promise<BloodInventoryUnit> {
-        const response = await api.put(API_ENDPOINTS.BLOOD_INVENTORY.UPDATE(id), unitData);
+        const response = await api.put(API_ENDPOINTS.BLOOD_INVENTORY.UPDATE, unitData, {
+            params: { id }
+        });
         return response.data;
     }
 

@@ -163,16 +163,16 @@ const Register = () => {
       }));
       
       toast({
-        title: "Success",
-        description: "Google sign-up successful!",
+        title: "Thành công",
+        description: "Đăng ký bằng Google thành công!",
       });
       
       navigate('/profile');
     } catch (error) {
       console.error('Google sign-up failed:', error);
-      const errorMessage = error instanceof Error ? error.message : "An error occurred during sign-up";
+      const errorMessage = error instanceof Error ? error.message : "Đã xảy ra lỗi khi đăng ký";
       toast({
-        title: "Sign-up Failed",
+        title: "Đăng ký thất bại",
         description: errorMessage,
         variant: "destructive"
       });
@@ -202,17 +202,17 @@ const Register = () => {
       });
       
       toast({
-        title: "Success",
-        description: "Your account has been created successfully. Please log in.",
+        title: "Thành công",
+        description: "Tài khoản của bạn đã được tạo thành công. Vui lòng đăng nhập.",
       });
 
       navigate('/login');
       
     } catch (error: unknown) {
       console.error('Registration failed:', error);
-      const errorMessage = error instanceof Error ? error.message : "An error occurred during registration";
+      const errorMessage = error instanceof Error ? error.message : "Đã xảy ra lỗi khi đăng ký";
       toast({
-        title: "Registration Failed",
+        title: "Đăng ký thất bại",
         description: errorMessage,
         variant: "destructive"
       });
@@ -222,33 +222,38 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-red-50 flex items-center justify-center py-8 px-4">
+    <div className="min-h-screen flex items-center justify-center py-4 px-2 relative overflow-hidden">
+      {/* Subtle animated gradient background */}
+      <div className="absolute inset-0 z-0 animate-gradient bg-gradient-to-br from-pink-100 via-red-100 to-pink-200 opacity-80" />
       <NavigationBar fixed />
 
-      <div className="w-full max-w-2xl mt-16">
+      <div className="w-full max-w-2xl mt-16 z-10">
         <Card className="shadow-2xl border-0">
           <CardHeader className="text-center bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-t-lg">
             <CardTitle className="text-2xl font-bold flex items-center justify-center space-x-2">
               <Heart className="h-6 w-6" />
               <span>Blood Care</span>
             </CardTitle>
-            <p className="text-red-100">Every drop counts - Join our life saving community</p>
+            <p className="text-red-100">Mỗi giọt máu cho đi - Tham gia cộng đồng cứu người của chúng tôi</p>
           </CardHeader>
           <CardContent className="p-8 bg-white">
-            <h2 className="text-xl font-semibold mb-6 text-center">Create Account</h2>
-            <p className="text-center text-gray-600 mb-6">Join our community of blood donors</p>
+            <h2 className="text-xl font-semibold mb-6 text-center">Tạo tài khoản</h2>
+            <p className="text-center text-gray-600 mb-6">Tham gia cộng đồng hiến máu của chúng tôi</p>
 
             <form onSubmit={handleSubmit} className="space-y-4 mt-6">
               <div className="grid grid-cols-1 gap-4">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <User className="h-4 w-4 text-red-500" />
-                    <Label htmlFor="name">Full Name</Label>
+                    <Label htmlFor="name">Họ và tên</Label>
                   </div>
                   <Input
                     id="name"
+                    type="text"
+                    autoComplete="name"
+                    placeholder="Nhập họ và tên của bạn"
                     value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
                     onBlur={(e) => handleInputBlur("name", e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, "email")}
                   />
@@ -256,7 +261,7 @@ const Register = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Mail className="h-4 w-4 text-red-500" />
@@ -264,9 +269,11 @@ const Register = () => {
                   </div>
                   <Input
                     id="email"
-                    type="text"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="Nhập email của bạn"
                     value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
                     onBlur={(e) => handleInputBlur("email", e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, "phone")}
                   />
@@ -275,12 +282,15 @@ const Register = () => {
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Phone className="h-4 w-4 text-red-500" />
-                    <Label htmlFor="phone">Phone Number</Label>
+                    <Label htmlFor="phone">Số điện thoại</Label>
                   </div>
                   <Input
                     id="phone"
+                    type="tel"
+                    autoComplete="tel"
+                    placeholder="Nhập số điện thoại của bạn"
                     value={formData.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
                     onBlur={(e) => handleInputBlur("phone", e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, "dateOfBirth")}
                     maxLength={10}
@@ -289,49 +299,56 @@ const Register = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Calendar className="h-4 w-4 text-red-500" />
-                    <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                  <Label htmlFor="dateOfBirth">Ngày sinh</Label>
                   </div>
                   <Input
                     id="dateOfBirth"
                     type="date"
                     value={formData.dateOfBirth}
-                    onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
+                  onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
                     onBlur={(e) => handleInputBlur("dateOfBirth", e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, "address")}
+                  className={errors.dateOfBirth ? "border-red-500" : ""}
                   />
-                  {errors.dateOfBirth && <p className="text-red-500 text-xs mt-1">{errors.dateOfBirth}</p>}
-                </div>
+                {errors.dateOfBirth && (
+                  <p className="text-red-500 text-xs mt-1">{errors.dateOfBirth}</p>
+                )}
               </div>
 
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <MapPin className="h-4 w-4 text-red-500" />
-                  <Label htmlFor="address">Address</Label>
+                  <Label htmlFor="address">Địa chỉ</Label>
                 </div>
                 <Input
                   id="address"
+                  type="text"
+                  autoComplete="street-address"
+                  placeholder="Nhập địa chỉ của bạn"
                   value={formData.address}
-                  onChange={(e) => handleInputChange("address", e.target.value)}
+                  onChange={(e) => handleInputChange('address', e.target.value)}
                   onBlur={(e) => handleInputBlur("address", e.target.value)}
                   onKeyDown={(e) => handleKeyDown(e, "city")}
                 />
                 {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Building2 className="h-4 w-4 text-red-500" />
-                    <Label htmlFor="city">City</Label>
+                    <Label htmlFor="city">Tỉnh/Thành phố</Label>
                   </div>
                   <Input
                     id="city"
+                    type="text"
+                    autoComplete="address-level2"
+                    placeholder="Nhập tỉnh/thành phố"
                     value={formData.city}
-                    onChange={(e) => handleInputChange("city", e.target.value)}
+                    onChange={(e) => handleInputChange('city', e.target.value)}
                     onBlur={(e) => handleInputBlur("city", e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, "district")}
                   />
@@ -340,12 +357,15 @@ const Register = () => {
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <MapPinned className="h-4 w-4 text-red-500" />
-                    <Label htmlFor="district">District</Label>
+                    <Label htmlFor="district">Quận/Huyện</Label>
                   </div>
                   <Input
                     id="district"
+                    type="text"
+                    autoComplete="address-level3"
+                    placeholder="Nhập quận/huyện"
                     value={formData.district}
-                    onChange={(e) => handleInputChange("district", e.target.value)}
+                    onChange={(e) => handleInputChange('district', e.target.value)}
                     onBlur={(e) => handleInputBlur("district", e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, "password")}
                   />
@@ -353,17 +373,19 @@ const Register = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Lock className="h-4 w-4 text-red-500" />
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password">Mật khẩu</Label>
                   </div>
                   <Input
                     id="password"
                     type="password"
+                    autoComplete="new-password"
+                    placeholder="Nhập mật khẩu"
                     value={formData.password}
-                    onChange={(e) => handleInputChange("password", e.target.value)}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
                     onBlur={(e) => handleInputBlur("password", e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, "confirmPassword")}
                   />
@@ -372,13 +394,15 @@ const Register = () => {
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Lock className="h-4 w-4 text-red-500" />
-                    <Label htmlFor="confirmPassword">Confirm Password</Label>
+                    <Label htmlFor="confirmPassword">Xác nhận mật khẩu</Label>
                   </div>
                   <Input
                     id="confirmPassword"
                     type="password"
+                    autoComplete="new-password"
+                    placeholder="Nhập lại mật khẩu"
                     value={formData.confirmPassword}
-                    onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                     onBlur={(e) => handleInputBlur("confirmPassword", e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e)}
                   />
@@ -386,61 +410,60 @@ const Register = () => {
                 </div>
               </div>
 
+              <div className="mt-6">
               <Button
                 type="submit"
-                className="w-full bg-red-500 hover:bg-red-600 text-white py-3 text-lg font-semibold"
+                  className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold py-3"
                 disabled={isLoading}
               >
-                {isLoading ? "Creating Account..." : "Create Account"}
+                  {isLoading ? "Đang đăng ký..." : "Đăng ký"}
               </Button>
+              </div>
+            </form>
 
-              <div className="relative">
+            <div className="mt-6 relative">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-gray-500">Or continue with</span>
-                </div>
+                <span className="bg-white px-2 text-gray-500">Hoặc tiếp tục với</span>
               </div>
-
+            </div>
               <Button
-                type="button"
                 variant="outline"
-                className="w-full flex items-center justify-center gap-2"
+              className="w-full mt-6 flex items-center justify-center gap-2"
                 onClick={handleGoogleSignUp}
                 disabled={isLoading}
               >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <svg className="h-5 w-5" viewBox="0 0 24 24">
                   <path
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    fill="#4285F4"
-                  />
-                  <path
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    fill="#34A853"
-                  />
-                  <path
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                    fill="#FBBC05"
-                  />
-                  <path
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                    fill="#EA4335"
+                  fill="currentColor"
+                  d="M21.35,11.1H12.18V13.83H18.69C18.36,17.64 15.19,19.27 12.19,19.27C8.36,19.27 5,16.25 5,12C5,7.9 8.2,5 12,5C14.5,5 16.22,6.17 17.06,6.96L19.5,4.55C17.27,2.56 14.75,1.73 12,1.73C6.36,1.73 2,6.5 2,12C2,17.5 6.36,22.27 12,22.27C17.63,22.27 21.72,17.9 21.72,12.34C21.72,11.77 21.5,11.1 21.35,11.1Z"
                   />
                 </svg>
-                Continue with Google
+              Google
               </Button>
 
-              <p className="text-center text-sm text-gray-600">
-                Already have an account?{" "}
-                <Link to="/login" className="text-red-500 hover:text-red-600 font-medium">
-                  Login here
+            <p className="mt-6 text-center text-sm">
+              Đã có tài khoản?{" "}
+              <Link to="/login" className="font-semibold text-red-500 hover:text-red-600">
+                Đăng nhập
                 </Link>
               </p>
-            </form>
           </CardContent>
         </Card>
       </div>
+      <style>{`
+        @keyframes gradient {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .animate-gradient {
+          background-size: 200% 200%;
+          animation: gradient 8s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 };
