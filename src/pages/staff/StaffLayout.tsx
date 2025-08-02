@@ -1,5 +1,5 @@
 import React from 'react';
-import { HeartPulse, User, LogOut, Home, Droplet, Newspaper, History, LayoutDashboard, ClipboardList, Heart, FlaskConical, BarChart } from 'lucide-react';
+import { HeartPulse, User, LogOut, Home, Droplet, Newspaper, History, LayoutDashboard, ClipboardList, Heart, FlaskConical, BarChart, CheckSquare } from 'lucide-react';
 
 interface StaffLayoutProps {
   children: React.ReactNode;
@@ -13,6 +13,7 @@ const StaffLayout = ({ children, currentPage, onNavigate, onLogout, userName }: 
   const menuItems = [
     { id: 'dashboard', label: 'Bảng điều khiển', icon: LayoutDashboard },
     { id: 'donations', label: 'Quản lý Hiến máu', icon: Heart },
+    { id: 'checkin', label: 'Check-in Hiến máu', icon: CheckSquare },
     { id: 'requests', label: 'Yêu cầu máu', icon: ClipboardList },
     { id: 'inventory', label: 'Kho máu', icon: FlaskConical },
     { id: 'history', label: 'Lịch sử hiến máu', icon: History },
