@@ -67,7 +67,11 @@ namespace BloodDonationSystem.Presentation.Controllers.BloodRequestController
                 {
                     return BadRequest(new { Message = "Vui lòng nhập số lượng người đi hiến máu hợp lệ (> 0)." });
                 }
-
+               
+                if (string.IsNullOrWhiteSpace(request.location_donate))
+                {
+                    return BadRequest(new { Message = "Vui lòng chọn địa điểm đi hiến máu." });
+                }
             }
 
             await _bloodRequestRepository.AddAsync(request);
@@ -104,9 +108,15 @@ namespace BloodDonationSystem.Presentation.Controllers.BloodRequestController
                     return BadRequest(new { Message = "Vui lòng nhập số lượng người hiến máu hợp lệ (> 0)." });
                 }
 
+                if (string.IsNullOrWhiteSpace(updatedRequest.location_donate))
+                {
+                    return BadRequest(new { Message = "Vui lòng chọn địa điểm đi hiến máu." });
+                }
+
                 existingRequest.request_date = updatedRequest.request_date;
                 existingRequest.end_date = updatedRequest.end_date;
                 existingRequest.donor_count = updatedRequest.donor_count;
+                existingRequest.location_donate = updatedRequest.location_donate;
             }
             await _bloodRequestRepository.UpdateAsync(existingRequest);
             return Ok(existingRequest);
