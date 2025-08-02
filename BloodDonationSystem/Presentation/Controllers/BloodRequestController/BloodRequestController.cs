@@ -46,7 +46,30 @@ namespace BloodDonationSystem.Presentation.Controllers.BloodRequestController
         public async Task<IActionResult> Create([FromBody] BloodRequest request)
         {
             if (request.emergency_status)
+            {
                 request.request_date = DateTime.Now;
+                request.end_date = DateTime.Now.AddDays(2);
+            }
+            else
+            {
+                
+                if (request.request_date == default || request.end_date == default)
+                {
+                    return BadRequest(new { Message = "Phải nhập ngày bắt đầu và kết thúc." });
+                }
+
+                if (request.end_date <= request.request_date)
+                {
+                    return BadRequest(new { Message = "Ngày kết thúc phải sau ngày bắt đầu." });
+                }
+
+                if (request.donor_count <= 0)
+                {
+                    return BadRequest(new { Message = "Vui lòng nhập số lượng người đi hiến máu hợp lệ (> 0)." });
+                }
+
+            }
+
             await _bloodRequestRepository.AddAsync(request);
             return Ok(request);
         }
@@ -63,8 +86,28 @@ namespace BloodDonationSystem.Presentation.Controllers.BloodRequestController
             existingRequest.user_id = updatedRequest.user_id;
             existingRequest.blood_id = updatedRequest.blood_id;
             existingRequest.emergency_status = updatedRequest.emergency_status;
-            existingRequest.request_date = DateTime.Now;
           
+            if (updatedRequest.emergency_status)
+            {
+                existingRequest.request_date = DateTime.Now;
+                existingRequest.end_date = DateTime.Now.AddDays(2);
+            }
+            else
+            {
+                if (updatedRequest.end_date <= updatedRequest.request_date)
+                {
+                    return BadRequest(new { Message = "Ngày kết thúc phải sau ngày bắt đầu." });
+                }
+                
+                if (updatedRequest.donor_count <= 0)
+                {
+                    return BadRequest(new { Message = "Vui lòng nhập số lượng người hiến máu hợp lệ (> 0)." });
+                }
+
+                existingRequest.request_date = updatedRequest.request_date;
+                existingRequest.end_date = updatedRequest.end_date;
+                existingRequest.donor_count = updatedRequest.donor_count;
+            }
             await _bloodRequestRepository.UpdateAsync(existingRequest);
             return Ok(existingRequest);
         }
