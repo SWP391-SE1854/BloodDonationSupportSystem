@@ -8,6 +8,9 @@ export interface User {
   bloodType?: string;
   location?: string;
   phoneNumber?: string;
+  address?: string;
+  city?: string;
+  district?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -44,6 +47,7 @@ export interface BloodRequest {
   status: 'Pending' | 'In Progress' | 'Completed';
   contactPhone: string;
   assignedDonorId?: string;
+  location_donate?: string;
   createdAt: string;
   updatedAt: string;
 }

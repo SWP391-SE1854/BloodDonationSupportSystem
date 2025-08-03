@@ -2,12 +2,6 @@ import api from './api.service';
 import { API_ENDPOINTS } from './api.config';
 import axios from 'axios';
 import { Donation } from '@/types/api';
-import { BloodInventoryService } from './blood-inventory.service';
-
-const bloodTypeMap: { [key: string]: number } = {
-  'A+': 1, 'A-': 2, 'B+': 3, 'B-': 4,
-  'AB+': 5, 'AB-': 6, 'O+': 7, 'O-': 8,
-};
 
 // CreateDonationPayload is a subset of the full Donation object
 export type CreateDonationPayload = {
@@ -80,14 +74,22 @@ export class DonationService {
 
   static async getMemberDonations(): Promise<Donation[]> {
     try {
-      // Corrected endpoint to fetch member's donation history.
-      const response = await api.get<{ $values: Donation[] }>(API_ENDPOINTS.DONATION_HISTORY.GET_MEMBER_HISTORY);
+      const response = await api.get<{ $values: Donation[] }>(API_ENDPOINTS.DONATION.GET_MEMBER_DONATIONS);
       return response.data?.$values || response.data || [];
     } catch (error) {
       console.error('Error fetching member donations:', error);
       throw error;
     }
   }
+
+  static async cancelMemberDonation(id: number): Promise<void> {
+    try {
+      await api.put(API_ENDPOINTS.DONATION.CANCEL_MEMBER_DONATION(id));
+    } catch (error) {
+      console.error('Error cancelling member donation:', error);
+      throw error;
+    }
+  }
 }
 
-export default DonationService; 
+export default DonationService;
