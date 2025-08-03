@@ -90,6 +90,21 @@ export class DonationService {
       throw error;
     }
   }
+
+  static async updateDonationStatus(donationId: number, status: string): Promise<Donation> {
+    try {
+      const response = await api.put<Donation>(API_ENDPOINTS.DONATION.UPDATE, {
+        donation_id: donationId,
+        status: status
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error(`Error updating donation status ${donationId}:`, error.message);
+      }
+      throw error;
+    }
+  }
 }
 
 export default DonationService;

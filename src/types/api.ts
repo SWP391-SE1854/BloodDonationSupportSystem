@@ -148,7 +148,7 @@ export interface Donation {
     donation_date: string;
     donation_time?: string;
     note?: string;
-    status: 'Pending' | 'Approved' | 'Completed' | 'Rejected' | 'Cancelled' | 'Processed';
+    status: 'Pending' | 'Approved' | 'Completed' | 'Rejected' | 'Cancelled' | 'Processed' | 'CheckedIn';
     location?: string;
     component?: string;
     rejection_reason?: string;
