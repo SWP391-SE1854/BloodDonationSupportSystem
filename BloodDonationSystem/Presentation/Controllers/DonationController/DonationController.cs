@@ -62,9 +62,32 @@ namespace BloodDonationSystem.Presentation.Controllers.DonationController
                 return Unauthorized(new { Message = "Token không hợp lệ hoặc thiếu thông tin." });
 
             newDonation.user_id = userId;
+            if (string.IsNullOrWhiteSpace(newDonation.start_time) || string.IsNullOrWhiteSpace(newDonation.end_time))
+                return BadRequest(new { Message = "Vui lòng nhập thời gian bắt đầu và kết thúc." });
+
             await _donationRepository.AddAsync(newDonation);
             return Ok(newDonation);
         }
+
+        // [GET] Lấy danh sách yêu cầu hiến máu của thành viên hiện tại
+        // [GET] Lấy danh sách donation của thành viên hiện tại
+        [Authorize(Roles = "Member")]
+        [HttpGet("my-donations")]
+        public async Task<IActionResult> GetMyDonations()
+        {
+            
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.Claims.FirstOrDefault(c => c.Type == "user_id");
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                return Unauthorized(new { Message = "Không xác định được người dùng." });
+
+            var allDonations = await _donationRepository.GetAllAsync();
+            var myDonations = allDonations.Where(d => d.user_id == userId).ToList();
+            return Ok(myDonations);
+        }
+
+
+
+
 
         [Authorize(Policy = "StaffOnly")]
         [HttpPut("staff")]
