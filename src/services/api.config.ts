@@ -46,6 +46,9 @@ export const API_ENDPOINTS = {
     GET_ALL: '/donation/all',
     GET_BY_STATUS: '/donation/status',
     UPDATE: '/donation/staff',
+    GET_MEMBER_DONATIONS: '/donation/users',
+    CANCEL_MEMBER_DONATION: (id: number) => `/donation/member/cancel/${id}`,
+    CREATE_HISTORY: '/donation/history',
   },
   
   // Donation History endpoints
@@ -66,37 +69,6 @@ export const API_ENDPOINTS = {
     DELETE: (id: number) => `/bloodrequest/delete/${id}`,
     GET_MEMBER_REQUESTS: '/bloodrequest/member'
   },
-  
-  // Location endpoints
-  LOCATION: {
-    GET_ALL: '/location/all',
-    CREATE: '/location/new',
-    UPDATE_MEMBER: '/location/member/update',
-    DETAILS: (id: string) => `/locations/${id}`,
-    UPDATE: (id: string) => `/locations/${id}`,
-    DELETE: (id: string) => `/locations/${id}`,
-  },
-  
-  // Statistics endpoints
-  STATISTICS: {
-    DASHBOARD: '/statistics/dashboard',
-    DONATIONS: '/statistics/donations',
-    REQUESTS: '/statistics/requests',
-  },
-
-  // Blood Bank endpoints
-  GET_BLOOD_BANKS: '/bloodbank',
-  GET_BLOOD_BANK_BY_ID: (id: number) => `/bloodbank/${id}`,
-  CREATE_BLOOD_BANK: '/bloodbank',
-  UPDATE_BLOOD_BANK: (id: number) => `/bloodbank/${id}`,
-  DELETE_BLOOD_BANK: (id: number) => `/bloodbank/${id}`,
-
-  // Campaign endpoints
-  GET_CAMPAIGNS: '/campaign',
-  GET_CAMPAIGN_BY_ID: (id: number) => `/campaign/${id}`,
-  CREATE_CAMPAIGN: '/campaign',
-  UPDATE_CAMPAIGN: (id: number) => `/campaign/${id}`,
-  DELETE_CAMPAIGN: (id: number) => `/campaign/${id}`,
 
   // Health Record endpoints
   HEALTH_RECORD: {
@@ -131,4 +103,4 @@ export const API_ENDPOINTS = {
     DISMISS: (id: string) => `/notifications/${id}/dismiss`,
     SEND_PROBLEM_REPORT: '/notification/send'
   },
-}; 
+};
