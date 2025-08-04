@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { useToast } from "@/components/ui/use-toast";
 import { DonationService } from "@/services/donation.service";
 import { Donation } from "@/types/api";
-import { Heart, Calendar as CalendarIcon, FileText, Send, Clock, CheckCircle, AlertCircle, Stethoscope, HeartPulse } from 'lucide-react';
+import { Heart, Calendar as CalendarIcon, FileText, Send, Clock, CheckCircle, AlertCircle, Stethoscope, HeartPulse, XCircle } from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -18,7 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { HealthRecordService, HealthRecord } from '@/services/health-record.service';
 import { DonationHistoryService } from '@/services/donation-history.service';
-import { DonationHistoryEntry } from '@/utils/donationConstants';
+import { DonationHistoryRecord } from '@/services/donation-history.service';
 import { isEligibleToDonate } from '@/utils/healthValidation';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -82,40 +82,26 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
   const [activeDonations, setActiveDonations] = useState<Donation[]>([]);
   const [isFetching, setIsFetching] = useState(true);
   const [healthRecord, setHealthRecord] = useState<HealthRecord | null>(null);
-  const [donationHistory, setDonationHistory] = useState<DonationHistoryEntry[]>([]);
+  const [donationHistory, setDonationHistory] = useState<DonationHistoryRecord[]>([]);
   const [isEligible, setIsEligible] = useState<boolean | null>(null);
   const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
   const [selectedMedications, setSelectedMedications] = useState<string[]>([]);
+  const [selectedPermanentDisqualifications, setSelectedPermanentDisqualifications] = useState<string[]>([]);
+  const [selectedTemporaryDisqualifications, setSelectedTemporaryDisqualifications] = useState<string[]>([]);
+  const [showHealthWarning, setShowHealthWarning] = useState(false);
 
   // ==================== Time Slots Configuration ====================
   const timeSlots = Array.from({ length: 10 }, (_, i) => {
-    const hour = i + 8; // 8 AM to 5 PM
-    return [`${hour}:00`, `${hour}:30`];
+    const hour = i + 8;
+    return [`${hour}:00 - ${hour}:30`, `${hour}:30 - ${hour + 1}:00`];
   }).flat();
 
-  // ==================== Data Fetching Logic ====================
-  const fetchMemberDonations = useCallback(async () => {
-    setIsFetching(true);
-    try {
-      const allDonations = await DonationService.getMemberDonations();
-      setActiveDonations(allDonations.filter((d: Donation) => d.status === 'Pending' || d.status === 'Approved'));
-    } catch (error) {
-      toast({
-        title: "Lỗi",
-        description: "Không thể tải các yêu cầu hiến máu đang hoạt động của bạn.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsFetching(false);
-    }
-  }, [toast]);
+  // ==================== Check for Auto-Rejection ====================
+  const hasAutoRejectionConditions = selectedPermanentDisqualifications.length > 0;
+  const autoRejectionReasons = selectedPermanentDisqualifications.map(id => 
+    permanentDisqualifications.find(item => item.id === id)?.label
+  ).filter(Boolean);
 
-  // ==================== Effects ====================
-  useEffect(() => {
-    if (!onClose) {
-      fetchMemberDonations();
-    }
-  }, [fetchMemberDonations, onClose]);
 
   useEffect(() => {
     const checkEligibility = async () => {
@@ -130,7 +116,7 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
         const currentHistory = isWrapped(historyResponse) ? historyResponse.$values : historyResponse;
         
         setHealthRecord(currentRecord as HealthRecord);
-        setDonationHistory(currentHistory as DonationHistoryEntry[] || []);
+        setDonationHistory(currentHistory as DonationHistoryRecord[] || []);
 
         if (!currentRecord) {
           setIsEligible(false);
@@ -186,12 +172,31 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
       }
 
       // Step 2: Create the donation request
+      const disqualificationReasons = [
+        ...selectedPermanentDisqualifications.map(id => 
+          permanentDisqualifications.find(item => item.id === id)?.label
+        ).filter(Boolean),
+        ...selectedTemporaryDisqualifications.map(id => 
+          temporaryDisqualifications.find(item => item.id === id)?.label
+        ).filter(Boolean)
+      ];
+
       const donationData = {
         donation_date: format(donationDate, 'yyyy-MM-dd'),
         donation_time: donationTime,
-        note: note,
+        note: note + (disqualificationReasons.length > 0 ? `\n\nĐiều kiện sức khỏe cần lưu ý:\n${disqualificationReasons.join(', ')}` : ''),
       };
+
+      // Create the donation request
       await DonationService.createDonation(donationData);
+
+      // Note: The system will automatically handle rejection based on health conditions
+      // Staff will review and make the final decision
+
+      // Show health warning if there are permanent disqualifications
+      if (hasAutoRejectionConditions) {
+        setShowHealthWarning(true);
+      }
 
       toast({
         title: "Gửi yêu cầu thành công!",
@@ -202,12 +207,10 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
       setDonationDate(eventDate);
       setDonationTime('');
       setNote('');
+      setSelectedPermanentDisqualifications([]);
+      setSelectedTemporaryDisqualifications([]);
       // We don't reset allergies and medication, as they are part of the health record now
 
-      if (!onClose) {
-        fetchMemberDonations();
-      }
-      onClose?.();
 
     } catch (error) {
       console.error("Failed to create donation:", error);
@@ -230,6 +233,18 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
 
     const handleMedicationChange = (id: string, checked: boolean) => {
         setSelectedMedications(prev =>
+            checked ? [...prev, id] : prev.filter(item => item !== id)
+        );
+    };
+
+    const handlePermanentDisqualificationChange = (id: string, checked: boolean) => {
+        setSelectedPermanentDisqualifications(prev =>
+            checked ? [...prev, id] : prev.filter(item => item !== id)
+        );
+    };
+
+    const handleTemporaryDisqualificationChange = (id: string, checked: boolean) => {
+        setSelectedTemporaryDisqualifications(prev =>
             checked ? [...prev, id] : prev.filter(item => item !== id)
         );
     };
@@ -395,6 +410,76 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
           </div>
       </div>
 
+      {/* Disqualification Reasons Section */}
+      <div className="space-y-4 rounded-lg border bg-yellow-50 p-4">
+          <div className="flex items-center gap-2">
+              <XCircle className="h-5 w-5 text-yellow-600" />
+              <h3 className="text-lg font-semibold text-gray-800">Bạn có mắc các bệnh lý sau đây không?</h3>
+          </div>
+          <div className="space-y-4">
+              <div className="space-y-2">
+                  <Label className="font-semibold text-red-700">Bệnh lý nghiêm trọng:</Label>
+                  <div className="grid grid-cols-1 gap-2">
+                      {permanentDisqualifications.map(item => (
+                          <div key={item.id} className="flex items-center space-x-2">
+                              <Checkbox
+                                  id={`permanent-disqualification-${item.id}`}
+                                  checked={selectedPermanentDisqualifications.includes(item.id)}
+                                  onCheckedChange={(checked) => handlePermanentDisqualificationChange(item.id, !!checked)}
+                              />
+                              <label htmlFor={`permanent-disqualification-${item.id}`} className="text-sm font-medium">
+                                  {item.label}
+                              </label>
+                          </div>
+                      ))}
+                  </div>
+              </div>
+              <div className="space-y-2">
+                  <Label className="font-semibold text-orange-700">Bệnh lý khác:</Label>
+                  <div className="grid grid-cols-1 gap-2">
+                      {temporaryDisqualifications.map(item => (
+                          <div key={item.id} className="flex items-center space-x-2">
+                              <Checkbox
+                                  id={`temporary-disqualification-${item.id}`}
+                                  checked={selectedTemporaryDisqualifications.includes(item.id)}
+                                  onCheckedChange={(checked) => handleTemporaryDisqualificationChange(item.id, !!checked)}
+                              />
+                              <label htmlFor={`temporary-disqualification-${item.id}`} className="text-sm font-medium">
+                                  {item.label}
+                              </label>
+                          </div>
+                      ))}
+                  </div>
+              </div>
+          </div>
+      </div>
+
+      {/* Health Conditions Warning - Only show after submission */}
+      {showHealthWarning && (
+        <Alert variant="default" className="border-orange-200 bg-orange-50">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-2">
+              <XCircle className="h-4 w-4 text-orange-600 mt-0.5" />
+              <div>
+                <AlertTitle className="text-orange-800">Lưu ý về điều kiện sức khỏe</AlertTitle>
+                <AlertDescription className="text-orange-700">
+                  Bạn đã khai báo các điều kiện sức khỏe: {autoRejectionReasons.join(', ')}. 
+                  Yêu cầu hiến máu của bạn có thể bị từ chối dựa trên các điều kiện sức khỏe này.
+                </AlertDescription>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowHealthWarning(false)}
+              className="text-orange-600 hover:text-orange-800"
+            >
+              ×
+            </Button>
+          </div>
+        </Alert>
+      )}
+
       {/* Form Actions */}
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onClose}>Hủy</Button>
@@ -443,43 +528,6 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
         </CardContent>
       </Card>
 
-      {/* Active Donations List */}
-      {!onClose && (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Các yêu cầu hiến máu đang hoạt động của bạn</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isFetching ? (
-              <div className="text-center">Đang tải...</div>
-            ) : activeDonations.length === 0 ? (
-              <div className="text-center text-gray-500">Không có yêu cầu hiến máu nào đang hoạt động</div>
-            ) : (
-              <div className="space-y-4">
-                {activeDonations.map((donation) => (
-                  <Card key={donation.donation_id}>
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="text-sm text-gray-500 mt-1">
-                            Trạng thái:{' '}
-                            <Badge variant={getStatusBadgeVariant(donation.status)}>
-                                {statusTranslations[donation.status]}
-                            </Badge>
-                          </p>
-                          {donation.note && (
-                            <p className="text-sm text-gray-600 mt-2">Ghi chú: {donation.note}</p>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

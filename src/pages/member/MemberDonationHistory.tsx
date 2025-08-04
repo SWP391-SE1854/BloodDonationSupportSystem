@@ -1,11 +1,11 @@
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import DonationHistoryService, { DonationHistoryRecord } from '@/services/donation-history.service';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useMemo } from 'react';
+import { DonationHistoryService, DonationHistoryRecord } from '@/services/donation-history.service';
 
 type DonationHistoryServerResponse = DonationHistoryRecord[] | { $values: DonationHistoryRecord[] };
 
@@ -57,17 +57,17 @@ const MemberDonationHistory = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Lịch Sử Hiến Máu Của Tôi</CardTitle>
+        <CardTitle>Lịch sử hiến máu</CardTitle>
         <p className="text-sm text-muted-foreground">Hồ sơ về các hoạt động hiến máu đã qua của bạn.</p>
       </CardHeader>
       <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>ID Lịch sử</TableHead>
                 <TableHead>Ngày</TableHead>
-                <TableHead>Địa điểm</TableHead>
-              <TableHead>Số lượng (ml)</TableHead>
-              <TableHead>Trạng thái</TableHead>
+                <TableHead>Số lượng (ml)</TableHead>
+                <TableHead>Trạng thái</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -79,10 +79,10 @@ const MemberDonationHistory = () => {
               ))
             ) : donations && donations.length > 0 ? (
               donations.map((donation) => (
-                <TableRow key={donation.donation_id}>
+                <TableRow key={donation.history_id}>
+                  <TableCell>#{donation.history_id}</TableCell>
                   <TableCell>{new Date(donation.donation_date).toLocaleDateString()}</TableCell>
-                  <TableCell>{donation.location}</TableCell>
-                  <TableCell>{donation.quantity}</TableCell>
+                  <TableCell>{donation.bloodInventory?.quantity || 0}</TableCell>
                   <TableCell>
                     <Badge variant={getStatusBadgeVariant(donation.status)}>
                       {statusTranslations[donation.status] || donation.status}

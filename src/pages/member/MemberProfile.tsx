@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import UserService, { UserProfile, UpdateUserProfile } from '@/services/user.service';
 import { profileUpdateSchema } from '@/lib/validations';
@@ -101,7 +102,7 @@ const MemberProfile = () => {
         dob: formData.dob ? new Date(formData.dob).toISOString() : '',
       };
 
-      const updatedProfile = await UserService.updateMemberProfile(updateData);
+      const updatedProfile = await UserService.updateMemberProfile({ updatedUser: updateData });
       setProfileData(updatedProfile);
     setIsEditing(false);
       
@@ -261,6 +262,8 @@ const MemberProfile = () => {
               </div>
             </div>
 
+            <Separator className="my-4 border-red-100" />
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="phone">Số Điện Thoại</Label>
@@ -302,6 +305,8 @@ const MemberProfile = () => {
                 )}
               </div>
             </div>
+
+            <Separator className="my-4 border-red-100" />
 
             <div className="space-y-2">
               <Label htmlFor="address">Địa Chỉ</Label>

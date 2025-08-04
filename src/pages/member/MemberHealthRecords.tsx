@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CheckCircle, PlusCircle, Calendar, Heart } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, differenceInDays } from 'date-fns';
-import { calculateNextEligibleDate, DonationHistoryEntry, getWaitingPeriod } from '@/utils/donationConstants';
+import { calculateNextEligibleDate, getWaitingPeriod } from '@/utils/donationConstants';
 import { isEligibleToDonate } from '@/utils/healthValidation';
 import axios from 'axios';
 

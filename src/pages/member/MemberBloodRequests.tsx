@@ -103,20 +103,26 @@ const MemberBloodRequests = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Ngày</TableHead>
+              <TableHead>Ngày bắt đầu</TableHead>
+              <TableHead>Ngày kết thúc</TableHead>
+              <TableHead>Địa điểm</TableHead>
               <TableHead>Nhóm máu cần</TableHead>
+              <TableHead>Số lượng</TableHead>
               <TableHead>Khẩn cấp</TableHead>
               <TableHead className="text-right">Hành động</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoadingRequests ? (
-              <TableRow><TableCell colSpan={4} className="text-center">Đang tải...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center">Đang tải...</TableCell></TableRow>
             ) : compatibleRequests.length > 0 ? (
               compatibleRequests.map((request) => (
                 <TableRow key={request.request_id}>
                   <TableCell>{format(new Date(request.request_date), 'PPP')}</TableCell>
+                  <TableCell>{format(new Date(request.end_date), 'PPP')}</TableCell>
+                  <TableCell>{request.location_donate || 'N/A'}</TableCell>
                   <TableCell>{getBloodTypeName(request.blood_id)}</TableCell>
+                  <TableCell>{request.donor_count || 'N/A'}</TableCell>
                   <TableCell>
                     {request.emergency_status ? (
                       <Badge variant="destructive">Emergency</Badge>
@@ -136,7 +142,7 @@ const MemberBloodRequests = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="text-center">
+                <TableCell colSpan={6} className="text-center">
                   Không tìm thấy yêu cầu hiến máu tương thích với máu của bạn.
                 </TableCell>
               </TableRow>

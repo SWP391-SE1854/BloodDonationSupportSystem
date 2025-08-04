@@ -5,7 +5,7 @@ import { HealthRecordService, HealthRecord } from '@/services/health-record.serv
 import { DonationHistoryService, DonationHistoryRecord } from '@/services/donation-history.service';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, differenceInDays } from 'date-fns';
-import { calculateNextEligibleDate, DonationHistoryEntry, getWaitingPeriod, getLatestDonation } from '@/utils/donationConstants';
+import { calculateNextEligibleDate, getWaitingPeriod, getLatestDonation } from '@/utils/donationConstants';
 import { isEligibleByHistory } from '@/utils/donationConstants';
 import NotificationBell from '@/components/NotificationBell';
 import NotificationService, { Notification } from '@/services/notification.service';
@@ -22,20 +22,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import MemberDonationRequest from './MemberDonationRequest';
+import { getBloodTypeName } from '@/utils/bloodTypes';
 
-
-const bloodTypes = [
-    { id: "1", name: "A+" }, { id: "2", name: "A-" }, { id: "3", name: "B+" },
-    { id: "4", name: "B-" }, { id: "5", name: "AB+" }, { id: "6", "name": "AB-" },
-    { id: "7", name: "O+" }, { id: "8", name: "O-" }
-];
-
-const getBloodTypeName = (id: string | number | null): string => {
-    if (id === null) return 'N/A';
-    const stringId = id.toString();
-    const bloodType = bloodTypes.find(bt => bt.id === stringId);
-    return bloodType ? bloodType.name : 'N/A';
-};
 
 const statusTranslations: { [key: string]: string } = {
   Pending: 'Đang chờ',
@@ -63,7 +51,7 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [bloodRequests, setBloodRequests] = useState<BloodRequest[]>([]);
   const [emergencyRequests, setEmergencyRequests] = useState<BloodRequest[]>([]);
-  const [recentDonations, setRecentDonations] = useState<Donation[]>([]);
+  // const [recentDonations, setRecentDonations] = useState<Donation[]>([]);
   const navigate = useNavigate();
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -79,12 +67,12 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
 
   // Calculate eligibility and waiting period
   const { isEligible, lastDonation, waitingPeriod, nextEligibleDate } = useMemo(() => {
-    const nextDate = calculateNextEligibleDate(history as DonationHistoryEntry[]);
-    const latestDonation = getLatestDonation(history as DonationHistoryEntry[]);
-    const componentWaitingPeriod = latestDonation ? getWaitingPeriod(latestDonation.component) : 0;
+    const nextDate = calculateNextEligibleDate(history);
+    const latestDonation = getLatestDonation(history);
+    const componentWaitingPeriod = latestDonation?.bloodInventory?.component ? getWaitingPeriod(latestDonation.bloodInventory.component) : 0;
 
     return {
-      isEligible: isEligibleByHistory(history as DonationHistoryEntry[]),
+      isEligible: isEligibleByHistory(history),
       lastDonation: latestDonation,
       waitingPeriod: componentWaitingPeriod,
       nextEligibleDate: nextDate ? format(nextDate, 'PPP') : 'Now'
@@ -107,7 +95,13 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
           DonationService.getMemberDonations()
         ]);
 
-        const [historyData, recordData] = await Promise.all([historyPromise, healthRecordPromise]);
+        const [historyData, recordData] = await Promise.all([
+          historyPromise, 
+          healthRecordPromise.catch(error => {
+            console.error('Error fetching health record:', error);
+            return null;
+          })
+        ]);
 
         if (historyData && '$values' in historyData) {
           setHistory(Array.isArray(historyData.$values) ? historyData.$values : []);
@@ -117,8 +111,12 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
           setHistory([]);
         }
 
+        console.log('Health record data received:', recordData);
         if (recordData) {
           setHealthRecord(recordData);
+          console.log('Blood type from API:', recordData.blood_type);
+        } else {
+          console.log('No health record data received');
         }
 
         // Filter and sort blood requests
@@ -136,11 +134,11 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
         setEmergencyRequests(sortedRequests.filter(r => r.emergency_status));
 
         // Filter and sort recent donations
-        const sortedDonations = donationsData
-          .filter(d => d.status === 'Pending' || d.status === 'Approved')
-          .sort((a, b) => new Date(b.donation_date).getTime() - new Date(a.donation_date).getTime())
-          .slice(0, 5);
-        setRecentDonations(sortedDonations);
+        // const sortedDonations = donationsData
+        //   .filter(d => d.status === 'Pending' || d.status === 'Approved')
+        //   .sort((a, b) => new Date(b.donation_date).getTime() - new Date(a.donation_date).getTime())
+        //   .slice(0, 5);
+        // setRecentDonations(sortedDonations);
 
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
@@ -207,16 +205,17 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
     },
     { 
       title: 'Nhóm Máu', 
-      value: healthRecord ? getBloodTypeName(healthRecord.blood_type) : 'N/A', 
+      value: healthRecord ? getBloodTypeName(healthRecord?.blood_type) : 'N/A', 
       icon: Droplet, 
-      color: 'text-blue-600', 
-      bgColor: 'bg-blue-100' 
+      color: healthRecord ? 'text-blue-600' : 'text-gray-600', 
+      bgColor: healthRecord ? 'bg-blue-100' : 'bg-gray-100' 
     },
+    
     { 
       title: 'Lần Hiến Tiếp Theo', 
       value: isEligible ? 'Ngay bây giờ' : `${waitingPeriod} ngày`, 
       description: lastDonation 
-        ? `Lần hiến gần nhất (${lastDonation.component}): ${format(new Date(lastDonation.donation_date), 'PPP')}` 
+        ? `Lần hiến gần nhất (${lastDonation.bloodInventory?.component || 'N/A'}): ${format(new Date(lastDonation.donation_date), 'PPP')}` 
         : 'Chưa có lần hiến nào',
       subtext: !isEligible ? `Đủ điều kiện vào: ${nextEligibleDate}` : 'Bạn đủ điều kiện hiến máu',
       icon: Calendar, 
@@ -260,35 +259,6 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
             <p className="text-red-100 text-lg">Cảm ơn bạn đã tham gia hiến máu cứu người.</p>
           </div>
           <div className="flex items-center space-x-4">
-            <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="secondary" className="bg-white/80 hover:bg-white/100">
-                  Báo cáo sự cố
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Báo cáo sự cố</DialogTitle>
-                  <DialogDescription>
-                    Nếu bạn gặp bất kỳ vấn đề gì, vui lòng cho chúng tôi biết.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="report-title">Tiêu đề</Label>
-                    <Input id="report-title" value={reportTitle} onChange={e => setReportTitle(e.target.value)} />
-                  </div>
-                  <div>
-                    <Label htmlFor="report-message">Nội dung</Label>
-                    <Textarea id="report-message" value={reportMessage} onChange={e => setReportMessage(e.target.value)} />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsReportDialogOpen(false)}>Hủy</Button>
-                  <Button onClick={handleReportProblem}>Gửi báo cáo</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
             <NotificationBell />
           </div>
         </div>
@@ -343,6 +313,8 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
                     <div>
                       <p className="font-semibold">Cần nhóm máu: {getBloodTypeName(req.blood_id)}</p>
                       <p className="text-sm text-gray-600">Ngày yêu cầu: {format(new Date(req.request_date), 'PPP')}</p>
+                      <p className="text-sm text-gray-600">Ngày kết thúc: {format(new Date(req.end_date), 'PPP')}</p>
+                      <p className="text-sm text-gray-600">Số lượng cần: {req.donor_count || 'N/A'} người</p>
                   </div>
                   </div>
                   <Button onClick={() => handleDonateNow(req)}>Đóng góp ngay</Button>
@@ -365,7 +337,7 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
       )}
 
       {/* Recent Donations Section */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle className="text-xl">Lịch hẹn hiến máu gần đây</CardTitle>
         </CardHeader>
@@ -388,7 +360,7 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
             <p className="text-center text-gray-500">Bạn không có yêu cầu nào đang hoạt động.</p>
           )}
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 };
