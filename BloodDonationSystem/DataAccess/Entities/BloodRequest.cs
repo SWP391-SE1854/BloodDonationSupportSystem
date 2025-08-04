@@ -13,6 +13,7 @@ public class BloodRequest
     public DateTime end_date { get; set; }
     public int donor_count { get; set; }
     public string? location_donate { get; set; }
+    public bool check_in { get; set; }
     // Navigation
     [ForeignKey("user_id")]
     public User? User { get; set; }
