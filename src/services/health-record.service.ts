@@ -1,7 +1,7 @@
 import api from './api.service';
 import { API_ENDPOINTS } from './api.config';
-import { DonationComponent, calculateNextEligibleDate, DonationHistoryEntry } from '@/utils/donationConstants';
-import { DonationHistoryService } from './donation-history.service';
+import { DonationComponent, calculateNextEligibleDate } from '@/utils/donationConstants';
+import { DonationHistoryService, DonationHistoryRecord } from './donation-history.service';
 
 export interface User {
   user_id: number;
@@ -22,8 +22,8 @@ export interface HealthRecord {
   height: number;
   blood_type: string;
   heart_rate?: number;
-  allergies: string;
-  medication: string;
+  allergies?: string;
+  medication?: string;
   last_donation: string;
   eligibility_status: boolean;
   donation_count: number;
@@ -70,12 +70,21 @@ export class HealthRecordService {
       ]);
 
       // Create history entry for the new donation
-      const newDonation: DonationHistoryEntry = {
-        donation_id: 0, // This will be set by the backend
+      const newDonation: DonationHistoryRecord = {
+        history_id: 0, // This will be set by the backend
         user_id: parseInt(userId),
+        unit_id: null, // Add unit_id as it's required and can be null
         donation_date: donationDate,
-        component: component,
-        status: 'Completed'
+        status: 'Completed',
+        bloodInventory: { // Mock bloodInventory for eligibility calculation
+          unit_id: 0,
+          donation_id: 0,
+          blood_type: '',
+          component: component,
+          status: 'Available',
+          quantity: 0,
+          expiration_date: ''
+        }
       };
 
       // Combine existing history with new donation
@@ -107,4 +116,4 @@ export class HealthRecordService {
   }
 }
 
-export default HealthRecordService; 
+export default HealthRecordService;

@@ -6,7 +6,9 @@ import { Donation } from '@/types/api';
 // CreateDonationPayload is a subset of the full Donation object
 export type CreateDonationPayload = {
   donation_date: string;
-  donation_time: string;
+  start_time?: string;
+  end_time?: string;
+  donation_time?: string; // Keep for backward compatibility
   diseases?: string[];
   allergies?: string[];
   note?: string;
@@ -103,6 +105,73 @@ export class DonationService {
         console.error(`Error updating donation status ${donationId}:`, error.message);
       }
       throw error;
+    }
+  }
+
+  // New method to handle approval with history creation
+  static async approveDonation(donationId: number): Promise<Donation> {
+    try {
+      // First update the donation status to Approved
+      const updatedDonation = await this.updateDonationStatus(donationId, 'Approved');
+      
+      // Create donation history entry for approved donations
+      await this.createDonationHistoryEntry(donationId, 'Approved');
+      
+      return updatedDonation;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error(`Error approving donation ${donationId}:`, error.message);
+      }
+      throw error;
+    }
+  }
+
+  // New method to handle rejection with history creation
+  static async rejectDonation(donationId: number, reason?: string): Promise<Donation> {
+    try {
+      // Update the donation status to Rejected
+      const updatedDonation = await this.updateDonationStatus(donationId, 'Rejected');
+      
+      // Create donation history entry for rejected donations
+      await this.createDonationHistoryEntry(donationId, 'Rejected');
+      
+      return updatedDonation;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error(`Error rejecting donation ${donationId}:`, error.message);
+      }
+      throw error;
+    }
+  }
+
+  // New method to handle cancellation with history creation
+  static async cancelDonation(donationId: number): Promise<Donation> {
+    try {
+      // Update the donation status to Cancelled
+      const updatedDonation = await this.updateDonationStatus(donationId, 'Cancelled');
+      
+      // Create donation history entry for cancelled donations
+      await this.createDonationHistoryEntry(donationId, 'Cancelled');
+      
+      return updatedDonation;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error(`Error cancelling donation ${donationId}:`, error.message);
+      }
+      throw error;
+    }
+  }
+
+  // New method to create donation history entries
+  static async createDonationHistoryEntry(donationId: number, status: string): Promise<void> {
+    try {
+      await api.post(API_ENDPOINTS.DONATION.CREATE_HISTORY, {
+        donation_id: donationId,
+        status: status
+      });
+    } catch (error) {
+      console.error(`Error creating donation history entry for ${donationId}:`, error);
+      // Don't throw error here as the main operation (status update) should still succeed
     }
   }
 }

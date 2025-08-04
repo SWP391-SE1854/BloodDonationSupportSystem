@@ -31,6 +31,7 @@ type BloodComponent = {
 const statusTranslations: Record<string, string> = {
     Pending: 'Đang chờ xử lý',
     Approved: 'Đã duyệt',
+    CheckedIn: 'Checked In',
     Completed: 'Đã hoàn thành',
     Rejected: 'Đã từ chối',
     Processed: 'Đã xử lý'
@@ -62,14 +63,15 @@ const StaffDonationManagement = () => {
     setIsLoading(true);
     try {
         const donationsPromise = Promise.all([
+            DonationService.getDonationsByStatus('Processed'),
             DonationService.getDonationsByStatus('Pending'),
-            DonationService.getDonationsByStatus('Approved'),
+            DonationService.getDonationsByStatus('CheckedIn')
         ]);
 
         const usersPromise = StaffService.getAllMembers();
 
 
-        const [[pendingData, approvedData], usersData] = await Promise.all([donationsPromise, usersPromise]);
+        const [[processedDonations, pendingDonationsData, checkedInDonationsData], usersData] = await Promise.all([donationsPromise, usersPromise]);
 
         const nameMap = (usersData as UserProfile[]).reduce((acc, user) => {
             acc[user.user_id] = user.name;
@@ -77,8 +79,8 @@ const StaffDonationManagement = () => {
         }, {} as Record<string, string>);
 
         setUserMap(nameMap);
-        setPendingDonations(pendingData);
-        setApprovedDonations(approvedData);
+        setPendingDonations(pendingDonationsData);
+        setApprovedDonations(checkedInDonationsData);
 
     } catch (error) {
             console.error("Failed to fetch data:", error);
@@ -219,21 +221,39 @@ const StaffDonationManagement = () => {
     }
   };
 
-    const handleStatusUpdate = async (donation: Donation, newStatus: 'Approved' | 'Rejected' | 'Completed' | 'Processed', reason?: string, amount?: number) => {
+    const handleStatusUpdate = async (donation: Donation, newStatus: 'Approved' | 'Rejected' | 'Completed' | 'Processed' | 'Cancelled', reason?: string, amount?: number) => {
         setIsLoading(true);
     try {
-            const updatePayload: Partial<Donation> & { donation_id: number } = {
-                donation_id: donation.donation_id,
-                status: newStatus, 
-                rejection_reason: reason, 
-                amount_ml: amount 
-            };
+            let updatedDonation: Donation;
 
-            if (newStatus === 'Completed' || newStatus === 'Processed') {
-                updatePayload.donation_date = new Date().toISOString();
+            // Use the new service methods for proper status updates with history creation
+            switch (newStatus) {
+                case 'Approved':
+                    updatedDonation = await DonationService.approveDonation(donation.donation_id);
+                    break;
+                case 'Rejected':
+                    updatedDonation = await DonationService.rejectDonation(donation.donation_id, reason);
+                    break;
+                case 'Cancelled':
+                    updatedDonation = await DonationService.cancelDonation(donation.donation_id);
+                    break;
+                default: {
+                    // For other statuses, use the original update method
+                    const updatePayload: Partial<Donation> & { donation_id: number } = {
+                        donation_id: donation.donation_id,
+                        status: newStatus, 
+                        rejection_reason: reason, 
+                        amount_ml: amount 
+                    };
+
+                    if (newStatus === 'Completed' || newStatus === 'Processed') {
+                        updatePayload.donation_date = new Date().toISOString();
+                    }
+
+                    updatedDonation = await DonationService.updateDonation(updatePayload);
+                    break;
+                }
             }
-
-            await DonationService.updateDonation(updatePayload);
       
             if (newStatus !== 'Processed') { // Avoid double toast
                  toast({ title: 'Thành công', description: 'Cập nhật trạng thái hiến máu thành công.' });
@@ -271,7 +291,7 @@ const StaffDonationManagement = () => {
     }
   };
 
-    const renderDonationList = (donations: Donation[], type: 'pending' | 'approved') => {
+    const renderDonationList = (donations: Donation[], type: 'pending' | 'checkedin') => {
    if (isLoading) {
      return (
                 <div className="flex items-center justify-center h-48">
@@ -327,18 +347,28 @@ const StaffDonationManagement = () => {
                       </Select>
                     </div>
                              )}
-                             {type === 'approved' && (
-                               <div className="flex gap-2">
-                                 <Button onClick={() => handleOpenHealthCheck(donation)} variant="outline">
-                                   <HeartPulse className="h-4 w-4 mr-2" />
-                                   Kiểm tra sức khỏe
-                                 </Button>
-                                 <Button onClick={() => handleOpenProcessDialog(donation)} disabled={isLoading || !healthCheckPassed[donation.donation_id]}>
-                                     <CheckCircle className="h-4 w-4 mr-2" />
-                                     Hoàn thành & Xử lý
-                                 </Button>
-                                 </div>
-                            )}
+                             {type === 'checkedin' && (
+  <div className="flex flex-col sm:flex-row gap-2">
+    <Button 
+      onClick={() => handleOpenHealthCheck(donation)}
+      variant="outline"
+      size="sm"  // Using smaller size
+      className="truncate px-2"  // Reduced padding
+    >
+      <HeartPulse className="h-4 w-4 mr-1" /> 
+      <span className="truncate text-xs sm:text-sm">Kiểm tra</span>
+    </Button>
+    <Button 
+      onClick={() => handleOpenProcessDialog(donation)}
+      disabled={isLoading || !healthCheckPassed[donation.donation_id]}
+      size="sm"
+      className="truncate px-2"
+    >
+      <CheckCircle className="h-4 w-4 mr-1" />
+      <span className="truncate text-xs sm:text-sm">Xử lý</span>
+    </Button>
+  </div>
+)}
                         </CardContent>
                     </Card>
                 ))}
@@ -363,14 +393,14 @@ const StaffDonationManagement = () => {
                                 <Clock className="mr-2 h-4 w-4" /> Đang xử lý ({pendingDonations.length})
                             </TabsTrigger>
                             <TabsTrigger value="approved">
-                                <CheckCircle className="mr-2 h-4 w-4" /> Đã duyệt ({approvedDonations.length})
+                                <CheckCircle className="mr-2 h-4 w-4" /> Checked In ({approvedDonations.length})
                             </TabsTrigger>
                         </TabsList>
                         <TabsContent value="pending" className="pt-4">
                             {renderDonationList(pendingDonations, 'pending')}
                         </TabsContent>
-                        <TabsContent value="approved" className="pt-4">
-                             {renderDonationList(approvedDonations, 'approved')}
+                                                <TabsContent value="approved" className="pt-4">
+                            {renderDonationList(approvedDonations, 'checkedin')}
                         </TabsContent>
                     </Tabs>
                 </CardContent>

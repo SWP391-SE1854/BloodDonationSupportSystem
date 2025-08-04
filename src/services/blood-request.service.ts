@@ -30,6 +30,9 @@ export interface BloodRequest {
   blood_id: number;
   emergency_status: boolean;
   request_date: string;
+  end_date: string;  // New field
+  donor_count: number;  // New field
+  location_donate?: string;  // Location field for donation
   status: 'Pending' | 'Approved' | 'Rejected';
   // The 'user' object is optional because it might not be included in all API responses,
   // but it's not needed for creating a new request.
@@ -42,10 +45,15 @@ export interface CreateBloodRequestData {
     blood_id: number;
     emergency_status: boolean;
     request_date: string;
+    end_date: string;  // New field
+    donor_count: number;  // New field
+    location_donate?: string;  // Location field for donation
 }
 
 // Data for updating a request
-export type UpdateBloodRequestData = Partial<Omit<BloodRequest, 'request_id' | 'user'>>;
+export type UpdateBloodRequestData = Partial<Omit<BloodRequest, 'request_id' | 'user'>> & {
+    location_donate?: string;
+};
 
 export interface BloodRequestStatus {
   status: 'Pending' | 'Approved' | 'Rejected';
@@ -109,4 +117,4 @@ export class BloodRequestService {
             throw error;
         }
     }
-} 
+}
