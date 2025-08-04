@@ -14,6 +14,8 @@ namespace BloodDonationSystem.DataAccess.Entities
         public int quantity { get; set; } // Số lượng máu (ml)
         public string? status { get; set; } // Trạng thái hiến máu (e.g., "Completed", "Pending")
         public string? note { get; set; }
+        public string? start_time { get; set; }
+        public string? end_time { get; set; }
 
         // Navigation
         [ForeignKey("user_id")]
