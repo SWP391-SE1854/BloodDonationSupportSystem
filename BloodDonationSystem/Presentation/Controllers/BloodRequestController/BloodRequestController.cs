@@ -134,5 +134,26 @@ namespace BloodDonationSystem.Presentation.Controllers.BloodRequestController
             await _bloodRequestRepository.DeleteAsync(id);
             return Ok(new { Message = "Xoá yêu cầu thành công." });
         }
+
+
+        // [GET] Lấy danh sách yêu cầu hiến máu của thành viên hiện tại
+        [Authorize(Roles = "Member")]
+        [HttpGet("member-requests")]
+        public async Task<IActionResult> GetMemberRequests()
+        {
+            // Lấy userId từ claim
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "user_id");
+            if (userIdClaim == null)
+                return Unauthorized(new { Message = "Không xác định được người dùng." });
+
+            int userId = int.Parse(userIdClaim.Value);
+            var allRequests = await _bloodRequestRepository.GetAllAsync();
+            var myRequests = allRequests.Where(r => r.user_id == userId).ToList();
+            return Ok(myRequests);
+        }
+
+
+
+
     }
 }
