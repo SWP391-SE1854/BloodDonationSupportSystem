@@ -33,9 +33,14 @@ const DonationCheckIn = () => {
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Lấy danh sách đăng ký hiến máu đã được duyệt cho ngày hôm nay
-      const today = new Date().toISOString().split('T')[0];
-      const approvedDonations = await DonationService.getDonationsByStatus('Approved');
+      // Lấy danh sách đăng ký hiến máu đã được duyệt và đã check-in
+      const [approvedDonations, checkedInDonations] = await Promise.all([
+        DonationService.getDonationsByStatus('Approved'),
+        DonationService.getDonationsByStatus('CheckedIn')
+      ]);
+      
+      // Kết hợp cả hai danh sách
+      const allDonations = [...approvedDonations, ...checkedInDonations];
       
       // Lấy thông tin user cho mỗi donation
       const usersData = await StaffService.getAllMembers();
@@ -45,7 +50,7 @@ const DonationCheckIn = () => {
       }, {} as Record<string, { name: string; phone: string }>);
 
       // Kết hợp thông tin donation với user
-      const donationsWithUser = approvedDonations.map(donation => ({
+      const donationsWithUser = allDonations.map(donation => ({
         ...donation,
         id: donation.donation_id, // Alias for compatibility
         appointment_date: donation.donation_date, // Alias for compatibility
@@ -153,12 +158,12 @@ const DonationCheckIn = () => {
     return isCheckedIn ? (
       <Badge className="bg-green-100 text-green-800 border-green-200">
         <CheckCircle className="w-3 h-3 mr-1" />
-        Đã đến
+        Checked In
       </Badge>
     ) : (
       <Badge variant="secondary" className="bg-gray-100 text-gray-600">
         <Clock className="w-3 h-3 mr-1" />
-        Chưa đến
+        Approved
       </Badge>
     );
   };
@@ -309,7 +314,7 @@ const DonationCheckIn = () => {
                             className="text-orange-600 border-orange-200 hover:bg-orange-50"
                           >
                             <Square className="w-4 h-4 mr-1" />
-                            Hủy check-in
+                            Hủy Checked In
                           </Button>
                         ) : (
                           <Button
@@ -318,7 +323,7 @@ const DonationCheckIn = () => {
                             className="bg-green-600 hover:bg-green-700"
                           >
                             <CheckSquare className="w-4 h-4 mr-1" />
-                            Check-in
+                            Check In
                           </Button>
                         )}
                       </td>
@@ -378,7 +383,7 @@ const DonationCheckIn = () => {
                         className="text-orange-600 border-orange-200 hover:bg-orange-50"
                       >
                         <Square className="w-4 h-4 mr-1" />
-                        Hủy check-in
+                        Hủy Checked In
                       </Button>
                     ) : (
                       <Button
@@ -387,7 +392,7 @@ const DonationCheckIn = () => {
                         className="bg-green-600 hover:bg-green-700"
                       >
                         <CheckSquare className="w-4 h-4 mr-1" />
-                        Check-in
+                        Check In
                       </Button>
                     )}
                   </div>

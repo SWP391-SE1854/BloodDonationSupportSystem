@@ -1,5 +1,6 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { bloodTypes } from '@/utils/bloodTypes';
 
 interface BloodTypeSelectProps {
   value: string;
@@ -7,22 +8,11 @@ interface BloodTypeSelectProps {
   className?: string;
 }
 
-const bloodTypes = [
-    { id: "1", name: "A+" },
-    { id: "2", name: "A-" },
-    { id: "3", name: "B+" },
-    { id: "4", name: "B-" },
-    { id: "5", name: "AB+" },
-    { id: "6", name: "AB-" },
-    { id: "7", name: "O+" },
-    { id: "8", name: "O-" }
-];
-
 const BloodTypeSelect: React.FC<BloodTypeSelectProps> = ({ value, onChange, className }) => {
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger className={className}>
-        <SelectValue placeholder="Select blood type" />
+        <SelectValue placeholder="Chọn nhóm máu" />
       </SelectTrigger>
       <SelectContent>
         {bloodTypes.map(type => (

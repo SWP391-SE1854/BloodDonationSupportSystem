@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { BloodInventoryService } from '@/services/blood-inventory.service';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { blood_warning_threshold } from '@/utils/bloodStockThresholds';
 
 const bloodTypeMap: Record<string, number> = {
     "A+": 1, "A-": 2, "B+": 3, "B-": 4,
@@ -77,6 +78,32 @@ const BloodInventory = () => {
         }
         return inventory.filter(unit => unit.status !== 'Used'); // Other roles see only non-used units
     }, [inventory, userRole]);
+
+    useEffect(() => {
+        if (inventory && (userRole === 'Admin' || userRole === 'Staff')) {
+            const availableStock = inventory.reduce((acc, unit) => {
+                if (unit.status === 'Available') {
+                    const bloodTypeName = getBloodTypeName(unit.blood_type);
+                    if (bloodTypeName !== 'Không xác định') {
+                        acc[bloodTypeName] = (acc[bloodTypeName] || 0) + 1;
+                    }
+                }
+                return acc;
+            }, {} as Record<string, number>);
+
+            Object.keys(blood_warning_threshold).forEach(bloodType => {
+                const currentStock = availableStock[bloodType] || 0;
+                const threshold = blood_warning_threshold[bloodType];
+                if (currentStock < threshold) {
+                    toast({
+                        title: 'Cảnh báo tồn kho thấp',
+                        description: `Lượng tồn kho cho nhóm máu ${bloodType} đang ở mức thấp (${currentStock} đơn vị).`,
+                        variant: 'destructive',
+                    });
+                }
+            });
+        }
+    }, [inventory, userRole, toast]);
 
     return (
         <Card>

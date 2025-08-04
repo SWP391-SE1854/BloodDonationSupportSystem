@@ -121,14 +121,17 @@ const BloodRequestManagement = () => {
                             <TableHead>Loại máu</TableHead>
                             <TableHead>Khẩn cấp</TableHead>
                             <TableHead>Ngày yêu cầu</TableHead>
+                            <TableHead>Ngày kết thúc</TableHead>
+                            <TableHead>Số lượng</TableHead>
+                            <TableHead>Địa điểm</TableHead>
                             {isStaffOrAdmin && <TableHead>Hành động</TableHead>}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {isLoading ? (
-                            <TableRow><TableCell colSpan={isStaffOrAdmin ? 5 : 4} className="text-center">Đang tải...</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={isStaffOrAdmin ? 7 : 6} className="text-center">Đang tải...</TableCell></TableRow>
                         ) : requests?.length === 0 ? (
-                            <TableRow><TableCell colSpan={isStaffOrAdmin ? 5 : 4} className="text-center">Không tìm thấy yêu cầu máu nào.</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={isStaffOrAdmin ? 8 : 7} className="text-center">Không tìm thấy yêu cầu máu nào.</TableCell></TableRow>
                         ) : (
                             requests?.map((request) => (
                             <TableRow key={request.request_id}>
@@ -136,6 +139,9 @@ const BloodRequestManagement = () => {
                                 <TableCell>{getBloodTypeName(request.blood_id)}</TableCell>
                                 <TableCell>{request.emergency_status ? 'Có' : 'Không'}</TableCell>
                                 <TableCell>{new Date(request.request_date).toLocaleDateString()}</TableCell>
+                                <TableCell>{new Date(request.end_date).toLocaleDateString()}</TableCell>
+                                <TableCell>{request.donor_count || 'N/A'}</TableCell>
+                                <TableCell>{request.location_donate || 'N/A'}</TableCell>
                                 {isStaffOrAdmin && (
                                     <TableCell>
                                         <div className="flex space-x-2">
@@ -177,8 +183,9 @@ interface RequestFormProps {
 
 const RequestForm = ({ isOpen, setIsOpen, request, onSave }: RequestFormProps) => {
     const { toast } = useToast();
-    const [formData, setFormData] = useState<Partial<BloodRequest & { request_date: string }>>({});
+    const [formData, setFormData] = useState<Partial<BloodRequest & { request_date: string; end_date: string }>>({});
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+    const [isEndDateCalendarOpen, setIsEndDateCalendarOpen] = useState(false);
     const { user: authUser } = useAuth();
 
     useEffect(() => {
@@ -187,6 +194,7 @@ const RequestForm = ({ isOpen, setIsOpen, request, onSave }: RequestFormProps) =
                 setFormData({
                     ...request,
                     request_date: new Date(request.request_date).toISOString(),
+                    end_date: new Date(request.end_date).toISOString(),
                 });
             } else {
                 setFormData({
@@ -194,6 +202,9 @@ const RequestForm = ({ isOpen, setIsOpen, request, onSave }: RequestFormProps) =
                     blood_id: 1,
                     emergency_status: false,
                     request_date: new Date().toISOString(),
+                    end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // Default to 7 days from now
+                    donor_count: 1,
+                    location_donate: '',
                 });
             }
         }
@@ -201,6 +212,43 @@ const RequestForm = ({ isOpen, setIsOpen, request, onSave }: RequestFormProps) =
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validation for emergency requests
+        if (formData.emergency_status) {
+            // For emergency requests, dates are set automatically by backend
+            const createData: CreateBloodRequestData = {
+                user_id: formData.user_id!,
+                blood_id: Number(formData.blood_id),
+                emergency_status: true,
+                request_date: new Date().toISOString(),
+                end_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days from now
+                donor_count: 1, // Default for emergency
+                location_donate: formData.location_donate || 'Địa điểm khẩn cấp',
+            };
+            onSave(createData);
+            return;
+        }
+
+        // Validation for non-emergency requests
+        if (!formData.request_date || !formData.end_date) {
+            toast({ title: "Lỗi xác thực", description: "Phải nhập ngày bắt đầu và kết thúc.", variant: "destructive" });
+            return;
+        }
+
+        if (new Date(formData.end_date) <= new Date(formData.request_date)) {
+            toast({ title: "Lỗi xác thực", description: "Ngày kết thúc phải sau ngày bắt đầu.", variant: "destructive" });
+            return;
+        }
+
+        if (!formData.donor_count || formData.donor_count <= 0) {
+            toast({ title: "Lỗi xác thực", description: "Vui lòng nhập số lượng người hiến máu hợp lệ (> 0).", variant: "destructive" });
+            return;
+        }
+
+        if (!formData.emergency_status && (!formData.location_donate || formData.location_donate.trim() === '')) {
+            toast({ title: "Lỗi xác thực", description: "Vui lòng chọn địa điểm đi hiến máu.", variant: "destructive" });
+            return;
+        }
 
         if (request?.request_id) {
             if (!formData.blood_id) {
@@ -211,11 +259,14 @@ const RequestForm = ({ isOpen, setIsOpen, request, onSave }: RequestFormProps) =
                 blood_id: Number(formData.blood_id),
                 emergency_status: formData.emergency_status || false,
                 request_date: new Date(formData.request_date || Date.now()).toISOString(),
+                end_date: new Date(formData.end_date).toISOString(),
+                donor_count: formData.donor_count,
+                location_donate: formData.location_donate,
             };
             onSave(updateData, request.request_id);
         } else {
-            if (!formData.user_id || !formData.blood_id || !formData.request_date) {
-                toast({ title: "Lỗi xác thực", description: "ID Người dùng, Loại máu, và Ngày yêu cầu là bắt buộc.", variant: "destructive" });
+            if (!formData.user_id || !formData.blood_id || !formData.request_date || !formData.end_date || !formData.donor_count || (!formData.emergency_status && !formData.location_donate)) {
+                toast({ title: "Lỗi xác thực", description: "Tất cả các trường là bắt buộc.", variant: "destructive" });
                 return;
             }
             const createData: CreateBloodRequestData = {
@@ -223,6 +274,9 @@ const RequestForm = ({ isOpen, setIsOpen, request, onSave }: RequestFormProps) =
                 blood_id: Number(formData.blood_id),
                 emergency_status: formData.emergency_status || false,
                 request_date: new Date(formData.request_date).toISOString(),
+                end_date: new Date(formData.end_date).toISOString(),
+                donor_count: formData.donor_count,
+                location_donate: formData.location_donate,
             };
             onSave(createData);
         }
@@ -297,6 +351,66 @@ const RequestForm = ({ isOpen, setIsOpen, request, onSave }: RequestFormProps) =
                                 />
                             </PopoverContent>
                         </Popover>
+                    </div>
+
+                    {/* End Date - Only show for non-emergency requests */}
+                    {!formData.emergency_status && (
+                        <div className="space-y-1">
+                            <Label>Ngày kết thúc</Label>
+                            <Popover open={isEndDateCalendarOpen} onOpenChange={setIsEndDateCalendarOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                            "w-full justify-start text-left font-normal",
+                                            !formData.end_date && "text-muted-foreground"
+                                        )}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {formData.end_date ? format(new Date(formData.end_date), "PPP") : <span>Chọn ngày</span>}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                    <Calendar
+                                        mode="single"
+                                        selected={formData.end_date ? new Date(formData.end_date) : undefined}
+                                        onSelect={(date) => {
+                                            setFormData(prev => ({...prev, end_date: date?.toISOString()}));
+                                            setIsEndDateCalendarOpen(false);
+                                        }}
+                                        initialFocus
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                    )}
+
+                    {/* Donor Count - Only show for non-emergency requests */}
+                    {!formData.emergency_status && (
+                        <div className="space-y-1">
+                            <Label htmlFor="donor_count">Số lượng người hiến máu</Label>
+                            <Input
+                                id="donor_count"
+                                type="number"
+                                min="1"
+                                value={formData.donor_count || ''}
+                                onChange={(e) => setFormData(prev => ({ ...prev, donor_count: parseInt(e.target.value) || 1 }))}
+                                placeholder="Nhập số lượng người hiến máu"
+                            />
+                        </div>
+                    )}
+
+                    {/* Location - Show for all requests */}
+                    <div className="space-y-1">
+                        <Label htmlFor="location_donate">Địa điểm hiến máu</Label>
+                        <Input
+                            id="location_donate"
+                            type="text"
+                            value={formData.location_donate || ''}
+                            onChange={(e) => setFormData(prev => ({ ...prev, location_donate: e.target.value }))}
+                            placeholder="Nhập địa điểm hiến máu"
+                            required={!formData.emergency_status}
+                        />
                     </div>
                     
                     <div className="flex justify-end space-x-2 pt-4">

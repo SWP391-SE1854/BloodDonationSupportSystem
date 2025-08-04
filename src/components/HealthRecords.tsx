@@ -4,10 +4,9 @@ import { format, differenceInDays } from 'date-fns';
 import { Activity, Heart, Scale, Ruler, Droplet, AlertCircle, Calendar, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { HealthRecord } from '@/services/health-record.service';
-import { DonationHistoryService } from '@/services/donation-history.service';
-import { calculateNextEligibleDate, DonationHistoryEntry, getWaitingPeriod, getLatestDonation } from '@/utils/donationConstants';
+import { DonationHistoryService, DonationHistoryRecord } from '@/services/donation-history.service';
+import { calculateNextEligibleDate, getWaitingPeriod, getLatestDonation } from '@/utils/donationConstants';
 import { isEligibleByHistory } from '@/utils/donationConstants';
 
 interface HealthRecordsProps {
@@ -15,14 +14,14 @@ interface HealthRecordsProps {
 }
 
 const HealthRecords = ({ healthData }: HealthRecordsProps) => {
-  const [donationHistory, setDonationHistory] = useState<DonationHistoryEntry[]>([]);
+  const [donationHistory, setDonationHistory] = useState<DonationHistoryRecord[]>([]);
 
   useEffect(() => {
     const fetchDonationHistory = async () => {
       try {
         const history = await DonationHistoryService.getMemberHistory();
         if (history && Array.isArray(history)) {
-          setDonationHistory(history as DonationHistoryEntry[]);
+          setDonationHistory(history);
         }
       } catch (error) {
         console.error('Failed to fetch donation history:', error);
@@ -34,7 +33,7 @@ const HealthRecords = ({ healthData }: HealthRecordsProps) => {
   const { isEligible, nextEligibleDate, waitingPeriod, lastDonation } = useMemo(() => {
     const nextDate = calculateNextEligibleDate(donationHistory);
     const latestDonation = getLatestDonation(donationHistory);
-    const waitingPeriod = latestDonation ? getWaitingPeriod(latestDonation.component) : 0;
+    const waitingPeriod = latestDonation?.bloodInventory?.component ? getWaitingPeriod(latestDonation.bloodInventory.component) : 0;
     
     return {
       isEligible: isEligibleByHistory(donationHistory),
@@ -107,7 +106,7 @@ const HealthRecords = ({ healthData }: HealthRecordsProps) => {
                 </p>
                 {lastDonation && (
                   <p className="text-xs text-gray-500 mt-1">
-                    Last donation ({lastDonation.component}): {format(new Date(lastDonation.donation_date), 'PPP')}
+                    Last donation ({lastDonation.bloodInventory?.component || 'N/A'}): {format(new Date(lastDonation.donation_date), 'PPP')}
                   </p>
                 )}
                 {!isEligible && (
@@ -174,13 +173,13 @@ const HealthRecords = ({ healthData }: HealthRecordsProps) => {
             <div className="space-y-4">
               {sortedHistory.length > 0 ? (
                 sortedHistory.map((donation, index) => (
-                  <div key={donation.donation_id} className="p-4 bg-gray-50 rounded-lg">
+                  <div key={donation.history_id} className="p-4 bg-gray-50 rounded-lg">
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="font-semibold">{format(new Date(donation.donation_date), 'PPP')}</p>
-                        <p className="text-sm text-gray-600">{donation.component}</p>
-                        {donation.location && (
-                          <p className="text-xs text-gray-500">{donation.location}</p>
+                        <p className="text-sm text-gray-600">{donation.bloodInventory?.component || 'N/A'}</p>
+                        {donation.user?.city && (
+                          <p className="text-xs text-gray-500">{donation.user.city}</p>
                         )}
                       </div>
                       <Badge variant="outline">{donation.status}</Badge>

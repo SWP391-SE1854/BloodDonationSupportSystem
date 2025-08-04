@@ -22,16 +22,30 @@ interface HealthRecordFormProps {
   userProfile: UserProfile | null;
 }
 
+const getCleanInitialData = (data: Partial<HealthRecord> | null) => {
+  if (!data) return { eligibility_status: true };
+  
+  return {
+    ...data,
+    last_donation: data.last_donation === '1/1/1' ? 'N/A' : data.last_donation,
+    allergies: data.allergies === 'a' ? '' : data.allergies,
+    medication: data.medication === 'a' ? '' : data.medication,
+    eligibility_status: data.eligibility_status !== undefined ? data.eligibility_status : true
+  };
+};
+
+
+
 const HealthRecordForm: React.FC<HealthRecordFormProps> = ({ isOpen, onClose, onSave, initialData, userProfile }) => {
   const { toast } = useToast();
-  const [formData, setFormData] = useState<Partial<HealthRecord>>(initialData || { eligibility_status: true });
+  const [formData, setFormData] = useState<Partial<HealthRecord>>(initialData || {  eligibility_status: true });
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const { user } = useAuth();
+  const { user } = useAuth(); 
   const userRole = user?.role;
 
   useEffect(() => {
-    setFormData(initialData || { eligibility_status: true });
+    setFormData(getCleanInitialData || { eligibility_status: true });
     setErrors([]);
     setTouched({});
   }, [initialData]);
