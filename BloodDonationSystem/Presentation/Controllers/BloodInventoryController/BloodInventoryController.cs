@@ -76,5 +76,17 @@ namespace BloodDonationSystem.Presentation.Controllers.BloodController
             await _inventoryRepository.DeleteAsync(id);
             return Ok(new { Message = "Xóa đơn vị máu thành công." });
         }
+
+        //  Lấy username theo unit_id của BloodInventory
+        [HttpGet("username/{unitId}")]
+        public async Task<IActionResult> GetUsernameByBloodUnitId(int unitId)
+        {
+            var unit = await _inventoryRepository.GetByIdAsync(unitId);
+            if (unit == null || unit.Donation == null || unit.Donation.User == null)
+                return NotFound(new { Message = "Không tìm thấy đơn vị máu, donation hoặc user." });
+
+            return Ok(new { Username = unit.Donation.User.name });
+        }
+
     }
 }
