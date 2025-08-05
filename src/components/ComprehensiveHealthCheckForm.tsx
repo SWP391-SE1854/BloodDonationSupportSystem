@@ -61,24 +61,48 @@ const comprehensiveHealthCheckSchema = z.object({
   hasBeenInjected: z.enum(["yes", "no"], { required_error: "Vui lòng chọn câu trả lời" }),
 
   // Section 5: Physical Examination
-  weight: z.string().min(1, "Cân nặng là bắt buộc").refine((val) => !isNaN(Number(val)) && Number(val) >= 30 && Number(val) <= 200, {
-    message: "Cân nặng phải từ 30-200kg"
-  }),
-  bloodPressureSystolic: z.string().min(1, "Huyết áp tâm thu là bắt buộc").refine((val) => !isNaN(Number(val)) && Number(val) >= 70 && Number(val) <= 200, {
-    message: "Huyết áp tâm thu phải từ 70-200"
-  }),
-  bloodPressureDiastolic: z.string().min(1, "Huyết áp tâm trương là bắt buộc").refine((val) => !isNaN(Number(val)) && Number(val) >= 40 && Number(val) <= 130, {
-    message: "Huyết áp tâm trương phải từ 40-130"
-  }),
-  pulseRate: z.string().min(1, "Nhịp tim là bắt buộc").refine((val) => !isNaN(Number(val)) && Number(val) >= 40 && Number(val) <= 200, {
-    message: "Nhịp tim phải từ 40-200 bpm"
-  }),
-  temperature: z.string().min(1, "Nhiệt độ là bắt buộc").refine((val) => !isNaN(Number(val)) && Number(val) >= 35 && Number(val) <= 42, {
-    message: "Nhiệt độ phải từ 35-42°C"
-  }),
-  hemoglobin: z.string().min(1, "Hemoglobin là bắt buộc").refine((val) => !isNaN(Number(val)) && Number(val) >= 8 && Number(val) <= 20, {
-    message: "Hemoglobin phải từ 8-20 g/dL"
-  }),
+  weight: z.string()
+    .min(1, "Cân nặng là bắt buộc")
+    .refine((val) => !isNaN(Number(val)), { message: "Cân nặng phải là số" })
+    .refine((val) => Number(val) >= 30 && Number(val) <= 200, {
+      message: "Cân nặng phải từ 30-200kg"
+    }),
+  height: z.string()
+    .min(1, "Chiều cao là bắt buộc")
+    .refine((val) => !isNaN(Number(val)), { message: "Chiều cao phải là số" })
+    .refine((val) => Number(val) >= 120 && Number(val) <= 220, {
+      message: "Chiều cao phải từ 120-220cm"
+    }),
+  bloodPressureSystolic: z.string()
+    .min(1, "Huyết áp tâm thu là bắt buộc")
+    .refine((val) => !isNaN(Number(val)), { message: "Huyết áp tâm thu phải là số" })
+    .refine((val) => Number(val) >= 70 && Number(val) <= 220, {
+      message: "Huyết áp tâm thu phải từ 70-220 mmHg"
+    }),
+  bloodPressureDiastolic: z.string()
+    .min(1, "Huyết áp tâm trương là bắt buộc")
+    .refine((val) => !isNaN(Number(val)), { message: "Huyết áp tâm trương phải là số" })
+    .refine((val) => Number(val) >= 40 && Number(val) <= 150, {
+      message: "Huyết áp tâm trương phải từ 40-150 mmHg"
+    }),
+  pulseRate: z.string()
+    .min(1, "Nhịp tim là bắt buộc")
+    .refine((val) => !isNaN(Number(val)), { message: "Nhịp tim phải là số" })
+    .refine((val) => Number(val) >= 30 && Number(val) <= 200, {
+      message: "Nhịp tim phải từ 30-200 bpm"
+    }),
+  temperature: z.string()
+    .min(1, "Nhiệt độ là bắt buộc")
+    .refine((val) => !isNaN(Number(val)), { message: "Nhiệt độ phải là số" })
+    .refine((val) => Number(val) >= 34 && Number(val) <= 42, {
+      message: "Nhiệt độ phải từ 34-42°C"
+    }),
+  hemoglobin: z.string()
+    .min(1, "Huyết sắc tố là bắt buộc")
+    .refine((val) => !isNaN(Number(val)), { message: "Huyết sắc tố phải là số" })
+    .refine((val) => Number(val) >= 8 && Number(val) <= 22, {
+      message: "Huyết sắc tố phải từ 8-22 g/dL"
+    }),
 });
 
 type ComprehensiveHealthCheckFormData = z.infer<typeof comprehensiveHealthCheckSchema>;
@@ -123,6 +147,7 @@ export const ComprehensiveHealthCheckForm = ({
             hasUsedDrugs: undefined,
             hasBeenInjected: undefined,
             weight: "",
+            height: "",
             bloodPressureSystolic: "",
             bloodPressureDiastolic: "",
             pulseRate: "",
@@ -153,6 +178,7 @@ export const ComprehensiveHealthCheckForm = ({
                 hasUsedDrugs: undefined,
                 hasBeenInjected: undefined,
                 weight: "",
+                height: "",
                 bloodPressureSystolic: "",
                 bloodPressureDiastolic: "",
                 pulseRate: "",
@@ -163,23 +189,27 @@ export const ComprehensiveHealthCheckForm = ({
     }, [isOpen, form]);
 
     const determineEligibility = (data: ComprehensiveHealthCheckFormData): boolean => {
-        const weightOk = Number(data.weight) >= 45;
+        // Tiêu chuẩn y tế cho hiến máu
+        const weightOk = Number(data.weight) >= 45; // Tối thiểu 45kg
+        const heightOk = Number(data.height) >= 140; // Tối thiểu 140cm
         const bloodPressureOk = Number(data.bloodPressureSystolic) >= 90 && Number(data.bloodPressureSystolic) <= 160 &&
                                Number(data.bloodPressureDiastolic) >= 60 && Number(data.bloodPressureDiastolic) <= 100;
         const temperatureOk = Number(data.temperature) >= 36.0 && Number(data.temperature) <= 37.5;
-        const hemoglobinOk = Number(data.hemoglobin) >= 12.5;
-        const pulseOk = Number(data.pulseRate) >= 60 && Number(data.pulseRate) <= 100;
+        const hemoglobinOk = Number(data.hemoglobin) >= 12.5; // Tối thiểu 12.5 g/dL cho nữ, 13.5 g/dL cho nam (dùng 12.5 làm chuẩn chung)
+        const pulseOk = Number(data.pulseRate) >= 50 && Number(data.pulseRate) <= 100;
 
+        // Tiêu chuẩn sức khỏe tổng quát
         const notCurrentlySick = data.isCurrentlySick === "no";
         const noInfectiousDiseases = data.hasInfectiousDiseases === "no";
         const noRecentProcedures = data.hasRecentProcedures === "no";
         const feelingHealthy = data.isFeelingHealthy === "yes";
 
+        // Tiêu chuẩn hành vi nguy cơ
         const noUnprotectedSex = data.hasUnprotectedSex === "no";
         const noDrugUse = data.hasUsedDrugs === "no";
         const noUnknownInjections = data.hasBeenInjected === "no";
 
-        return weightOk && bloodPressureOk && temperatureOk && hemoglobinOk && pulseOk &&
+        return weightOk && heightOk && bloodPressureOk && temperatureOk && hemoglobinOk && pulseOk &&
                notCurrentlySick && noInfectiousDiseases && noRecentProcedures && feelingHealthy &&
                noUnprotectedSex && noDrugUse && noUnknownInjections;
     };
@@ -818,6 +848,26 @@ export const ComprehensiveHealthCheckForm = ({
                                             )}
                                         />
 
+                                        <FormField
+                                            control={form.control}
+                                            name="height"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel className="text-sm font-medium text-gray-700">
+                                                        Chiều cao (cm)
+                                                    </FormLabel>
+                                                    <FormControl>
+                                                        <Input 
+                                                            type="text"
+                                                            placeholder="Ví dụ: 165"
+                                                            {...field} 
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+
                                         <div className="space-y-2">
                                             <FormField
                                                 control={form.control}
@@ -825,7 +875,7 @@ export const ComprehensiveHealthCheckForm = ({
                                                 render={({ field }) => (
                                                     <FormItem>
                                                         <FormLabel className="text-sm font-medium text-gray-700">
-                                                            Huyết áp tâm thu
+                                                            Huyết áp tâm thu (mmHg)
                                                         </FormLabel>
                                                         <FormControl>
                                                             <Input 
@@ -844,7 +894,7 @@ export const ComprehensiveHealthCheckForm = ({
                                                 render={({ field }) => (
                                                     <FormItem>
                                                         <FormLabel className="text-sm font-medium text-gray-700">
-                                                            Huyết áp tâm trương
+                                                            Huyết áp tâm trương (mmHg)
                                                         </FormLabel>
                                                         <FormControl>
                                                             <Input 
