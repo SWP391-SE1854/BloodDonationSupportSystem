@@ -64,10 +64,13 @@ const MemberBloodRequests = () => {
     }
     
     const userBloodTypeName = getBloodTypeName(healthRecord.blood_type);
+    
     if (userBloodTypeName === 'N/A' || !compatibilityMap[userBloodTypeName]) {
         return [];
     }
 
+    // For a user with blood type X, they can donate to requests that need blood types compatible with X
+    // The compatibility map shows what blood types can RECEIVE from the user's blood type
     const compatibleRecipientTypes = compatibilityMap[userBloodTypeName];
     
     const today = new Date();
@@ -76,7 +79,14 @@ const MemberBloodRequests = () => {
     return allRequests.filter(request => {
         const requestedBloodTypeName = getBloodTypeName(request.blood_id);
         const requestDate = new Date(request.request_date);
-        return compatibleRecipientTypes.includes(requestedBloodTypeName) && requestDate >= today;
+        
+        // Check if the user can donate to this request
+        // The request needs requestedBloodTypeName, and the user has userBloodTypeName
+                  // The user can donate if requestedBloodTypeName is in the list of types that can receive from userBloodTypeName
+          const canDonateToRequest = compatibleRecipientTypes.includes(requestedBloodTypeName);
+          const isFuture = requestDate >= today;
+          
+          return canDonateToRequest && isFuture;
     });
   }, [healthRecord, allRequests]);
 
@@ -100,6 +110,8 @@ const MemberBloodRequests = () => {
         </p>
       </CardHeader>
       <CardContent>
+        
+        
         <Table>
           <TableHeader>
             <TableRow>

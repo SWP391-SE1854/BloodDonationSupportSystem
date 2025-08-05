@@ -40,46 +40,32 @@ const UserManagement = () => {
     try {
       setLoading(true);
       const allUsers = await AdminService.getAllUsers();
-      // Initialize status to 'Active' if it's missing
-      const usersWithStatus = allUsers.map(u => ({ ...u, status: u.status || 'Active' }));
-      setUsers(usersWithStatus);
-      } catch (error) {
+      setUsers(allUsers);
+    } catch (error) {
       console.error("Error fetching users:", error);
       toast({
         title: "Lỗi",
         description: "Không thể tải danh sách người dùng",
         variant: "destructive"
       });
-      } finally {
-        setLoading(false);
-      }
-    };
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = async () => {
     navigate("/login");
   };
 
-  const handleToggleStatus = async (userToUpdate: UserProfile) => {
-    const newStatus = userToUpdate.status === 'Active' ? 'Disabled' : 'Active';
-    try {
-      await AdminService.updateUserStatus(userToUpdate.user_id, newStatus);
-      setUsers(users.map(user => 
-        user.user_id === userToUpdate.user_id ? { ...user, status: newStatus } : user
-      ));
-      toast({
-        title: "Thành công",
-        description: `Người dùng đã được ${newStatus === 'Active' ? 'kích hoạt' : 'vô hiệu hóa'}.`,
-      });
-    } catch (error) {
-      console.error("Error updating user status:", error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể cập nhật trạng thái người dùng.",
-        variant: "destructive"
-      });
-    }
+  const handleEditUser = (user: UserProfile) => {
+    // TODO: Implement edit user functionality
+    toast({
+      title: "Tính năng đang phát triển",
+      description: "Chức năng chỉnh sửa người dùng sẽ được cập nhật sau.",
+    });
   };
 
+ 
   const getRoleColor = (role: string) => {
     switch (role.toLowerCase()) {
       case "admin": return "bg-purple-100 text-purple-800";
@@ -161,9 +147,9 @@ const UserManagement = () => {
         {/* Users List */}
         <div className="grid gap-6">
           {filteredUsers.map((user) => (
-            <Card key={user.user_id} className={user.status === 'Disabled' ? 'bg-gray-100 opacity-70' : ''}>
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
+            <Card key={user.user_id}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="bg-gray-100 p-3 rounded-full">
                       <UserIcon className="h-6 w-6 text-gray-600" />
@@ -171,26 +157,23 @@ const UserManagement = () => {
                     <div>
                       <h3 className="font-semibold text-lg">{user.name}</h3>
                       <p className="text-sm text-gray-500">{user.email}</p>
-                              </div>
+                    </div>
                     <Badge className={getRoleColor(user.role)}>{user.role}</Badge>
-                    <Badge variant={user.status === 'Active' ? 'default' : 'destructive'}>
-                      {user.status}
-                    </Badge>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Button
-                      variant={user.status === 'Active' ? 'destructive' : 'default'}
+                      variant="outline"
                       size="sm"
-                      onClick={() => handleToggleStatus(user)}
+                      onClick={() => handleEditUser(user)}
                     >
-                      {user.status === 'Active' ? <ToggleLeft className="mr-2 h-4 w-4" /> : <ToggleRight className="mr-2 h-4 w-4" />}
-                      {user.status === 'Active' ? 'Vô hiệu hóa' : 'Kích hoạt'}
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                      <Edit className="mr-2 h-4 w-4" />
+                      Chỉnh sửa
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
                 </div>
             </div>
                 </div>

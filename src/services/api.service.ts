@@ -20,6 +20,7 @@ api.interceptors.request.use(
     // Do not overwrite the Authorization header if it's already set.
     // This is crucial for the firebase-login flow which sets its own header.
     if (config.headers.Authorization) {
+      console.log('Request with existing Authorization header:', config.url);
       return config;
     }
     
@@ -27,6 +28,9 @@ api.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('Request with JWT token:', config.url);
+    } else {
+      console.log('Request without token:', config.url);
     }
     return config;
   },

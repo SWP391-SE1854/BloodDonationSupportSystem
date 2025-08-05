@@ -12,15 +12,15 @@ export const permanentDisqualifications = [
 ];
 
 export const temporaryDisqualifications = [
-  { id: 'flu', label: 'Cúm, cảm sốt, viêm họng, viêm phế quản', autoReject: false },
-  { id: 'dengue', label: 'Sốt xuất huyết', autoReject: false },
-  { id: 'malaria', label: 'Sốt rét', autoReject: false },
-  { id: 'surgery', label: 'Phẫu thuật hoặc tiểu phẫu', autoReject: false },
-  { id: 'covid', label: 'Nhiễm COVID-19', autoReject: false },
-  { id: 'vaccine', label: 'Tiêm vaccine', autoReject: false },
-  { id: 'pregnancy', label: 'Mang thai và sau sinh', autoReject: false },
-  { id: 'menstruation', label: 'Kinh nguyệt quá nhiều, mất máu nặng', autoReject: false },
-  { id: 'antibiotics', label: 'Dùng kháng sinh hoặc điều trị bệnh lý khác', autoReject: false },
+  { id: 'flu', label: 'Cúm, cảm sốt, viêm họng, viêm phế quản', autoReject: true },
+  { id: 'dengue', label: 'Sốt xuất huyết', autoReject: true },
+  { id: 'malaria', label: 'Sốt rét', autoReject: true },
+  { id: 'surgery', label: 'Phẫu thuật hoặc tiểu phẫu', autoReject: true },
+  { id: 'covid', label: 'Nhiễm COVID-19', autoReject: true },
+  { id: 'vaccine', label: 'Tiêm vaccine', autoReject: true },
+  { id: 'pregnancy', label: 'Mang thai và sau sinh', autoReject: true },
+  { id: 'menstruation', label: 'Kinh nguyệt quá nhiều, mất máu nặng', autoReject: true },
+  { id: 'antibiotics', label: 'Dùng kháng sinh hoặc điều trị bệnh lý khác', autoReject: true },
 ];
 
 export const otherConsiderations = [

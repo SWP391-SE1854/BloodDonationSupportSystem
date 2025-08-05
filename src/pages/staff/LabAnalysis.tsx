@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 
-const StaffLabAnalysis = () => {
+const StaffBloodCheck = () => {
   const [searchTerm, setSearchTerm] = useState("");
   
   const sidebarItems = [
@@ -201,4 +201,4 @@ const StaffLabAnalysis = () => {
   );
 };
 
-export default StaffLabAnalysis;
+export default StaffBloodCheck;

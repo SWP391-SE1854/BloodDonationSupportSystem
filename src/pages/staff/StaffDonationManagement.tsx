@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckCircle, Clock, RefreshCw, XCircle, HeartPulse, PlusCircle, Trash2 } from 'lucide-react';
+import { CheckCircle, Clock, RefreshCw, XCircle, HeartPulse, PlusCircle, Trash2, FileText } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import DonationService from '@/services/donation.service';
 import { Donation } from '@/types/api';
@@ -62,16 +62,15 @@ const StaffDonationManagement = () => {
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-        const donationsPromise = Promise.all([
-            DonationService.getDonationsByStatus('Processed'),
-            DonationService.getDonationsByStatus('Pending'),
-            DonationService.getDonationsByStatus('CheckedIn')
-        ]);
+        // Temporary fix: Get all donations and filter on frontend due to backend endpoint issue
+        const allDonations = await DonationService.getAllDonations();
+        
+        // Filter donations by status on the frontend
+        const processedDonations = allDonations.filter(d => d.status === 'Processed');
+        const pendingDonationsData = allDonations.filter(d => d.status === 'Pending');
+        const checkedInDonationsData = allDonations.filter(d => d.status === 'CheckedIn');
 
-        const usersPromise = StaffService.getAllMembers();
-
-
-        const [[processedDonations, pendingDonationsData, checkedInDonationsData], usersData] = await Promise.all([donationsPromise, usersPromise]);
+        const usersData = await StaffService.getAllMembers();
 
         const nameMap = (usersData as UserProfile[]).reduce((acc, user) => {
             acc[user.user_id] = user.name;
@@ -98,14 +97,25 @@ const StaffDonationManagement = () => {
     loadData();
   }, [loadData]);
 
-  const handleHealthCheckResult = (donationId: number, isEligible: boolean) => {
+  const handleHealthCheckResult = (donationId: number, isEligible: boolean, formData?: Record<string, unknown>) => {
+    console.log('Health check result:', { donationId, isEligible, formData });
+    
     if (isEligible) {
       setHealthCheckPassed(prev => ({ ...prev, [donationId]: true }));
+      toast({
+        title: 'Kiểm tra sức khỏe thành công',
+        description: 'Người hiến đủ điều kiện để hiến máu.',
+      });
     } else {
       const donation = approvedDonations.find(d => d.donation_id === donationId);
       if (donation) {
-        handleStatusUpdate(donation, 'Rejected');
+        handleStatusUpdate(donation, 'Rejected', 'Không đủ điều kiện sức khỏe');
       }
+      toast({
+        title: 'Kiểm tra sức khỏe không đạt',
+        description: 'Người hiến không đủ điều kiện để hiến máu.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -222,6 +232,7 @@ const StaffDonationManagement = () => {
   };
 
     const handleStatusUpdate = async (donation: Donation, newStatus: 'Approved' | 'Rejected' | 'Completed' | 'Processed' | 'Cancelled', reason?: string, amount?: number) => {
+        console.log(`handleStatusUpdate called with:`, { donation, newStatus, reason, amount });
         setIsLoading(true);
     try {
             let updatedDonation: Donation;
@@ -229,7 +240,9 @@ const StaffDonationManagement = () => {
             // Use the new service methods for proper status updates with history creation
             switch (newStatus) {
                 case 'Approved':
+                    console.log(`Calling approveDonation for donation ${donation.donation_id}`);
                     updatedDonation = await DonationService.approveDonation(donation.donation_id);
+                    console.log(`approveDonation result:`, updatedDonation);
                     break;
                 case 'Rejected':
                     updatedDonation = await DonationService.rejectDonation(donation.donation_id, reason);
@@ -259,6 +272,7 @@ const StaffDonationManagement = () => {
                  toast({ title: 'Thành công', description: 'Cập nhật trạng thái hiến máu thành công.' });
             }
             
+            console.log(`Status update successful, reloading data...`);
             loadData();
 
     } catch (error) {
@@ -311,12 +325,44 @@ const StaffDonationManagement = () => {
             <div className="space-y-4">
                 {donations.map((donation) => (
                     <Card key={donation.donation_id}>
-                        <CardContent className="p-4 grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                        <CardContent className="p-4 grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
                             <div>
-                                <p className="font-semibold">{userMap[donation.user_id] || `ID Người hiến: ${donation.user_id}`}</p>
+                                <div className="flex items-center gap-2">
+                                    <p className="font-semibold">{userMap[donation.user_id] || `ID Người hiến: ${donation.user_id}`}</p>
+                                    {donation.note && (
+                                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                            <FileText className="h-3 w-3 mr-1" />
+                                            Có ghi chú
+                                        </Badge>
+                                    )}
+                                </div>
                                 
                                 {donation.amount_ml && (
                                     <p className="text-sm text-green-600 font-semibold">Lượng máu: {donation.amount_ml}cc</p>
+                                )}
+                                
+                                {donation.note && (
+                                    <div className="mt-2">
+                                        <div className="flex items-center gap-1 mb-1">
+                                            <FileText className="h-3 w-3 text-blue-500" />
+                                            <p className="text-sm font-medium text-gray-700">Ghi chú từ người hiến:</p>
+                                        </div>
+                                        <div className="text-sm text-gray-600 bg-blue-50 border border-blue-200 p-2 rounded-md">
+                                            {donation.note}
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {donation.rejection_reason && (
+                                    <div className="mt-2">
+                                        <div className="flex items-center gap-1 mb-1">
+                                            <XCircle className="h-3 w-3 text-red-500" />
+                                            <p className="text-sm font-medium text-gray-700">Lý do từ chối:</p>
+                                        </div>
+                                        <div className="text-sm text-gray-600 bg-red-50 border border-red-200 p-2 rounded-md">
+                                            {donation.rejection_reason}
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                             <div>

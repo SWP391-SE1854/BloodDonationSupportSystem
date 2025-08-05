@@ -33,14 +33,15 @@ const DonationCheckIn = () => {
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Lấy danh sách đăng ký hiến máu đã được duyệt và đã check-in
-      const [approvedDonations, checkedInDonations] = await Promise.all([
-        DonationService.getDonationsByStatus('Approved'),
-        DonationService.getDonationsByStatus('CheckedIn')
-      ]);
+      // Get all donations and filter on frontend due to backend endpoint issue
+      const allDonations = await DonationService.getAllDonations();
+      
+      // Filter donations by status on the frontend
+      const approvedDonations = allDonations.filter(d => d.status === 'Approved');
+      const checkedInDonations = allDonations.filter(d => d.status === 'CheckedIn');
       
       // Kết hợp cả hai danh sách
-      const allDonations = [...approvedDonations, ...checkedInDonations];
+      const filteredDonations = [...approvedDonations, ...checkedInDonations];
       
       // Lấy thông tin user cho mỗi donation
       const usersData = await StaffService.getAllMembers();
@@ -50,7 +51,7 @@ const DonationCheckIn = () => {
       }, {} as Record<string, { name: string; phone: string }>);
 
       // Kết hợp thông tin donation với user
-      const donationsWithUser = allDonations.map(donation => ({
+      const donationsWithUser = filteredDonations.map(donation => ({
         ...donation,
         id: donation.donation_id, // Alias for compatibility
         appointment_date: donation.donation_date, // Alias for compatibility

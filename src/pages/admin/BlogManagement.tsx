@@ -25,7 +25,7 @@ import { EditBlogPost } from '@/components/EditBlogPost';
 import { useAuth } from '@/contexts/AuthContext';
 
 function isWrapped(response: BlogPost[] | WrappedResponse<BlogPost[]>): response is WrappedResponse<BlogPost[]> {
-    return response && typeof response === 'object' && '$values' in response;
+     return response && typeof response === 'object' && '$values' in response;
 }
 
 const BlogManagement = () => {

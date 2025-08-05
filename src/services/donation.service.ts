@@ -6,11 +6,10 @@ import { Donation } from '@/types/api';
 // CreateDonationPayload is a subset of the full Donation object
 export type CreateDonationPayload = {
   donation_date: string;
-  start_time?: string;
-  end_time?: string;
-  donation_time?: string; // Keep for backward compatibility
-  diseases?: string[];
-  allergies?: string[];
+  start_time: string;
+  end_time: string;
+  blood_type?: string;
+  status?: string;
   note?: string;
 };
 
@@ -93,70 +92,125 @@ export class DonationService {
     }
   }
 
-  static async updateDonationStatus(donationId: number, status: string): Promise<Donation> {
+  static async updateDonationStatus(donationId: number, status: Donation['status']): Promise<Donation> {
     try {
-      const response = await api.put<Donation>(API_ENDPOINTS.DONATION.UPDATE, {
+      console.log(`Updating donation ${donationId} status to ${status}...`);
+      
+      // First, get the current donation to have all the required fields
+      const allDonations = await this.getAllDonations();
+      const currentDonation = allDonations.find(d => d.donation_id === donationId);
+      
+      if (!currentDonation) {
+        throw new Error(`Donation ${donationId} not found`);
+      }
+      
+      // Create the donation object with the fields the backend expects
+      const updatePayload = {
         donation_id: donationId,
-        status: status
-      });
+        status: status,
+        quantity: currentDonation.amount_ml || 0, // Map amount_ml to quantity
+        start_time: currentDonation.start_time,
+        end_time: currentDonation.end_time,
+        note: currentDonation.note || ''
+      };
+      
+      console.log(`Request payload:`, updatePayload);
+      console.log(`API endpoint:`, API_ENDPOINTS.DONATION.UPDATE);
+      
+      const response = await api.put<Donation>(API_ENDPOINTS.DONATION.UPDATE, updatePayload);
+      
+      console.log(`Successfully updated donation status:`, response.data);
       return response.data;
     } catch (error) {
+      console.error(`Error updating donation status ${donationId}:`, error);
       if (axios.isAxiosError(error)) {
-        console.error(`Error updating donation status ${donationId}:`, error.message);
+        console.error(`Axios error details for status update:`, {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          url: error.config?.url,
+          method: error.config?.method,
+          requestData: error.config?.data
+        });
       }
       throw error;
     }
   }
 
-  // New method to handle approval with history creation
+  // New method to handle approval
   static async approveDonation(donationId: number): Promise<Donation> {
     try {
-      // First update the donation status to Approved
+      console.log(`Attempting to approve donation ${donationId}...`);
+      
+      // Update the donation status to Approved
       const updatedDonation = await this.updateDonationStatus(donationId, 'Approved');
       
-      // Create donation history entry for approved donations
-      await this.createDonationHistoryEntry(donationId, 'Approved');
+      console.log(`Successfully approved donation ${donationId}:`, updatedDonation);
+      
+      // Note: History creation is disabled due to missing backend endpoint
+      // await this.createDonationHistoryEntry(donationId, 'Approved');
       
       return updatedDonation;
     } catch (error) {
+      console.error(`Error approving donation ${donationId}:`, error);
       if (axios.isAxiosError(error)) {
-        console.error(`Error approving donation ${donationId}:`, error.message);
+        console.error(`Axios error details:`, {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          url: error.config?.url,
+          method: error.config?.method
+        });
       }
       throw error;
     }
   }
 
-  // New method to handle rejection with history creation
+  // New method to handle rejection
   static async rejectDonation(donationId: number, reason?: string): Promise<Donation> {
     try {
       // Update the donation status to Rejected
       const updatedDonation = await this.updateDonationStatus(donationId, 'Rejected');
       
-      // Create donation history entry for rejected donations
-      await this.createDonationHistoryEntry(donationId, 'Rejected');
+      // Note: History creation is disabled due to missing backend endpoint
+      // await this.createDonationHistoryEntry(donationId, 'Rejected');
       
       return updatedDonation;
     } catch (error) {
+      console.error(`Error rejecting donation ${donationId}:`, error);
       if (axios.isAxiosError(error)) {
-        console.error(`Error rejecting donation ${donationId}:`, error.message);
+        console.error(`Axios error details:`, {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          url: error.config?.url,
+          method: error.config?.method
+        });
       }
       throw error;
     }
   }
 
-  // New method to handle cancellation with history creation
+  // New method to handle cancellation
   static async cancelDonation(donationId: number): Promise<Donation> {
     try {
       // Update the donation status to Cancelled
       const updatedDonation = await this.updateDonationStatus(donationId, 'Cancelled');
       
-      // Create donation history entry for cancelled donations
-      await this.createDonationHistoryEntry(donationId, 'Cancelled');
+      // Note: History creation is disabled due to missing backend endpoint
+      // await this.createDonationHistoryEntry(donationId, 'Cancelled');
       
       return updatedDonation;
     } catch (error) {
+      console.error(`Error cancelling donation ${donationId}:`, error);
       if (axios.isAxiosError(error)) {
-        console.error(`Error cancelling donation ${donationId}:`, error.message);
+        console.error(`Axios error details:`, {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          url: error.config?.url,
+          method: error.config?.method
+        });
       }
       throw error;
     }
