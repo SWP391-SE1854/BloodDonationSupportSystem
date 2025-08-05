@@ -34,41 +34,51 @@ import { User, FileText, Activity, Shield, Stethoscope, AlertTriangle } from "lu
 
 // Health check form schema
 const comprehensiveHealthCheckSchema = z.object({
-  // Section 1: Personal Information & Blood Donation History
-  fullName: z.string().min(1, "Họ tên là bắt buộc"),
-  dateOfBirth: z.string().min(1, "Ngày sinh là bắt buộc"),
-  hasDonatedBefore: z.enum(["yes", "no"]),
+  // Section 1: Blood Donation History
+  hasDonatedBefore: z.enum(["yes", "no"], { required_error: "Vui lòng chọn câu trả lời" }),
   lastDonationDate: z.string().optional(),
-  hasSideEffects: z.enum(["yes", "no"]),
+  hasSideEffects: z.enum(["yes", "no"], { required_error: "Vui lòng chọn câu trả lời" }),
   sideEffectsDescription: z.string().optional(),
 
   // Section 2: Medical History
-  isCurrentlySick: z.enum(["yes", "no"]),
-  hasChronicConditions: z.enum(["yes", "no"]),
+  isCurrentlySick: z.enum(["yes", "no"], { required_error: "Vui lòng chọn câu trả lời" }),
+  hasChronicConditions: z.enum(["yes", "no"], { required_error: "Vui lòng chọn câu trả lời" }),
   chronicConditionsList: z.string().optional(),
-  hasInfectiousDiseases: z.enum(["yes", "no"]),
-  hasRecentProcedures: z.enum(["yes", "no"]),
-  isOnMedication: z.enum(["yes", "no"]),
+  hasInfectiousDiseases: z.enum(["yes", "no"], { required_error: "Vui lòng chọn câu trả lời" }),
+  hasRecentProcedures: z.enum(["yes", "no"], { required_error: "Vui lòng chọn câu trả lời" }),
+  isOnMedication: z.enum(["yes", "no"], { required_error: "Vui lòng chọn câu trả lời" }),
   medicationList: z.string().optional(),
 
   // Section 3: Current Health Status
-  isFeelingHealthy: z.enum(["yes", "no"]),
-  hasHealthChanges: z.enum(["yes", "no"]),
+  isFeelingHealthy: z.enum(["yes", "no"], { required_error: "Vui lòng chọn câu trả lời" }),
+  hasHealthChanges: z.enum(["yes", "no"], { required_error: "Vui lòng chọn câu trả lời" }),
   healthChangesDescription: z.string().optional(),
-  isPregnantOrBreastfeeding: z.enum(["yes", "no", "na"]),
+  isPregnantOrBreastfeeding: z.enum(["yes", "no", "na"], { required_error: "Vui lòng chọn câu trả lời" }),
 
   // Section 4: High-Risk Behaviors
-  hasUnprotectedSex: z.enum(["yes", "no"]),
-  hasUsedDrugs: z.enum(["yes", "no"]),
-  hasBeenInjected: z.enum(["yes", "no"]),
+  hasUnprotectedSex: z.enum(["yes", "no"], { required_error: "Vui lòng chọn câu trả lời" }),
+  hasUsedDrugs: z.enum(["yes", "no"], { required_error: "Vui lòng chọn câu trả lời" }),
+  hasBeenInjected: z.enum(["yes", "no"], { required_error: "Vui lòng chọn câu trả lời" }),
 
   // Section 5: Physical Examination
-  weight: z.number().min(30, "Cân nặng phải ít nhất 30kg").max(200, "Cân nặng không hợp lệ"),
-  bloodPressureSystolic: z.number().min(70, "Huyết áp tâm thu không hợp lệ").max(200, "Huyết áp tâm thu không hợp lệ"),
-  bloodPressureDiastolic: z.number().min(40, "Huyết áp tâm trương không hợp lệ").max(130, "Huyết áp tâm trương không hợp lệ"),
-  pulseRate: z.number().min(40, "Nhịp tim không hợp lệ").max(200, "Nhịp tim không hợp lệ"),
-  temperature: z.number().min(35, "Nhiệt độ không hợp lệ").max(42, "Nhiệt độ không hợp lệ"),
-  hemoglobin: z.number().min(8, "Hemoglobin quá thấp").max(20, "Hemoglobin không hợp lệ"),
+  weight: z.string().min(1, "Cân nặng là bắt buộc").refine((val) => !isNaN(Number(val)) && Number(val) >= 30 && Number(val) <= 200, {
+    message: "Cân nặng phải từ 30-200kg"
+  }),
+  bloodPressureSystolic: z.string().min(1, "Huyết áp tâm thu là bắt buộc").refine((val) => !isNaN(Number(val)) && Number(val) >= 70 && Number(val) <= 200, {
+    message: "Huyết áp tâm thu phải từ 70-200"
+  }),
+  bloodPressureDiastolic: z.string().min(1, "Huyết áp tâm trương là bắt buộc").refine((val) => !isNaN(Number(val)) && Number(val) >= 40 && Number(val) <= 130, {
+    message: "Huyết áp tâm trương phải từ 40-130"
+  }),
+  pulseRate: z.string().min(1, "Nhịp tim là bắt buộc").refine((val) => !isNaN(Number(val)) && Number(val) >= 40 && Number(val) <= 200, {
+    message: "Nhịp tim phải từ 40-200 bpm"
+  }),
+  temperature: z.string().min(1, "Nhiệt độ là bắt buộc").refine((val) => !isNaN(Number(val)) && Number(val) >= 35 && Number(val) <= 42, {
+    message: "Nhiệt độ phải từ 35-42°C"
+  }),
+  hemoglobin: z.string().min(1, "Hemoglobin là bắt buộc").refine((val) => !isNaN(Number(val)) && Number(val) >= 8 && Number(val) <= 20, {
+    message: "Hemoglobin phải từ 8-20 g/dL"
+  }),
 });
 
 type ComprehensiveHealthCheckFormData = z.infer<typeof comprehensiveHealthCheckSchema>;
@@ -78,18 +88,13 @@ interface ComprehensiveHealthCheckFormProps {
     onOpenChange: (isOpen: boolean) => void;
     donation: Donation | null;
     onCheckResult: (donationId: number, isEligible: boolean, formData: ComprehensiveHealthCheckFormData) => void;
-    prefillData?: {
-        fullName?: string;
-        dateOfBirth?: string;
-    };
 }
 
 export const ComprehensiveHealthCheckForm = ({ 
     isOpen, 
     onOpenChange, 
     donation, 
-    onCheckResult,
-    prefillData 
+    onCheckResult
 }: ComprehensiveHealthCheckFormProps) => {
     const { toast } = useToast();
     const { user } = useAuth();
@@ -99,75 +104,71 @@ export const ComprehensiveHealthCheckForm = ({
     const form = useForm<ComprehensiveHealthCheckFormData>({
         resolver: zodResolver(comprehensiveHealthCheckSchema),
         defaultValues: {
-            fullName: prefillData?.fullName || "",
-            dateOfBirth: prefillData?.dateOfBirth || "",
-            hasDonatedBefore: "no",
+            hasDonatedBefore: undefined,
             lastDonationDate: "",
-            hasSideEffects: "no",
+            hasSideEffects: undefined,
             sideEffectsDescription: "",
-            isCurrentlySick: "no",
-            hasChronicConditions: "no",
+            isCurrentlySick: undefined,
+            hasChronicConditions: undefined,
             chronicConditionsList: "",
-            hasInfectiousDiseases: "no",
-            hasRecentProcedures: "no",
-            isOnMedication: "no",
+            hasInfectiousDiseases: undefined,
+            hasRecentProcedures: undefined,
+            isOnMedication: undefined,
             medicationList: "",
-            isFeelingHealthy: "yes",
-            hasHealthChanges: "no",
+            isFeelingHealthy: undefined,
+            hasHealthChanges: undefined,
             healthChangesDescription: "",
-            isPregnantOrBreastfeeding: "na",
-            hasUnprotectedSex: "no",
-            hasUsedDrugs: "no",
-            hasBeenInjected: "no",
-            weight: 0,
-            bloodPressureSystolic: 0,
-            bloodPressureDiastolic: 0,
-            pulseRate: 0,
-            temperature: 0,
-            hemoglobin: 0,
+            isPregnantOrBreastfeeding: undefined,
+            hasUnprotectedSex: undefined,
+            hasUsedDrugs: undefined,
+            hasBeenInjected: undefined,
+            weight: "",
+            bloodPressureSystolic: "",
+            bloodPressureDiastolic: "",
+            pulseRate: "",
+            temperature: "",
+            hemoglobin: "",
         }
     });
 
     useEffect(() => {
         if (isOpen) {
             form.reset({
-                fullName: prefillData?.fullName || "",
-                dateOfBirth: prefillData?.dateOfBirth || "",
-                hasDonatedBefore: "no",
+                hasDonatedBefore: undefined,
                 lastDonationDate: "",
-                hasSideEffects: "no",
+                hasSideEffects: undefined,
                 sideEffectsDescription: "",
-                isCurrentlySick: "no",
-                hasChronicConditions: "no",
+                isCurrentlySick: undefined,
+                hasChronicConditions: undefined,
                 chronicConditionsList: "",
-                hasInfectiousDiseases: "no",
-                hasRecentProcedures: "no",
-                isOnMedication: "no",
+                hasInfectiousDiseases: undefined,
+                hasRecentProcedures: undefined,
+                isOnMedication: undefined,
                 medicationList: "",
-                isFeelingHealthy: "yes",
-                hasHealthChanges: "no",
+                isFeelingHealthy: undefined,
+                hasHealthChanges: undefined,
                 healthChangesDescription: "",
-                isPregnantOrBreastfeeding: "na",
-                hasUnprotectedSex: "no",
-                hasUsedDrugs: "no",
-                hasBeenInjected: "no",
-                weight: 0,
-                bloodPressureSystolic: 0,
-                bloodPressureDiastolic: 0,
-                pulseRate: 0,
-                temperature: 0,
-                hemoglobin: 0,
+                isPregnantOrBreastfeeding: undefined,
+                hasUnprotectedSex: undefined,
+                hasUsedDrugs: undefined,
+                hasBeenInjected: undefined,
+                weight: "",
+                bloodPressureSystolic: "",
+                bloodPressureDiastolic: "",
+                pulseRate: "",
+                temperature: "",
+                hemoglobin: "",
             });
         }
-    }, [isOpen, prefillData, form]);
+    }, [isOpen, form]);
 
     const determineEligibility = (data: ComprehensiveHealthCheckFormData): boolean => {
-        const weightOk = data.weight >= 45;
-        const bloodPressureOk = data.bloodPressureSystolic >= 90 && data.bloodPressureSystolic <= 160 &&
-                               data.bloodPressureDiastolic >= 60 && data.bloodPressureDiastolic <= 100;
-        const temperatureOk = data.temperature >= 36.0 && data.temperature <= 37.5;
-        const hemoglobinOk = data.hemoglobin >= 12.5;
-        const pulseOk = data.pulseRate >= 60 && data.pulseRate <= 100;
+        const weightOk = Number(data.weight) >= 45;
+        const bloodPressureOk = Number(data.bloodPressureSystolic) >= 90 && Number(data.bloodPressureSystolic) <= 160 &&
+                               Number(data.bloodPressureDiastolic) >= 60 && Number(data.bloodPressureDiastolic) <= 100;
+        const temperatureOk = Number(data.temperature) >= 36.0 && Number(data.temperature) <= 37.5;
+        const hemoglobinOk = Number(data.hemoglobin) >= 12.5;
+        const pulseOk = Number(data.pulseRate) >= 60 && Number(data.pulseRate) <= 100;
 
         const notCurrentlySick = data.isCurrentlySick === "no";
         const noInfectiousDiseases = data.hasInfectiousDiseases === "no";
@@ -238,6 +239,8 @@ export const ComprehensiveHealthCheckForm = ({
         onOpenChange(open);
     };
 
+    const isFormValid = form.formState.isValid && Object.keys(form.formState.errors).length === 0;
+
     return (
         <>
             <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -254,63 +257,36 @@ export const ComprehensiveHealthCheckForm = ({
 
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                            {/* Section 1: Personal Information & Blood Donation History */}
-                            <Card className="mb-6">
-                                <CardHeader className="pb-3">
-                                    <CardTitle className="flex items-center gap-2 text-lg">
-                                        <User className="h-5 w-5" />
-                                        💼 Thông tin cá nhân & Lịch sử hiến máu
+                            {/* Section 1: Blood Donation History */}
+                            <Card className="border-gray-200">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+                                        <User className="h-5 w-5 text-blue-600" />
+                                        Lịch sử hiến máu
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <FormField
-                                            control={form.control}
-                                            name="fullName"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Họ và tên *</FormLabel>
-                                                    <FormControl>
-                                                        <Input placeholder="Nhập họ và tên" {...field} />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <FormField
-                                            control={form.control}
-                                            name="dateOfBirth"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Ngày sinh *</FormLabel>
-                                                    <FormControl>
-                                                        <Input type="date" {...field} />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                    </div>
-
                                     <FormField
                                         control={form.control}
                                         name="hasDonatedBefore"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Bạn đã từng hiến máu chưa? *</FormLabel>
+                                                <FormLabel className="text-sm font-medium text-gray-700">
+                                                    Đã từng hiến máu chưa?
+                                                </FormLabel>
                                                 <FormControl>
                                                     <RadioGroup
                                                         onValueChange={field.onChange}
-                                                        defaultValue={field.value}
-                                                        className="flex flex-col space-y-1"
+                                                        value={field.value}
+                                                        className="flex flex-col space-y-2"
                                                     >
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="yes" id="donated-yes" />
-                                                            <Label htmlFor="donated-yes">Có</Label>
+                                                            <Label htmlFor="donated-yes" className="text-sm">Có</Label>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="no" id="donated-no" />
-                                                            <Label htmlFor="donated-no">Không</Label>
+                                                            <Label htmlFor="donated-no" className="text-sm">Không</Label>
                                                         </div>
                                                     </RadioGroup>
                                                 </FormControl>
@@ -325,9 +301,11 @@ export const ComprehensiveHealthCheckForm = ({
                                             name="lastDonationDate"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Lần hiến máu gần nhất?</FormLabel>
+                                                    <FormLabel className="text-sm font-medium text-gray-700">
+                                                        Lần hiến máu gần nhất
+                                                    </FormLabel>
                                                     <FormControl>
-                                                        <Input type="date" {...field} />
+                                                        <Input type="date" {...field} className="max-w-xs" />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -340,20 +318,22 @@ export const ComprehensiveHealthCheckForm = ({
                                         name="hasSideEffects"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Bạn có gặp tác dụng phụ sau khi hiến máu không? (chóng mặt, ngất xỉu, buồn nôn)</FormLabel>
+                                                <FormLabel className="text-sm font-medium text-gray-700">
+                                                    Có gặp tác dụng phụ sau khi hiến máu không? (chóng mặt, ngất xỉu, buồn nôn)
+                                                </FormLabel>
                                                 <FormControl>
                                                     <RadioGroup
                                                         onValueChange={field.onChange}
-                                                        defaultValue={field.value}
-                                                        className="flex flex-col space-y-1"
+                                                        value={field.value}
+                                                        className="flex flex-col space-y-2"
                                                     >
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="yes" id="side-effects-yes" />
-                                                            <Label htmlFor="side-effects-yes">Có</Label>
+                                                            <Label htmlFor="side-effects-yes" className="text-sm">Có</Label>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="no" id="side-effects-no" />
-                                                            <Label htmlFor="side-effects-no">Không</Label>
+                                                            <Label htmlFor="side-effects-no" className="text-sm">Không</Label>
                                                         </div>
                                                     </RadioGroup>
                                                 </FormControl>
@@ -368,9 +348,15 @@ export const ComprehensiveHealthCheckForm = ({
                                             name="sideEffectsDescription"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Mô tả tác dụng phụ</FormLabel>
+                                                    <FormLabel className="text-sm font-medium text-gray-700">
+                                                        Mô tả tác dụng phụ
+                                                    </FormLabel>
                                                     <FormControl>
-                                                        <Textarea placeholder="Mô tả chi tiết các tác dụng phụ..." {...field} />
+                                                        <Textarea 
+                                                            placeholder="Mô tả chi tiết các tác dụng phụ..." 
+                                                            {...field} 
+                                                            className="min-h-[80px]"
+                                                        />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -381,11 +367,11 @@ export const ComprehensiveHealthCheckForm = ({
                             </Card>
 
                             {/* Section 2: Medical History */}
-                            <Card className="mb-6">
-                                <CardHeader className="pb-3">
-                                    <CardTitle className="flex items-center gap-2 text-lg">
-                                        <FileText className="h-5 w-5" />
-                                        📋 Tiền sử bệnh lý
+                            <Card className="border-gray-200">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+                                        <FileText className="h-5 w-5 text-green-600" />
+                                        Tiền sử bệnh lý
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
@@ -394,20 +380,22 @@ export const ComprehensiveHealthCheckForm = ({
                                         name="isCurrentlySick"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Bạn có đang bị bệnh không? (cảm, sốt, cúm, ho, tiêu chảy) *</FormLabel>
+                                                <FormLabel className="text-sm font-medium text-gray-700">
+                                                    Có đang bị bệnh không? (cảm, sốt, cúm, ho, tiêu chảy)
+                                                </FormLabel>
                                                 <FormControl>
                                                     <RadioGroup
                                                         onValueChange={field.onChange}
-                                                        defaultValue={field.value}
-                                                        className="flex flex-col space-y-1"
+                                                        value={field.value}
+                                                        className="flex flex-col space-y-2"
                                                     >
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="yes" id="sick-yes" />
-                                                            <Label htmlFor="sick-yes">Có</Label>
+                                                            <Label htmlFor="sick-yes" className="text-sm">Có</Label>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="no" id="sick-no" />
-                                                            <Label htmlFor="sick-no">Không</Label>
+                                                            <Label htmlFor="sick-no" className="text-sm">Không</Label>
                                                         </div>
                                                     </RadioGroup>
                                                 </FormControl>
@@ -421,20 +409,22 @@ export const ComprehensiveHealthCheckForm = ({
                                         name="hasChronicConditions"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Bạn có bệnh mãn tính không? (bệnh tim, tiểu đường, cao huyết áp, hen suyễn)</FormLabel>
+                                                <FormLabel className="text-sm font-medium text-gray-700">
+                                                    Có bệnh mãn tính không? (bệnh tim, tiểu đường, cao huyết áp, hen suyễn)
+                                                </FormLabel>
                                                 <FormControl>
                                                     <RadioGroup
                                                         onValueChange={field.onChange}
-                                                        defaultValue={field.value}
-                                                        className="flex flex-col space-y-1"
+                                                        value={field.value}
+                                                        className="flex flex-col space-y-2"
                                                     >
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="yes" id="chronic-yes" />
-                                                            <Label htmlFor="chronic-yes">Có</Label>
+                                                            <Label htmlFor="chronic-yes" className="text-sm">Có</Label>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="no" id="chronic-no" />
-                                                            <Label htmlFor="chronic-no">Không</Label>
+                                                            <Label htmlFor="chronic-no" className="text-sm">Không</Label>
                                                         </div>
                                                     </RadioGroup>
                                                 </FormControl>
@@ -449,9 +439,15 @@ export const ComprehensiveHealthCheckForm = ({
                                             name="chronicConditionsList"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Danh sách bệnh mãn tính</FormLabel>
+                                                    <FormLabel className="text-sm font-medium text-gray-700">
+                                                        Danh sách bệnh mãn tính
+                                                    </FormLabel>
                                                     <FormControl>
-                                                        <Textarea placeholder="Liệt kê các bệnh mãn tính..." {...field} />
+                                                        <Textarea 
+                                                            placeholder="Liệt kê các bệnh mãn tính..." 
+                                                            {...field} 
+                                                            className="min-h-[80px]"
+                                                        />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -464,20 +460,22 @@ export const ComprehensiveHealthCheckForm = ({
                                         name="hasInfectiousDiseases"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Bạn có từng mắc bệnh truyền nhiễm không? (viêm gan B/C, HIV/AIDS, giang mai)</FormLabel>
+                                                <FormLabel className="text-sm font-medium text-gray-700">
+                                                    Có từng mắc bệnh truyền nhiễm không? (viêm gan B/C, HIV/AIDS, giang mai)
+                                                </FormLabel>
                                                 <FormControl>
                                                     <RadioGroup
                                                         onValueChange={field.onChange}
-                                                        defaultValue={field.value}
-                                                        className="flex flex-col space-y-1"
+                                                        value={field.value}
+                                                        className="flex flex-col space-y-2"
                                                     >
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="yes" id="infectious-yes" />
-                                                            <Label htmlFor="infectious-yes">Có</Label>
+                                                            <Label htmlFor="infectious-yes" className="text-sm">Có</Label>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="no" id="infectious-no" />
-                                                            <Label htmlFor="infectious-no">Không</Label>
+                                                            <Label htmlFor="infectious-no" className="text-sm">Không</Label>
                                                         </div>
                                                     </RadioGroup>
                                                 </FormControl>
@@ -491,20 +489,22 @@ export const ComprehensiveHealthCheckForm = ({
                                         name="hasRecentProcedures"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Bạn có phẫu thuật, truyền máu, xăm hình, xỏ khuyên trong 6-12 tháng qua không?</FormLabel>
+                                                <FormLabel className="text-sm font-medium text-gray-700">
+                                                    Có phẫu thuật, truyền máu, xăm hình, xỏ khuyên trong 6-12 tháng qua không?
+                                                </FormLabel>
                                                 <FormControl>
                                                     <RadioGroup
                                                         onValueChange={field.onChange}
-                                                        defaultValue={field.value}
-                                                        className="flex flex-col space-y-1"
+                                                        value={field.value}
+                                                        className="flex flex-col space-y-2"
                                                     >
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="yes" id="procedures-yes" />
-                                                            <Label htmlFor="procedures-yes">Có</Label>
+                                                            <Label htmlFor="procedures-yes" className="text-sm">Có</Label>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="no" id="procedures-no" />
-                                                            <Label htmlFor="procedures-no">Không</Label>
+                                                            <Label htmlFor="procedures-no" className="text-sm">Không</Label>
                                                         </div>
                                                     </RadioGroup>
                                                 </FormControl>
@@ -518,20 +518,22 @@ export const ComprehensiveHealthCheckForm = ({
                                         name="isOnMedication"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Bạn có đang dùng thuốc không?</FormLabel>
+                                                <FormLabel className="text-sm font-medium text-gray-700">
+                                                    Có đang dùng thuốc không?
+                                                </FormLabel>
                                                 <FormControl>
                                                     <RadioGroup
                                                         onValueChange={field.onChange}
-                                                        defaultValue={field.value}
-                                                        className="flex flex-col space-y-1"
+                                                        value={field.value}
+                                                        className="flex flex-col space-y-2"
                                                     >
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="yes" id="medication-yes" />
-                                                            <Label htmlFor="medication-yes">Có</Label>
+                                                            <Label htmlFor="medication-yes" className="text-sm">Có</Label>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="no" id="medication-no" />
-                                                            <Label htmlFor="medication-no">Không</Label>
+                                                            <Label htmlFor="medication-no" className="text-sm">Không</Label>
                                                         </div>
                                                     </RadioGroup>
                                                 </FormControl>
@@ -546,9 +548,15 @@ export const ComprehensiveHealthCheckForm = ({
                                             name="medicationList"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Danh sách thuốc đang dùng</FormLabel>
+                                                    <FormLabel className="text-sm font-medium text-gray-700">
+                                                        Danh sách thuốc đang dùng
+                                                    </FormLabel>
                                                     <FormControl>
-                                                        <Textarea placeholder="Liệt kê các loại thuốc..." {...field} />
+                                                        <Textarea 
+                                                            placeholder="Liệt kê các loại thuốc..." 
+                                                            {...field} 
+                                                            className="min-h-[80px]"
+                                                        />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -559,11 +567,11 @@ export const ComprehensiveHealthCheckForm = ({
                             </Card>
 
                             {/* Section 3: Current Health Status */}
-                            <Card className="mb-6">
-                                <CardHeader className="pb-3">
-                                    <CardTitle className="flex items-center gap-2 text-lg">
-                                        <Activity className="h-5 w-5" />
-                                        🧍 Tình trạng sức khỏe hiện tại
+                            <Card className="border-gray-200">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+                                        <Activity className="h-5 w-5 text-purple-600" />
+                                        Tình trạng sức khỏe hiện tại
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
@@ -572,20 +580,22 @@ export const ComprehensiveHealthCheckForm = ({
                                         name="isFeelingHealthy"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Bạn có cảm thấy khỏe mạnh hôm nay không? *</FormLabel>
+                                                <FormLabel className="text-sm font-medium text-gray-700">
+                                                    Có cảm thấy khỏe mạnh hôm nay không?
+                                                </FormLabel>
                                                 <FormControl>
                                                     <RadioGroup
                                                         onValueChange={field.onChange}
-                                                        defaultValue={field.value}
-                                                        className="flex flex-col space-y-1"
+                                                        value={field.value}
+                                                        className="flex flex-col space-y-2"
                                                     >
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="yes" id="healthy-yes" />
-                                                            <Label htmlFor="healthy-yes">Có</Label>
+                                                            <Label htmlFor="healthy-yes" className="text-sm">Có</Label>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="no" id="healthy-no" />
-                                                            <Label htmlFor="healthy-no">Không</Label>
+                                                            <Label htmlFor="healthy-no" className="text-sm">Không</Label>
                                                         </div>
                                                     </RadioGroup>
                                                 </FormControl>
@@ -599,20 +609,22 @@ export const ComprehensiveHealthCheckForm = ({
                                         name="hasHealthChanges"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Bạn có thay đổi sức khỏe gần đây không? (sụt cân đột ngột, mất ngủ kéo dài)</FormLabel>
+                                                <FormLabel className="text-sm font-medium text-gray-700">
+                                                    Có thay đổi sức khỏe gần đây không? (sụt cân đột ngột, mất ngủ kéo dài)
+                                                </FormLabel>
                                                 <FormControl>
                                                     <RadioGroup
                                                         onValueChange={field.onChange}
-                                                        defaultValue={field.value}
-                                                        className="flex flex-col space-y-1"
+                                                        value={field.value}
+                                                        className="flex flex-col space-y-2"
                                                     >
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="yes" id="changes-yes" />
-                                                            <Label htmlFor="changes-yes">Có</Label>
+                                                            <Label htmlFor="changes-yes" className="text-sm">Có</Label>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="no" id="changes-no" />
-                                                            <Label htmlFor="changes-no">Không</Label>
+                                                            <Label htmlFor="changes-no" className="text-sm">Không</Label>
                                                         </div>
                                                     </RadioGroup>
                                                 </FormControl>
@@ -627,9 +639,15 @@ export const ComprehensiveHealthCheckForm = ({
                                             name="healthChangesDescription"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Mô tả thay đổi sức khỏe</FormLabel>
+                                                    <FormLabel className="text-sm font-medium text-gray-700">
+                                                        Mô tả thay đổi sức khỏe
+                                                    </FormLabel>
                                                     <FormControl>
-                                                        <Textarea placeholder="Mô tả chi tiết các thay đổi..." {...field} />
+                                                        <Textarea 
+                                                            placeholder="Mô tả chi tiết các thay đổi..." 
+                                                            {...field} 
+                                                            className="min-h-[80px]"
+                                                        />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -642,24 +660,26 @@ export const ComprehensiveHealthCheckForm = ({
                                         name="isPregnantOrBreastfeeding"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Đối với phụ nữ: Bạn có đang mang thai, cho con bú hoặc đang trong kỳ kinh không?</FormLabel>
+                                                <FormLabel className="text-sm font-medium text-gray-700">
+                                                    Đối với phụ nữ: Có đang mang thai, cho con bú hoặc đang trong kỳ kinh không?
+                                                </FormLabel>
                                                 <FormControl>
                                                     <RadioGroup
                                                         onValueChange={field.onChange}
-                                                        defaultValue={field.value}
-                                                        className="flex flex-col space-y-1"
+                                                        value={field.value}
+                                                        className="flex flex-col space-y-2"
                                                     >
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="yes" id="pregnant-yes" />
-                                                            <Label htmlFor="pregnant-yes">Có</Label>
+                                                            <Label htmlFor="pregnant-yes" className="text-sm">Có</Label>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="no" id="pregnant-no" />
-                                                            <Label htmlFor="pregnant-no">Không</Label>
+                                                            <Label htmlFor="pregnant-no" className="text-sm">Không</Label>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="na" id="pregnant-na" />
-                                                            <Label htmlFor="pregnant-na">Không áp dụng</Label>
+                                                            <Label htmlFor="pregnant-na" className="text-sm">Không áp dụng</Label>
                                                         </div>
                                                     </RadioGroup>
                                                 </FormControl>
@@ -671,11 +691,11 @@ export const ComprehensiveHealthCheckForm = ({
                             </Card>
 
                             {/* Section 4: High-Risk Behaviors */}
-                            <Card className="mb-6">
-                                <CardHeader className="pb-3">
-                                    <CardTitle className="flex items-center gap-2 text-lg">
-                                        <Shield className="h-5 w-5" />
-                                        🚫 Hành vi nguy cơ cao
+                            <Card className="border-gray-200">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+                                        <Shield className="h-5 w-5 text-red-600" />
+                                        Hành vi nguy cơ cao
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
@@ -684,20 +704,22 @@ export const ComprehensiveHealthCheckForm = ({
                                         name="hasUnprotectedSex"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Bạn có quan hệ tình dục không an toàn với nhiều bạn tình trong 12 tháng qua không?</FormLabel>
+                                                <FormLabel className="text-sm font-medium text-gray-700">
+                                                    Có quan hệ tình dục không an toàn trong 12 tháng qua không?
+                                                </FormLabel>
                                                 <FormControl>
                                                     <RadioGroup
                                                         onValueChange={field.onChange}
-                                                        defaultValue={field.value}
-                                                        className="flex flex-col space-y-1"
+                                                        value={field.value}
+                                                        className="flex flex-col space-y-2"
                                                     >
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="yes" id="sex-yes" />
-                                                            <Label htmlFor="sex-yes">Có</Label>
+                                                            <Label htmlFor="sex-yes" className="text-sm">Có</Label>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="no" id="sex-no" />
-                                                            <Label htmlFor="sex-no">Không</Label>
+                                                            <Label htmlFor="sex-no" className="text-sm">Không</Label>
                                                         </div>
                                                     </RadioGroup>
                                                 </FormControl>
@@ -711,20 +733,22 @@ export const ComprehensiveHealthCheckForm = ({
                                         name="hasUsedDrugs"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Bạn có sử dụng ma túy hoặc chất kích thích không?</FormLabel>
+                                                <FormLabel className="text-sm font-medium text-gray-700">
+                                                    Có sử dụng ma túy hoặc chất kích thích không?
+                                                </FormLabel>
                                                 <FormControl>
                                                     <RadioGroup
                                                         onValueChange={field.onChange}
-                                                        defaultValue={field.value}
-                                                        className="flex flex-col space-y-1"
+                                                        value={field.value}
+                                                        className="flex flex-col space-y-2"
                                                     >
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="yes" id="drugs-yes" />
-                                                            <Label htmlFor="drugs-yes">Có</Label>
+                                                            <Label htmlFor="drugs-yes" className="text-sm">Có</Label>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="no" id="drugs-no" />
-                                                            <Label htmlFor="drugs-no">Không</Label>
+                                                            <Label htmlFor="drugs-no" className="text-sm">Không</Label>
                                                         </div>
                                                     </RadioGroup>
                                                 </FormControl>
@@ -738,20 +762,22 @@ export const ComprehensiveHealthCheckForm = ({
                                         name="hasBeenInjected"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Bạn có bị tiêm chất không rõ nguồn gốc không?</FormLabel>
+                                                <FormLabel className="text-sm font-medium text-gray-700">
+                                                    Có bị tiêm chất không rõ nguồn gốc không?
+                                                </FormLabel>
                                                 <FormControl>
                                                     <RadioGroup
                                                         onValueChange={field.onChange}
-                                                        defaultValue={field.value}
-                                                        className="flex flex-col space-y-1"
+                                                        value={field.value}
+                                                        className="flex flex-col space-y-2"
                                                     >
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="yes" id="injected-yes" />
-                                                            <Label htmlFor="injected-yes">Có</Label>
+                                                            <Label htmlFor="injected-yes" className="text-sm">Có</Label>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
                                                             <RadioGroupItem value="no" id="injected-no" />
-                                                            <Label htmlFor="injected-no">Không</Label>
+                                                            <Label htmlFor="injected-no" className="text-sm">Không</Label>
                                                         </div>
                                                     </RadioGroup>
                                                 </FormControl>
@@ -763,11 +789,11 @@ export const ComprehensiveHealthCheckForm = ({
                             </Card>
 
                             {/* Section 5: Physical Examination */}
-                            <Card className="mb-6">
-                                <CardHeader className="pb-3">
-                                    <CardTitle className="flex items-center gap-2 text-lg">
-                                        <Stethoscope className="h-5 w-5" />
-                                        🩺 Khám sức khỏe nhanh (dành cho nhân viên y tế)
+                            <Card className="border-gray-200">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+                                        <Stethoscope className="h-5 w-5 text-indigo-600" />
+                                        Khám sức khỏe nhanh
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
@@ -777,13 +803,14 @@ export const ComprehensiveHealthCheckForm = ({
                                             name="weight"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Cân nặng (kg) *</FormLabel>
+                                                    <FormLabel className="text-sm font-medium text-gray-700">
+                                                        Cân nặng (kg)
+                                                    </FormLabel>
                                                     <FormControl>
                                                         <Input 
-                                                            type="number" 
+                                                            type="text"
                                                             placeholder="Ví dụ: 65"
                                                             {...field} 
-                                                            onChange={e => field.onChange(parseFloat(e.target.value) || 0)} 
                                                         />
                                                     </FormControl>
                                                     <FormMessage />
@@ -797,13 +824,14 @@ export const ComprehensiveHealthCheckForm = ({
                                                 name="bloodPressureSystolic"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel>Huyết áp tâm thu *</FormLabel>
+                                                        <FormLabel className="text-sm font-medium text-gray-700">
+                                                            Huyết áp tâm thu
+                                                        </FormLabel>
                                                         <FormControl>
                                                             <Input 
-                                                                type="number" 
+                                                                type="text"
                                                                 placeholder="Ví dụ: 120"
                                                                 {...field} 
-                                                                onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} 
                                                             />
                                                         </FormControl>
                                                         <FormMessage />
@@ -815,13 +843,14 @@ export const ComprehensiveHealthCheckForm = ({
                                                 name="bloodPressureDiastolic"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel>Huyết áp tâm trương *</FormLabel>
+                                                        <FormLabel className="text-sm font-medium text-gray-700">
+                                                            Huyết áp tâm trương
+                                                        </FormLabel>
                                                         <FormControl>
                                                             <Input 
-                                                                type="number" 
+                                                                type="text"
                                                                 placeholder="Ví dụ: 80"
                                                                 {...field} 
-                                                                onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} 
                                                             />
                                                         </FormControl>
                                                         <FormMessage />
@@ -835,13 +864,14 @@ export const ComprehensiveHealthCheckForm = ({
                                             name="pulseRate"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Nhịp tim (bpm) *</FormLabel>
+                                                    <FormLabel className="text-sm font-medium text-gray-700">
+                                                        Nhịp tim (bpm)
+                                                    </FormLabel>
                                                     <FormControl>
                                                         <Input 
-                                                            type="number" 
+                                                            type="text"
                                                             placeholder="Ví dụ: 72"
                                                             {...field} 
-                                                            onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} 
                                                         />
                                                     </FormControl>
                                                     <FormMessage />
@@ -854,14 +884,14 @@ export const ComprehensiveHealthCheckForm = ({
                                             name="temperature"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Nhiệt độ (°C) *</FormLabel>
+                                                    <FormLabel className="text-sm font-medium text-gray-700">
+                                                        Nhiệt độ (°C)
+                                                    </FormLabel>
                                                     <FormControl>
                                                         <Input 
-                                                            type="number" 
-                                                            step="0.1"
+                                                            type="text"
                                                             placeholder="Ví dụ: 36.5"
                                                             {...field} 
-                                                            onChange={e => field.onChange(parseFloat(e.target.value) || 0)} 
                                                         />
                                                     </FormControl>
                                                     <FormMessage />
@@ -874,14 +904,14 @@ export const ComprehensiveHealthCheckForm = ({
                                             name="hemoglobin"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Hemoglobin (g/dL) *</FormLabel>
+                                                    <FormLabel className="text-sm font-medium text-gray-700">
+                                                        Huyết sắc tố (g/dL)
+                                                    </FormLabel>
                                                     <FormControl>
                                                         <Input 
-                                                            type="number" 
-                                                            step="0.1"
+                                                            type="text"
                                                             placeholder="Ví dụ: 13.5"
                                                             {...field} 
-                                                            onChange={e => field.onChange(parseFloat(e.target.value) || 0)} 
                                                         />
                                                     </FormControl>
                                                     <FormMessage />
@@ -892,7 +922,7 @@ export const ComprehensiveHealthCheckForm = ({
                                 </CardContent>
                             </Card>
 
-                            <div className="flex items-center justify-between pt-4 border-t">
+                            <div className="flex items-center justify-between pt-6 border-t border-gray-200">
                                 <div className="flex items-center gap-2">
                                     <Badge variant="outline" className="text-xs">
                                         {Object.keys(form.formState.errors).length} lỗi
@@ -903,7 +933,7 @@ export const ComprehensiveHealthCheckForm = ({
                                         </span>
                                     )}
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex gap-3">
                                     <DialogClose asChild>
                                         <Button type="button" variant="outline">
                                             Hủy
@@ -912,9 +942,9 @@ export const ComprehensiveHealthCheckForm = ({
                                     <Button 
                                         type="submit" 
                                         disabled={form.formState.isSubmitting}
-                                        className="min-w-[120px]"
+                                        className="min-w-[140px] bg-blue-600 hover:bg-blue-700"
                                     >
-                                        {form.formState.isSubmitting ? 'Đang xử lý...' : 'Hoàn thành kiểm tra'}
+                                        {form.formState.isSubmitting ? 'Đang xử lý...' : 'Gửi kiểm tra sức khỏe'}
                                     </Button>
                                 </div>
                             </div>
@@ -928,7 +958,7 @@ export const ComprehensiveHealthCheckForm = ({
                     <AlertDialogHeader>
                         <AlertDialogTitle>Xác nhận gửi form</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Form vẫn còn một số lỗi chưa được điền đầy đủ. Bạn có chắc chắn muốn gửi form này không?
+                            Form vẫn còn một số lỗi chưa được điền đầy đủ. Có chắc chắn muốn gửi form này không?
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
