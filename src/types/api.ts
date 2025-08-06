@@ -80,7 +80,7 @@ export interface BloodInventoryUnit {
   donation_id: number;
   blood_type: number | string; // Can be string for creation, number when read
   component: string; // e.g., 'Whole Blood', 'Red Cells', 'Platelets'
-  status: 'Available' | 'Reserved' | 'Expired' | 'Used';
+  status: 'Available' | 'Reserved' | 'Expired' | 'Used' | 'Pending Approval';
   quantity: number; // in cc
   expiration_date: string; // ISO 8601 format
 }

@@ -97,13 +97,6 @@ export const API_ENDPOINTS = {
     ADD_BLOOD: '/blood-inventory/add-blood',
   },
 
-  BLOOD_BAG_APPROVAL: {
-    GET_PENDING: '/blood-bag-approval/pending',
-    GET_BY_ID: (id: number) => `/blood-bag-approval/${id}`,
-    APPROVE: '/blood-bag-approval/approve',
-    REJECT: '/blood-bag-approval/reject',
-  },
-
   NOTIFICATIONS: {
     GET_MY_NOTIFICATIONS: '/notifications/my-notifications',
     CREATE: '/notifications/create',

@@ -21,6 +21,7 @@ import { UserProfile } from '@/services/user.service';
 import { Input } from '@/components/ui/input';
 import { BloodInventoryService } from '@/services/blood-inventory.service';
 import NotificationService from '@/services/notification.service';
+import { BloodInventoryUnit } from '@/types/api';
 
 // New Type for components
 type BloodComponent = {
@@ -55,8 +56,11 @@ const StaffDonationManagement = () => {
     const [isProcessDialogOpen, setIsProcessDialogOpen] = useState(false);
     const [totalAmount, setTotalAmount] = useState<number | string>('');
     const [components, setComponents] = useState<BloodComponent[]>([]);
-    const [currentComponent, setCurrentComponent] = useState('');
+    const [currentComponent, setCurrentComponent] = useState('Máu toàn phần');
     const [currentQuantity, setCurrentQuantity] = useState<number | string>('');
+    const [isBloodAmountDialogOpen, setIsBloodAmountDialogOpen] = useState(false);
+    const [bloodAmount, setBloodAmount] = useState<number | string>('');
+    const [selectedDonationForBlood, setSelectedDonationForBlood] = useState<Donation | null>(null);
     const queryClient = useQueryClient();
 
   const loadData = useCallback(async () => {
@@ -65,10 +69,28 @@ const StaffDonationManagement = () => {
         // Temporary fix: Get all donations and filter on frontend due to backend endpoint issue
         const allDonations = await DonationService.getAllDonations();
         
-        // Filter donations by status on the frontend
-        const processedDonations = allDonations.filter(d => d.status === 'Processed');
-        const pendingDonationsData = allDonations.filter(d => d.status === 'Pending');
-        const checkedInDonationsData = allDonations.filter(d => d.status === 'CheckedIn');
+        // Auto-approve donations with no health issues (no notes = healthy donor)
+        const donationAutoApprove = allDonations.filter(d => 
+            d.status === 'Pending' && 
+            (!d.note || d.note.trim() === '')
+        );
+        
+        // Auto-approve these healthy donations
+        for (const donation of donationAutoApprove){
+            try {
+                await DonationService.approveDonation(donation.donation_id);
+                console.log(`Auto-approved donation ${donation.donation_id} (no health issues)`);
+            } catch (error) {
+                console.error(`Failed to auto-approve donation ${donation.donation_id}:`, error);
+            }
+        }
+
+        // Re-fetch donations after auto-approval to get updated data
+        const updatedDonations = await DonationService.getAllDonations();
+        
+        // Filter the updated donations
+        const pendingDonationsData = updatedDonations.filter(d => d.status === 'Pending');
+        const checkedInDonationsData = updatedDonations.filter(d => d.status === 'CheckedIn');
 
         const usersData = await StaffService.getAllMembers();
 
@@ -97,23 +119,89 @@ const StaffDonationManagement = () => {
     loadData();
   }, [loadData]);
 
+  const handleConfirmProcessingWithAmount = async (donation: Donation, amount: number) => {
+    setIsLoading(true);
+    try {
+      // Step 1: Get the user's blood type from their health record
+      const healthRecord = await HealthRecordService.getRecordByUserId(donation.user_id);
+      const bloodTypeString = healthRecord?.blood_type;
+
+      if (!bloodTypeString) {
+        toast({ title: "Lỗi", description: "Không tìm thấy loại máu trong hồ sơ sức khỏe của người dùng.", variant: "destructive" });
+        setIsLoading(false);
+        return;
+      }
+      
+      // Step 2: Always create whole blood component
+      const wholeBloodComponent = [{
+        component: "Máu toàn phần",
+        quantity: amount
+      }];
+
+      // Step 3: Create inventory unit with whole blood and 'Pending Approval' status for lab analysis
+      // Create blood inventory units with 'Pending Approval' status
+      for (const comp of wholeBloodComponent) {
+        const payload: Partial<BloodInventoryUnit> = {
+          donation_id: donation.donation_id,
+          blood_type: bloodTypeString,
+          component: comp.component,
+          quantity: comp.quantity,
+          status: 'Pending Approval', // Set status for lab analysis
+          expiration_date: new Date(new Date().setDate(new Date().getDate() + 42)).toISOString(),
+        };
+        await BloodInventoryService.create(payload);
+      }
+
+      // Step 4: Update the original donation's status to 'Processed'
+      await handleStatusUpdate(donation, 'Processed', undefined, amount);
+
+      toast({
+        title: "Thành công",
+        description: "Đã xử lý máu toàn phần và chuyển đến phòng lab để phân tích."
+      });
+
+      // Invalidate queries to refetch data
+      queryClient.invalidateQueries({ queryKey: ['allDonations'] });
+      queryClient.invalidateQueries({ queryKey: ['bloodInventory'] });
+
+    } catch (error) {
+      console.error("Lỗi khi xử lý hiến máu:", error);
+      toast({ title: "Lỗi", description: "Đã xảy ra lỗi khi xử lý hiến máu.", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleHealthCheckResult = (donationId: number, isEligible: boolean, formData?: Record<string, unknown>) => {
     console.log('Health check result:', { donationId, isEligible, formData });
     
     if (isEligible) {
       setHealthCheckPassed(prev => ({ ...prev, [donationId]: true }));
-      toast({
-        title: 'Kiểm tra sức khỏe thành công',
-        description: 'Người hiến đủ điều kiện để hiến máu.',
-      });
-    } else {
+      
+      // Show blood amount input dialog when health check passes
       const donation = approvedDonations.find(d => d.donation_id === donationId);
       if (donation) {
-        handleStatusUpdate(donation, 'Rejected', 'Không đủ điều kiện sức khỏe');
+        setSelectedDonationForBlood(donation);
+        setBloodAmount('');
+        setIsBloodAmountDialogOpen(true);
       }
+      
+      toast({
+        title: 'Kiểm tra sức khỏe thành công',
+        description: 'Vui lòng nhập số lượng máu đã lấy.',
+      });
+    } else {
+      // When health check fails, show confirmation dialog
+      const donation = approvedDonations.find(d => d.donation_id === donationId);
+      if (donation) {
+        setSelectedDonation(donation);
+        setRejectionReason('Không đủ điều kiện sức khỏe');
+        setIsRejectDialogOpen(true);
+      }
+      setHealthCheckPassed(prev => ({ ...prev, [donationId]: false }));
       toast({
         title: 'Kiểm tra sức khỏe không đạt',
-        description: 'Người hiến không đủ điều kiện để hiến máu.',
+        description: 'Vui lòng xác nhận để từ chối yêu cầu hiến máu.',
         variant: 'destructive',
       });
     }
@@ -161,9 +249,6 @@ const StaffDonationManagement = () => {
     setSelectedDonation(donation);
     setIsProcessDialogOpen(true);
     setTotalAmount('');
-    setComponents([]);
-    setCurrentComponent('');
-    setCurrentQuantity('');
   };
 
   const handleAddComponent = () => {
@@ -191,7 +276,7 @@ const StaffDonationManagement = () => {
   };
 
   const handleConfirmProcessing = async () => {
-    if (selectedDonation && totalAmount && components.length > 0) {
+    if (selectedDonation && totalAmount) {
       setIsLoading(true);
       try {
         // Step 1: Get the user's blood type from their health record
@@ -204,15 +289,32 @@ const StaffDonationManagement = () => {
           return;
         }
         
-        // Step 2: Create inventory units for each component
-        await BloodInventoryService.createFromDonation(selectedDonation.donation_id, bloodTypeString, components);
+        // Step 2: Always create whole blood component
+        const wholeBloodComponent = [{
+          component: "Máu toàn phần",
+          quantity: Number(totalAmount)
+        }];
 
-        // Step 3: Update the original donation's status to 'Processed'
+        // Step 3: Create inventory unit with whole blood and 'Pending Approval' status for lab analysis
+        // Create blood inventory units with 'Pending Approval' status
+        for (const comp of wholeBloodComponent) {
+          const payload: Partial<BloodInventoryUnit> = {
+            donation_id: selectedDonation.donation_id,
+            blood_type: bloodTypeString,
+            component: comp.component,
+            quantity: comp.quantity,
+            status: 'Pending Approval', // Set status for lab analysis
+            expiration_date: new Date(new Date().setDate(new Date().getDate() + 42)).toISOString(),
+          };
+          await BloodInventoryService.create(payload);
+        }
+
+        // Step 4: Update the original donation's status to 'Processed'
         await handleStatusUpdate(selectedDonation, 'Processed', undefined, Number(totalAmount));
 
         toast({
           title: "Thành công",
-          description: "Tách thành phần và cập nhật kho thành công."
+          description: "Đã xử lý máu toàn phần và chuyển đến phòng lab để phân tích."
         });
 
         // Invalidate queries to refetch data
@@ -227,7 +329,16 @@ const StaffDonationManagement = () => {
         setIsProcessDialogOpen(false);
       }
     } else {
-      toast({ title: "Thông tin không đầy đủ", description: "Vui lòng nhập tổng lượng máu và thêm ít nhất một thành phần.", variant: "destructive" });
+      toast({ title: "Thông tin không đầy đủ", description: "Vui lòng nhập tổng lượng máu.", variant: "destructive" });
+    }
+  };
+
+  const handleConfirmBloodAmount = async () => {
+    if (selectedDonationForBlood && bloodAmount) {
+      await handleConfirmProcessingWithAmount(selectedDonationForBlood, Number(bloodAmount));
+      setIsBloodAmountDialogOpen(false);
+      setSelectedDonationForBlood(null);
+      setBloodAmount('');
     }
   };
 
@@ -329,12 +440,6 @@ const StaffDonationManagement = () => {
                             <div>
                                 <div className="flex items-center gap-2">
                                     <p className="font-semibold">{userMap[donation.user_id] || `ID Người hiến: ${donation.user_id}`}</p>
-                                    {donation.note && (
-                                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                                            <FileText className="h-3 w-3 mr-1" />
-                                            Có ghi chú
-                                        </Badge>
-                                    )}
                                 </div>
                                 
                                 {donation.amount_ml && (
@@ -406,12 +511,25 @@ const StaffDonationManagement = () => {
     </Button>
     <Button 
       onClick={() => handleOpenProcessDialog(donation)}
-      disabled={isLoading || !healthCheckPassed[donation.donation_id]}
+      disabled={isLoading || healthCheckPassed[donation.donation_id] !== true}
       size="sm"
-      className="truncate px-2"
+      className={`truncate px-2 ${
+        healthCheckPassed[donation.donation_id] === true
+          ? 'bg-green-100 text-green-800 border-green-300 hover:bg-green-200' 
+          : healthCheckPassed[donation.donation_id] === false
+          ? 'bg-red-100 text-red-800 border-red-300'
+          : 'bg-gray-100 text-gray-500 border-gray-300'
+      }`}
     >
       <CheckCircle className="h-4 w-4 mr-1" />
-      <span className="truncate text-xs sm:text-sm">Xử lý</span>
+      <span className="truncate text-xs sm:text-sm">
+        {healthCheckPassed[donation.donation_id] === true 
+          ? 'Xử lý' 
+          : healthCheckPassed[donation.donation_id] === false
+          ? 'Đã từ chối'
+          : 'Cần kiểm tra sức khỏe'
+        }
+      </span>
     </Button>
   </div>
 )}
@@ -481,11 +599,11 @@ const StaffDonationManagement = () => {
                 </DialogContent>
             </Dialog>
             <Dialog open={isProcessDialogOpen} onOpenChange={setIsProcessDialogOpen}>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Xử lý và Tách thành phần máu</DialogTitle>
+                        <DialogTitle>Xử lý Máu Toàn Phần</DialogTitle>
                         <DialogDescription>
-                            Nhập tổng lượng máu đã hiến và tách thành các thành phần. Tổng các thành phần không được vượt quá tổng lượng máu.
+                            Nhập tổng lượng máu đã hiến. Máu toàn phần sẽ được tạo và chuyển đến phòng lab để phân tích.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -501,46 +619,48 @@ const StaffDonationManagement = () => {
                             />
                         </div>
 
-                        <div className="mt-4 border-t pt-4">
-                            <h4 className="font-semibold mb-2">Các thành phần</h4>
-                            {components.map((comp, index) => (
-                                <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
-                                    <p>{comp.component}: <span className="font-semibold">{comp.quantity}cc</span></p>
-                                    <Button variant="ghost" size="sm" onClick={() => setComponents(components.filter((_, i) => i !== index))}>
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="mt-4 grid grid-cols-6 items-end gap-2 border-t pt-4">
-                            <div className="col-span-3">
-                                <Label htmlFor="componentType">Loại thành phần</Label>
-                                <Select onValueChange={setCurrentComponent} value={currentComponent}>
-                                    <SelectTrigger><SelectValue placeholder="Chọn loại..." /></SelectTrigger>
-                                    <SelectContent>
-                                        {componentOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                             <div className="col-span-2">
-                                <Label htmlFor="componentQuantity">Số lượng (cc)</Label>
-                        <Input
-                                    id="componentQuantity"
-                            type="number"
-                                    value={currentQuantity}
-                                    onChange={(e) => setCurrentQuantity(e.target.value)}
-                                    placeholder="Nhập số lượng"
-                        />
-                            </div>
-                            <div className="col-span-1">
-                                <Button onClick={handleAddComponent}><PlusCircle className="h-4 w-4" /></Button>
-                            </div>
+                        <div className="bg-blue-50 border border-blue-200 p-3 rounded-md">
+                            <p className="text-sm text-blue-700">
+                                <strong>Lưu ý:</strong> Máu toàn phần sẽ được tạo và chuyển đến phòng lab để phân tích thành phần.
+                            </p>
                         </div>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsProcessDialogOpen(false)}>Hủy</Button>
                         <Button onClick={handleConfirmProcessing}>Xác nhận Xử lý</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            <Dialog open={isBloodAmountDialogOpen} onOpenChange={setIsBloodAmountDialogOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Nhập Số Lượng Máu Đã Lấy</DialogTitle>
+                        <DialogDescription>
+                            Vui lòng nhập số lượng máu đã lấy từ người hiến. Máu toàn phần sẽ được tạo và chuyển đến phòng lab.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="bloodAmount" className="text-right">Số lượng máu (cc)</Label>
+                            <Input 
+                                id="bloodAmount" 
+                                type="number"
+                                value={bloodAmount}
+                                onChange={(e) => setBloodAmount(e.target.value)}
+                                placeholder="Nhập số lượng máu đã lấy"
+                                className="col-span-3"
+                            />
+                        </div>
+
+                        <div className="bg-green-50 border border-green-200 p-3 rounded-md">
+                            <p className="text-sm text-green-700">
+                                <strong>Thành công:</strong> Kiểm tra sức khỏe đã đạt. Vui lòng nhập số lượng máu đã lấy.
+                            </p>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsBloodAmountDialogOpen(false)}>Hủy</Button>
+                        <Button onClick={handleConfirmBloodAmount} disabled={!bloodAmount}>Xác nhận Lấy Máu</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
