@@ -60,9 +60,12 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
   const [reportMessage, setReportMessage] = useState('');
   const { toast } = useToast();
 
-  // Calculate total completed donations
-  const totalDonations = useMemo(() => {
-    return history.filter(donation => donation.status.toLowerCase() === 'completed').length;
+  // Calculate total successful donations (excluding rejected/failed)
+  const totalSuccessfulDonations = useMemo(() => {
+    return history.filter(donation => {
+      const status = donation.status.toLowerCase();
+      return status === 'completed' || status === 'approved';
+    }).length;
   }, [history]);
 
   // Calculate eligibility and waiting period
@@ -197,18 +200,18 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
 
   const memberStats = [
     { 
-      title: 'Tổng Số Lần Hiến', 
-      value: totalDonations, 
+      title: 'Tổng Lần Hiến Thành Công', 
+      value: totalSuccessfulDonations, 
       icon: Heart, 
       color: 'text-red-600', 
       bgColor: 'bg-red-100' 
     },
     { 
       title: 'Nhóm Máu', 
-      value: healthRecord ? getBloodTypeName(healthRecord?.blood_type) : 'N/A', 
+      value: getBloodTypeName(healthRecord?.blood_type || null), 
       icon: Droplet, 
-      color: healthRecord ? 'text-blue-600' : 'text-gray-600', 
-      bgColor: healthRecord ? 'bg-blue-100' : 'bg-gray-100' 
+      color: healthRecord?.blood_type ? 'text-blue-600' : 'text-gray-600', 
+      bgColor: healthRecord?.blood_type ? 'bg-blue-100' : 'bg-gray-100' 
     },
     
     { 

@@ -5,8 +5,8 @@ export const bloodTypes = [
 ];
 
 export const getBloodTypeName = (id: string | number | null): string => {
-    if (id === null) return 'N/A';
+    if (id === null) return 'Không xác định';
     const stringId = id.toString();
     const bloodType = bloodTypes.find(bt => bt.id === stringId);
-    return bloodType ? bloodType.name : 'N/A';
+    return bloodType ? bloodType.name : 'Không xác định';
 }; 

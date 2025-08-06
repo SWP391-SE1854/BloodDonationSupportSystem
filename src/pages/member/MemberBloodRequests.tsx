@@ -1,22 +1,19 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
+import { BloodRequestService, BloodRequest } from '@/services/blood-request.service';
+import { HealthRecordService, HealthRecord } from '@/services/health-record.service';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { BloodRequestService, BloodRequest } from '@/services/blood-request.service';
-import { useAuth } from '@/contexts/AuthContext';
-import { HealthRecordService, HealthRecord } from '@/services/health-record.service';
+import { vi } from 'date-fns/locale';
 import MemberDonationRequest from './MemberDonationRequest';
+import { getBloodTypeName } from '@/utils/bloodTypes';
 
-const bloodTypes = [
-    { id: "1", name: "A+" }, { id: "2", name: "A-" }, { id: "3", name: "B+" },
-    { id: "4", name: "B-" }, { id: "5", name: "AB+" }, { id: "6", "name": "AB-" },
-    { id: "7", name: "O+" }, { id: "8", name: "O-" }
-];
-
-const compatibilityMap: Record<string, string[]> = {
+// Blood type compatibility map
+const compatibilityMap: { [key: string]: string[] } = {
     'A+': ['A+', 'AB+'],
     'A-': ['A+', 'A-', 'AB+', 'AB-'],
     'B+': ['B+', 'AB+'],
@@ -25,13 +22,6 @@ const compatibilityMap: Record<string, string[]> = {
     'AB-': ['AB+', 'AB-'],
     'O+': ['O+', 'A+', 'B+', 'AB+'],
     'O-': ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-','O+', 'O-'], // Universal donor
-};
-
-const getBloodTypeName = (id: string | number | null): string => {
-    if (id === null) return 'N/A';
-    const stringId = id.toString();
-    const bloodType = bloodTypes.find(bt => bt.id === stringId);
-    return bloodType ? bloodType.name : 'N/A';
 };
 
 type BloodRequestServerResponse = BloodRequest[] | { $values: BloodRequest[] };
@@ -63,9 +53,9 @@ const MemberBloodRequests = () => {
       return [];
     }
     
-    const userBloodTypeName = getBloodTypeName(healthRecord.blood_type);
+    const userBloodTypeName = getBloodTypeName(healthRecord.blood_type || null);
     
-    if (userBloodTypeName === 'N/A' || !compatibilityMap[userBloodTypeName]) {
+    if (userBloodTypeName === 'Không xác định' || !compatibilityMap[userBloodTypeName]) {
         return [];
     }
 
@@ -77,7 +67,7 @@ const MemberBloodRequests = () => {
     today.setHours(0, 0, 0, 0);
 
     return allRequests.filter(request => {
-        const requestedBloodTypeName = getBloodTypeName(request.blood_id);
+        const requestedBloodTypeName = getBloodTypeName(request.blood_id || null);
         const requestDate = new Date(request.request_date);
         
         // Check if the user can donate to this request
@@ -133,7 +123,7 @@ const MemberBloodRequests = () => {
                   <TableCell>{format(new Date(request.request_date), 'PPP')}</TableCell>
                   <TableCell>{format(new Date(request.end_date), 'PPP')}</TableCell>
                   <TableCell>{request.location_donate || 'N/A'}</TableCell>
-                  <TableCell>{getBloodTypeName(request.blood_id)}</TableCell>
+                  <TableCell>{getBloodTypeName(request.blood_id || null)}</TableCell>
                   <TableCell>{request.donor_count || 'N/A'}</TableCell>
                   <TableCell>
                     {request.emergency_status ? (
