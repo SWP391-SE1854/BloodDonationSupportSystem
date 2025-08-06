@@ -176,7 +176,7 @@ const MemberDonationRequest: React.FC<MemberDonationRequestProps> = ({ isOpen = 
         donation_date: format(donationDate, 'yyyy-MM-dd'),
         start_time: selectedSlot?.start || '',
         end_time: selectedSlot?.end || '',
-        blood_type: healthRecord?.blood_type ? getBloodTypeName(healthRecord.blood_type) : undefined,
+        blood_type: healthRecord?.blood_type ? getBloodTypeName(healthRecord.blood_type || null) : undefined,
         status: 'Pending', // Default status for new donations
         note: note, // Only include user's note, not disqualification reasons
       };

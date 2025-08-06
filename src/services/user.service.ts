@@ -45,6 +45,18 @@ export class UserService {
     const response = await api.put<UserProfile>(API_ENDPOINTS.USER.UPDATE_MEMBER_PROFILE, data);
     return response.data;
   }
+
+  static async getUserById(userId: string): Promise<UserProfile> {
+    try {
+      const response = await api.get(API_ENDPOINTS.USER.GET_USER_BY_ID(parseInt(userId, 10)));
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Error fetching user by ID:', error.message);
+      }
+      throw error;
+    }
+  }
 }
 
 export default UserService; 

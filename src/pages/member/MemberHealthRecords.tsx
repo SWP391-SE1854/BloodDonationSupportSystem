@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { HealthRecord, HealthRecordService } from '@/services/health-record.service';
-import { DonationHistoryService } from '@/services/donation-history.service';
+import { DonationHistoryService, DonationHistoryRecord } from '@/services/donation-history.service';
 import { UserService, UserProfile } from '@/services/user.service';
 import HealthRecordForm from '@/components/HealthRecordForm';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -11,33 +11,22 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format, differenceInDays } from 'date-fns';
 import { calculateNextEligibleDate, getWaitingPeriod } from '@/utils/donationConstants';
 import { isEligibleToDonate } from '@/utils/healthValidation';
+import { getBloodTypeName } from '@/utils/bloodTypes';
 import axios from 'axios';
 
-// Data from BloodTypeSelect component
-const bloodTypes = [
-    { id: "1", name: "A+" }, { id: "2", name: "A-" }, { id: "3", name: "B+" },
-    { id: "4", name: "B-" }, { id: "5", name: "AB+" }, { id: "6", name: "AB-" },
-    { id: "7", name: "O+" }, { id: "8", name: "O-" }
-];
-
-const getBloodTypeName = (id: string | number) => {
-    const bloodType = bloodTypes.find(bt => bt.id === id.toString());
-    return bloodType ? bloodType.name : 'N/A';
-};
-
 type HealthRecordResponse = HealthRecord | { $values: HealthRecord[] };
-type DonationHistoryResponse = DonationHistoryEntry[] | { $values: DonationHistoryEntry[] };
+type DonationHistoryResponse = DonationHistoryRecord[] | { $values: DonationHistoryRecord[] };
 
 const MemberHealthRecords = () => {
   const { toast } = useToast();
   const [healthRecord, setHealthRecord] = useState<HealthRecord | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [donationHistory, setDonationHistory] = useState<DonationHistoryEntry[]>([]);
+  const [donationHistory, setDonationHistory] = useState<DonationHistoryRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   // Calculate eligibility and waiting period
-  const { nextEligibleDays, waitingPeriod, isEligible, nextEligibleDate } = useMemo(() => {
+  const { nextEligibleDays, waitingPeriod, isEligible, nextEligibleDate, lastDonationDate } = useMemo(() => {
     const nextDate = calculateNextEligibleDate(donationHistory);
     const today = new Date();
     const daysToWait = nextDate ? differenceInDays(nextDate, today) : 0;
@@ -47,14 +36,15 @@ const MemberHealthRecords = () => {
       .filter(d => d.status.toLowerCase() === 'completed')
       .sort((a, b) => new Date(b.donation_date).getTime() - new Date(a.donation_date).getTime())[0];
     
-    const componentWaitingPeriod = lastDonation ? getWaitingPeriod(lastDonation.component) : 0;
+    const componentWaitingPeriod = lastDonation?.bloodInventory?.component ? getWaitingPeriod(lastDonation.bloodInventory.component) : 0;
     const eligibility = healthRecord ? isEligibleToDonate(healthRecord, donationHistory) : false;
 
     return {
       nextEligibleDays: Math.max(0, daysToWait),
       waitingPeriod: componentWaitingPeriod,
       isEligible: eligibility,
-      nextEligibleDate: nextDate ? format(nextDate, 'PPP') : 'Bây giờ'
+      nextEligibleDate: nextDate ? format(nextDate, 'PPP') : 'Bây giờ',
+      lastDonationDate: lastDonation ? format(new Date(lastDonation.donation_date), 'PPP') : 'N/A'
     };
   }, [donationHistory, healthRecord]);
 
@@ -204,7 +194,7 @@ const MemberHealthRecords = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <InfoCard 
           title="Nhóm Máu" 
-          value={getBloodTypeName(healthRecord.blood_type)} 
+          value={getBloodTypeName(healthRecord?.blood_type || null)} 
           icon={<Heart className="h-5 w-5 text-red-500" />}
         />
         <InfoCard 
@@ -217,7 +207,7 @@ const MemberHealthRecords = () => {
         />
         <InfoCard 
           title="Lần hiến cuối" 
-          value={healthRecord.last_donation ? format(new Date(healthRecord.last_donation), 'PPP') : 'Chưa có'} 
+          value={lastDonationDate} 
           subValue={!isEligible && nextEligibleDays > 0 ? `Lần tiếp theo: ${nextEligibleDate}` : undefined}
           isHighlighted={!isEligible}
           icon={<Calendar className={`h-5 w-5 ${!isEligible ? 'text-red-500' : 'text-gray-500'}`} />}
