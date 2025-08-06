@@ -9,12 +9,7 @@ import { BloodRequestService, BloodRequest } from '@/services/blood-request.serv
 import { useAuth } from '@/contexts/AuthContext';
 import { HealthRecordService, HealthRecord } from '@/services/health-record.service';
 import MemberDonationRequest from './MemberDonationRequest';
-
-const bloodTypes = [
-    { id: "1", name: "A+" }, { id: "2", name: "A-" }, { id: "3", name: "B+" },
-    { id: "4", name: "B-" }, { id: "5", name: "AB+" }, { id: "6", "name": "AB-" },
-    { id: "7", name: "O+" }, { id: "8", name: "O-" }
-];
+import { bloodTypes } from '@/utils/bloodTypes';
 
 const compatibilityMap: Record<string, string[]> = {
     'A+': ['A+', 'AB+'],

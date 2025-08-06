@@ -80,9 +80,13 @@ export interface BloodInventoryUnit {
   donation_id: number;
   blood_type: number | string; // Can be string for creation, number when read
   component: string; // e.g., 'Whole Blood', 'Red Cells', 'Platelets'
-  status: 'Available' | 'Reserved' | 'Expired' | 'Used' | 'Pending Approval';
+  status: 'Available' | 'Reserved' | 'Expired' | 'Used' | 'Pending Approval' | 'Approved';
   quantity: number; // in cc
   expiration_date: string; // ISO 8601 format
+  rejection_reason?: string; // Reason for rejection
+  parent_unit_id?: number; // ID of parent unit when split
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface DashboardStats {

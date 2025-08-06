@@ -41,6 +41,25 @@ export class BloodInventoryService {
         await Promise.all(creationPromises);
     }
 
+    static async createMultipleUnitsFromParent(parentUnit: BloodInventoryUnit, newUnits: Array<{ component: string; quantity: number }>): Promise<void> {
+        const creationPromises = newUnits.map(unit => {
+            const payload: Partial<BloodInventoryUnit> = {
+                donation_id: parentUnit.donation_id, // Same donation ID as parent
+                blood_type: parentUnit.blood_type,
+                component: unit.component,
+                quantity: unit.quantity,
+                status: 'Available',
+                expiration_date: parentUnit.expiration_date,
+                parent_unit_id: parentUnit.unit_id, // Link to parent unit
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+            return this.create(payload);
+        });
+
+        await Promise.all(creationPromises);
+    }
+
     static async update(id: number, unitData: Partial<BloodInventoryUnit>): Promise<BloodInventoryUnit> {
         const response = await api.put(API_ENDPOINTS.BLOOD_INVENTORY.UPDATE, unitData, {
             params: { id }

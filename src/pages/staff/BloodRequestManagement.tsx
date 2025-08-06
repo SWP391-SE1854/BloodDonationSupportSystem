@@ -384,17 +384,38 @@ const RequestForm = ({ isOpen, setIsOpen, request, onSave }: RequestFormProps) =
 
         // Validation for emergency requests
         if (formData.emergency_status) {
-            // For emergency requests, dates are set automatically by backend
-            const createData: CreateBloodRequestData = {
-                user_id: formData.user_id!,
-                blood_id: Number(formData.blood_id),
-                emergency_status: true,
-                request_date: new Date().toISOString(),
-                end_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days from now
-                donor_count: 1, // Default for emergency
-                location_donate: formData.location_donate || 'Địa điểm khẩn cấp',
-            };
-            onSave(createData);
+            // Handle "Tất cả nhóm máu" selection for emergency requests
+            const bloodId = Number(formData.blood_id);
+            const isAllBloodTypes = bloodId === 0; // "Tất cả nhóm máu" has id "0"
+            
+            if (isAllBloodTypes) {
+                // Create multiple emergency blood requests for all blood types
+                const allBloodTypeIds = [1, 2, 3, 4, 5, 6, 7, 8]; // A+, A-, B+, B-, AB+, AB-, O+, O-
+                
+                for (const typeId of allBloodTypeIds) {
+                    const createData: CreateBloodRequestData = {
+                        user_id: formData.user_id!,
+                        blood_id: typeId,
+                        emergency_status: true,
+                        request_date: new Date().toISOString(),
+                        end_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days from now
+                        donor_count: 1, // Default for emergency
+                        location_donate: formData.location_donate || 'Địa điểm khẩn cấp',
+                    };
+                    onSave(createData);
+                }
+            } else {
+                const createData: CreateBloodRequestData = {
+                    user_id: formData.user_id!,
+                    blood_id: bloodId,
+                    emergency_status: true,
+                    request_date: new Date().toISOString(),
+                    end_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days from now
+                    donor_count: 1, // Default for emergency
+                    location_donate: formData.location_donate || 'Địa điểm khẩn cấp',
+                };
+                onSave(createData);
+            }
             return;
         }
 
@@ -439,16 +460,39 @@ const RequestForm = ({ isOpen, setIsOpen, request, onSave }: RequestFormProps) =
                 toast({ title: "Lỗi xác thực", description: "Tất cả các trường là bắt buộc.", variant: "destructive" });
                 return;
             }
-            const createData: CreateBloodRequestData = {
-                user_id: formData.user_id,
-                blood_id: Number(formData.blood_id),
-                emergency_status: formData.emergency_status || false,
-                request_date: new Date(formData.request_date).toISOString(),
-                end_date: new Date(formData.end_date).toISOString(),
-                donor_count: formData.donor_count,
-                location_donate: formData.location_donate,
-            };
-            onSave(createData);
+            
+            // Handle "Tất cả nhóm máu" selection
+            const bloodId = Number(formData.blood_id);
+            const isAllBloodTypes = bloodId === 0; // "Tất cả nhóm máu" has id "0"
+            
+            if (isAllBloodTypes) {
+                // Create multiple blood requests for all blood types
+                const allBloodTypeIds = [1, 2, 3, 4, 5, 6, 7, 8]; // A+, A-, B+, B-, AB+, AB-, O+, O-
+                
+                for (const typeId of allBloodTypeIds) {
+                    const createData: CreateBloodRequestData = {
+                        user_id: formData.user_id,
+                        blood_id: typeId,
+                        emergency_status: formData.emergency_status || false,
+                        request_date: new Date(formData.request_date).toISOString(),
+                        end_date: new Date(formData.end_date).toISOString(),
+                        donor_count: formData.donor_count,
+                        location_donate: formData.location_donate,
+                    };
+                    onSave(createData);
+                }
+            } else {
+                const createData: CreateBloodRequestData = {
+                    user_id: formData.user_id,
+                    blood_id: bloodId,
+                    emergency_status: formData.emergency_status || false,
+                    request_date: new Date(formData.request_date).toISOString(),
+                    end_date: new Date(formData.end_date).toISOString(),
+                    donor_count: formData.donor_count,
+                    location_donate: formData.location_donate,
+                };
+                onSave(createData);
+            }
         }
     };
 

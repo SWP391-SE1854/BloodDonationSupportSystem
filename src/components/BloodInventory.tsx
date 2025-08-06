@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { BloodInventoryService } from '@/services/blood-inventory.service';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { blood_warning_threshold } from '@/utils/bloodStockThresholds';
+import { ChevronDown, ChevronRight, Package, Droplets } from 'lucide-react';
 
 const bloodTypeMap: Record<string, number> = {
     "A+": 1, "A-": 2, "B+": 3, "B-": 4,
@@ -38,11 +39,18 @@ const formatDate = (dateString: string | undefined | null): string => {
     }
 };
 
+interface GroupedInventory {
+    donation_id: number;
+    parent_unit: BloodInventoryUnit;
+    child_units: BloodInventoryUnit[];
+}
+
 const BloodInventory = () => {
     const queryClient = useQueryClient();
     const { toast } = useToast();
     const { user } = useAuth();
     const userRole = user?.role;
+    const [expandedGroups, setExpandedGroups] = useState<Set<number>>(new Set());
 
     const { data: inventory, isLoading: isLoadingInventory, isError: isErrorInventory, error: errorInventory } = useQuery<BloodInventoryUnit[], Error>({
         queryKey: ['bloodInventory'],
@@ -71,13 +79,54 @@ const BloodInventory = () => {
         updateStatusMutation.mutate({ unitId, data: updatedUnitPayload });
     };
 
-    const filteredInventory = useMemo(() => {
-        if (!inventory) return [];
-        if (userRole === 'Admin') {
-            return inventory; // Admin sees all units
+    const toggleGroup = (donationId: number) => {
+        const newExpanded = new Set(expandedGroups);
+        if (newExpanded.has(donationId)) {
+            newExpanded.delete(donationId);
+        } else {
+            newExpanded.add(donationId);
         }
-        return inventory.filter(unit => unit.status !== 'Used'); // Other roles see only non-used units
-    }, [inventory, userRole]);
+        setExpandedGroups(newExpanded);
+    };
+
+    const groupedInventory = useMemo(() => {
+        if (!inventory) return [];
+        
+        // Only show units with Available status
+        const availableUnits = inventory.filter(unit => unit.status === 'Available');
+        
+        // Group by donation_id
+        const groups: Record<number, GroupedInventory> = {};
+        
+        availableUnits.forEach(unit => {
+            if (!groups[unit.donation_id]) {
+                groups[unit.donation_id] = {
+                    donation_id: unit.donation_id,
+                    parent_unit: unit,
+                    child_units: []
+                };
+            }
+            
+            // Find the máu toàn phần unit for this donation_id
+            const currentGroup = groups[unit.donation_id];
+            
+            // If this unit is máu toàn phần, make it the parent
+            if (unit.component === "Máu toàn phần" || !unit.component) {
+                currentGroup.parent_unit = unit;
+            } else {
+                // All other units with same donation_id become children
+                currentGroup.child_units.push(unit);
+            }
+        });
+        
+        // Only show groups where parent_unit is "Máu toàn phần" and has no parent_unit_id
+        const validGroups = Object.values(groups).filter(group => 
+            !group.parent_unit.parent_unit_id && 
+            (group.parent_unit.component === "Máu toàn phần" || !group.parent_unit.component)
+        );
+        
+        return validGroups;
+    }, [inventory]);
 
     useEffect(() => {
         if (inventory && (userRole === 'Admin' || userRole === 'Staff')) {
@@ -134,32 +183,105 @@ const BloodInventory = () => {
                     <TableBody>
                         {isLoadingInventory ? (
                             <TableRow><TableCell colSpan={8} className="text-center">Đang tải...</TableCell></TableRow>
-                        ) : filteredInventory.length > 0 ? (
-                            filteredInventory.map((unit) => (
-                                <TableRow key={unit.unit_id} className={unit.status === 'Used' ? 'bg-gray-100 text-muted-foreground' : ''}>
-                                    <TableCell>{unit.donation_id}</TableCell>
-                                    <TableCell>{getBloodTypeName(unit.blood_type)}</TableCell>
-                                    <TableCell>{unit.component || 'N/A'}</TableCell>
-                                    <TableCell>{unit.quantity}</TableCell>
-                                    <TableCell>
-                                        <Badge variant={unit.status === 'Available' ? 'default' : 'secondary'}>{statusTranslations[unit.status] || unit.status}</Badge>
-                                    </TableCell>
-                                    <TableCell>{formatDate(unit.expiration_date)}</TableCell>
-                                    {(userRole === 'Admin' || userRole === 'Staff') && (
+                        ) : groupedInventory.length > 0 ? (
+                            groupedInventory.map((group) => (
+                                <>
+                                    {/* Parent Row - Chỉ hiển thị Máu toàn phần */}
+                                    <TableRow key={`parent-${group.donation_id}`} className="bg-gray-50">
                                         <TableCell>
-                                            {unit.status === 'Available' && (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => handleMarkAsUsed(unit.unit_id)}
-                                                    disabled={updateStatusMutation.isPending}
-                                                >
-                                                    Đánh dấu đã sử dụng
-                                                </Button>
-                                            )}
+                                            <div className="flex items-center space-x-2">
+                                                {group.child_units.length > 0 && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => toggleGroup(group.donation_id)}
+                                                        className="p-0 h-6 w-6"
+                                                    >
+                                                        {expandedGroups.has(group.donation_id) ? (
+                                                            <ChevronDown className="h-4 w-4" />
+                                                        ) : (
+                                                            <ChevronRight className="h-4 w-4" />
+                                                        )}
+                                                    </Button>
+                                                )}
+                                                <span className="font-medium">#{group.donation_id}</span>
+                                            </div>
                                         </TableCell>
-                                    )}
-                                </TableRow>
+                                        <TableCell>{getBloodTypeName(group.parent_unit.blood_type)}</TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center space-x-2">
+                                                <Package className="h-4 w-4 text-blue-600" />
+                                                <span>Máu toàn phần</span>
+                                                {group.child_units.length > 0 && (
+                                                    <Badge variant="outline" className="text-xs">
+                                                        {group.child_units.length} thành phần
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>{group.parent_unit.quantity}</TableCell>
+                                        <TableCell>
+                                            <Badge variant="default">{statusTranslations[group.parent_unit.status] || group.parent_unit.status}</Badge>
+                                        </TableCell>
+                                        <TableCell>{formatDate(group.parent_unit.expiration_date)}</TableCell>
+                                        {(userRole === 'Admin' || userRole === 'Staff') && (
+                                            <TableCell>
+                                                {group.parent_unit.status === 'Available' && (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => handleMarkAsUsed(group.parent_unit.unit_id)}
+                                                        disabled={updateStatusMutation.isPending}
+                                                    >
+                                                        Đánh dấu đã sử dụng
+                                                    </Button>
+                                                )}
+                                            </TableCell>
+                                        )}
+                                    </TableRow>
+                                    
+                                    {/* Child Rows - Các thành phần con */}
+                                    {expandedGroups.has(group.donation_id) && group.child_units.map((childUnit) => (
+                                        <TableRow key={`child-${childUnit.unit_id}`} className="bg-white">
+                                            <TableCell>
+                                                <div className="flex items-center space-x-2 ml-8">
+                                                    <Droplets className="h-4 w-4 text-purple-600" />
+                                                    <span className="text-sm text-gray-600">Thành phần</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-gray-600">
+                                                {getBloodTypeName(childUnit.blood_type)}
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center space-x-2">
+                                                    <Droplets className="h-4 w-4 text-purple-600" />
+                                                    <span className="text-sm">{childUnit.component}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-gray-600">{childUnit.quantity}</TableCell>
+                                            <TableCell>
+                                                <Badge variant="secondary" className="text-xs">
+                                                    {statusTranslations[childUnit.status] || childUnit.status}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-gray-600">{formatDate(childUnit.expiration_date)}</TableCell>
+                                            {(userRole === 'Admin' || userRole === 'Staff') && (
+                                                <TableCell>
+                                                    {childUnit.status === 'Available' && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => handleMarkAsUsed(childUnit.unit_id)}
+                                                            disabled={updateStatusMutation.isPending}
+                                                        >
+                                                            Đánh dấu đã sử dụng
+                                                        </Button>
+                                                    )}
+                                                </TableCell>
+                                            )}
+                                        </TableRow>
+                                    ))}
+                                </>
                             ))
                         ) : (
                             <TableRow>
