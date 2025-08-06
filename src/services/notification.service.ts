@@ -122,6 +122,31 @@ export class NotificationService {
       throw error;
     }
   }
+
+  static async sendThankYouNotification(data: {
+    donorUserId: string;
+    donorName: string;
+    bloodType: string;
+    donationAmount: string;
+    hospitalName?: string;
+    location?: string;
+  }): Promise<void> {
+    try {
+      const title = `Cảm ơn bạn, ${data.donorName}!`;
+      const message = `Máu hiến của bạn (${data.bloodType}, ${data.donationAmount}) vừa được sử dụng để cứu người! Chúng tôi thực sự trân trọng sự đóng góp cứu người của bạn.`;
+
+      await api.post(API_ENDPOINTS.CREATE_STAFF, {
+        user_id: parseInt(data.donorUserId, 10),
+        title: title,
+        message: message,
+        read_status: false,
+        sent_date: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Error sending thank you notification:', error);
+      throw error;
+    }
+  }
 }
 
 export default NotificationService; 

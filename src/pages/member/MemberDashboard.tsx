@@ -314,7 +314,7 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
                   <div className="flex items-center">
                     {req.emergency_status && <AlertCircle className="h-5 w-5 text-red-500 mr-3"/>}
                     <div>
-                      <p className="font-semibold">Cần nhóm máu: {getBloodTypeName(req.blood_id)}</p>
+                      <p className="font-semibold">Cần nhóm máu: {getBloodTypeName(req.blood_id || null)}</p>
                       <p className="text-sm text-gray-600">Ngày yêu cầu: {format(new Date(req.request_date), 'PPP')}</p>
                       <p className="text-sm text-gray-600">Ngày kết thúc: {format(new Date(req.end_date), 'PPP')}</p>
                       <p className="text-sm text-gray-600">Số lượng cần: {req.donor_count || 'N/A'} người</p>
