@@ -147,6 +147,53 @@ export class NotificationService {
       throw error;
     }
   }
+
+  static async sendDonationApprovalNotification(data: {
+    userId: number;
+    donorName: string;
+    donationDate: string;
+    bloodType: string | number;
+  }): Promise<void> {
+    try {
+      const title = `Đơn hiến máu của bạn đã được phê duyệt!`;
+      const message = `Xin chào ${data.donorName}, đơn hiến máu của bạn (${data.bloodType}) vào ngày ${new Date(data.donationDate).toLocaleDateString('vi-VN')} đã được phê duyệt. Vui lòng đến địa điểm hiến máu theo lịch hẹn.`;
+
+      await api.post(API_ENDPOINTS.CREATE_STAFF, {
+        user_id: data.userId,
+        title: title,
+        message: message,
+        read_status: false,
+        sent_date: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Error sending donation approval notification:', error);
+      throw error;
+    }
+  }
+
+  static async sendDonationRejectionNotification(data: {
+    userId: number;
+    donorName: string;
+    donationDate: string;
+    bloodType: string | number;
+    rejectionReason: string;
+  }): Promise<void> {
+    try {
+      const title = `Thông báo về đơn hiến máu của bạn`;
+      const message = `Xin chào ${data.donorName}, đơn hiến máu của bạn (${data.bloodType}) vào ngày ${new Date(data.donationDate).toLocaleDateString('vi-VN')} đã bị từ chối. Lý do: ${data.rejectionReason}. Vui lòng liên hệ với chúng tôi nếu bạn có thắc mắc.`;
+
+      await api.post(API_ENDPOINTS.CREATE_STAFF, {
+        user_id: data.userId,
+        title: title,
+        message: message,
+        read_status: false,
+        sent_date: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Error sending donation rejection notification:', error);
+      throw error;
+    }
+  }
 }
 
 export default NotificationService; 

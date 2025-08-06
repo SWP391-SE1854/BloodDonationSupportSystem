@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { BloodInventoryUnit } from "@/types/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { getBloodTypeName } from "@/utils/bloodTypes";
 
 const COMPONENT_OPTIONS = [
   "Huyết tương",
@@ -142,34 +143,9 @@ const StaffBloodCheck = () => {
 
 
   // Fetch donor name and lab details for a sample
-  const [donorNames, setDonorNames] = useState<Record<number, string>>({});
-  const [labDetails, setLabDetails] = useState<Record<number, string>>({});
 
-  // Fetch donor name and lab details when samples change
-  useMemo(() => {
-    if (!pendingSamples.length) return;
-    pendingSamples.forEach(async (sample) => {
-      // Get donation info
-      const allDonations = await DonationService.getAllDonations();
-      const donation = allDonations.find(d => d.donation_id === sample.donation_id);
-      if (donation) {
-        // Get donor name
-        if (donation.user_id && !donorNames[sample.unit_id]) {
-          try {
-            const donorRes = await donorApi.getById(donation.user_id);
-            setDonorNames(prev => ({ ...prev, [sample.unit_id]: donorRes.data.name || "Không xác định" }));
-          } catch {
-            setDonorNames(prev => ({ ...prev, [sample.unit_id]: "Không xác định" }));
-          }
-        }
-        // Lab details (example: note field)
-        if (donation.note) {
-          setLabDetails(prev => ({ ...prev, [sample.unit_id]: donation.note! }));
-        }
-      }
-    });
-    // eslint-disable-next-line
-  }, [pendingSamples]);
+
+
 
   const handleApprove = (sample: BloodInventoryUnit) => {
     setSelectedSample(sample);
@@ -208,6 +184,7 @@ const StaffBloodCheck = () => {
       });
     } else {
       // For rejection, change status to "Expired" with reason
+      // Rejected donations are not saved to donation history
       updateStatusMutation.mutate({
         unit: selectedSample,
         status: "Expired",
@@ -306,7 +283,7 @@ const StaffBloodCheck = () => {
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
-            placeholder="Tìm kiếm theo tên người hiến, ID hiến máu, hoặc nhóm máu..."
+            placeholder="Tìm kiếm theo ID hiến máu hoặc nhóm máu..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -336,9 +313,6 @@ const StaffBloodCheck = () => {
                     ID Hiến Máu
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tên Người Hiến
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Nhóm Máu
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -346,9 +320,6 @@ const StaffBloodCheck = () => {
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Thành Phần
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Kết Quả Xét Nghiệm
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Trạng Thái
@@ -364,7 +335,7 @@ const StaffBloodCheck = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
                       <div className="flex items-center justify-center space-x-2">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
                         <span>Đang tải...</span>
@@ -373,9 +344,7 @@ const StaffBloodCheck = () => {
                   </tr>
                 ) : pendingSamples.length > 0 ? (
                   pendingSamples.filter(sample => {
-                    const donor = donorNames[sample.unit_id] || "";
                     return (
-                      donor.toLowerCase().includes(searchTerm.toLowerCase()) ||
                       String(sample.donation_id).includes(searchTerm) ||
                       String(sample.blood_type).toLowerCase().includes(searchTerm.toLowerCase())
                     );
@@ -384,12 +353,9 @@ const StaffBloodCheck = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         #{sample.donation_id}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {donorNames[sample.unit_id] || <span className="text-gray-400">Đang tải...</span>}
-                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                          {sample.blood_type}
+                          {getBloodTypeName(sample.blood_type)}
                         </Badge>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -397,9 +363,6 @@ const StaffBloodCheck = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {sample.component || "Máu toàn phần"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {labDetails[sample.unit_id] || <span className="text-gray-400">Chưa có</span>}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Badge 
@@ -428,23 +391,23 @@ const StaffBloodCheck = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                         {sample.status === "Pending Approval" ? (
                           <>
-                            <Button 
-                              size="sm" 
-                              className="bg-green-600 hover:bg-green-700 text-white" 
-                              onClick={() => handleApprove(sample)}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" /> 
-                              Phê duyệt
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="border-red-200 text-red-600 hover:bg-red-50" 
-                              onClick={() => handleReject(sample)}
-                            >
-                              <X className="h-4 w-4 mr-1" /> 
-                              Từ chối
-                            </Button>
+                        <Button 
+                          size="sm" 
+                          className="bg-green-600 hover:bg-green-700 text-white" 
+                          onClick={() => handleApprove(sample)}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" /> 
+                          Phê duyệt
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="border-red-200 text-red-600 hover:bg-red-50" 
+                          onClick={() => handleReject(sample)}
+                        >
+                          <X className="h-4 w-4 mr-1" /> 
+                          Từ chối
+                        </Button>
                           </>
                         ) : (
                           // For Approved status, show component creation options
@@ -465,7 +428,7 @@ const StaffBloodCheck = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={8} className="px-6 py-12 text-center">
+                    <td colSpan={6} className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center space-y-3">
                         <FlaskConical className="h-12 w-12 text-gray-300" />
                         <div className="text-gray-500">
@@ -518,10 +481,10 @@ const StaffBloodCheck = () => {
                 </p>
               </div>
             ) : (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                   Lý Do Từ Chối
-                </label>
+              </label>
                 <textarea
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value)}
@@ -529,8 +492,8 @@ const StaffBloodCheck = () => {
                   className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   rows={3}
                 />
-              </div>
-            )}
+                </div>
+              )}
           </div>
           <DialogFooter className="space-x-2">
             <Button 

@@ -26,9 +26,13 @@ export class DonationHistoryService {
     }
   }
 
-  static async getMemberHistory(): Promise<DonationHistoryRecord[]> {
+  static async getMemberHistory(status?: string): Promise<DonationHistoryRecord[]> {
     try {
-      const response = await api.get(API_ENDPOINTS.DONATION_HISTORY.GET_MEMBER_HISTORY);
+      const endpoint = status 
+        ? API_ENDPOINTS.DONATION_HISTORY.GET_MEMBER_HISTORY_WITH_STATUS(status)
+        : API_ENDPOINTS.DONATION_HISTORY.GET_MEMBER_HISTORY;
+      
+      const response = await api.get(endpoint);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {

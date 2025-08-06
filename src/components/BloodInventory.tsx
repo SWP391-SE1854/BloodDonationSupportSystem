@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { blood_warning_threshold } from '@/utils/bloodStockThresholds';
-import { ChevronDown, ChevronRight, Package, Droplets } from 'lucide-react';
+import { ChevronDown, ChevronRight, Package, Droplets, Search, User } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 const bloodTypeMap: Record<string, number> = {
     "A+": 1, "A-": 2, "B+": 3, "B-": 4,
@@ -51,6 +52,8 @@ const BloodInventory = () => {
     const { user } = useAuth();
     const userRole = user?.role;
     const [expandedGroups, setExpandedGroups] = useState<Set<number>>(new Set());
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filteredGroups, setFilteredGroups] = useState<GroupedInventory[]>([]);
 
     const { data: inventory, isLoading: isLoadingInventory, isError: isErrorInventory, error: errorInventory } = useQuery<BloodInventoryUnit[], Error>({
         queryKey: ['bloodInventory'],
@@ -88,6 +91,8 @@ const BloodInventory = () => {
         }
         setExpandedGroups(newExpanded);
     };
+
+
 
     const groupedInventory = useMemo(() => {
         if (!inventory) return [];
@@ -128,6 +133,42 @@ const BloodInventory = () => {
         return validGroups;
     }, [inventory]);
 
+    // Filter groups based on search term
+    useEffect(() => {
+        const filterGroups = async () => {
+            if (!groupedInventory) {
+                setFilteredGroups([]);
+                return;
+            }
+
+            if (!searchTerm) {
+                setFilteredGroups(groupedInventory);
+                return;
+            }
+
+            const searchLower = searchTerm.toLowerCase();
+            const filtered: GroupedInventory[] = [];
+
+            for (const group of groupedInventory) {
+                // Check donation_id
+                if (String(group.donation_id).includes(searchLower)) {
+                    filtered.push(group);
+                }
+            }
+
+            setFilteredGroups(filtered);
+        };
+
+        filterGroups();
+    }, [groupedInventory, searchTerm]);
+
+    // Initialize filteredGroups with groupedInventory
+    useEffect(() => {
+        if (groupedInventory && !searchTerm) {
+            setFilteredGroups(groupedInventory);
+        }
+    }, [groupedInventory, searchTerm]);
+
     useEffect(() => {
         if (inventory && (userRole === 'Admin' || userRole === 'Staff')) {
             const availableStock = inventory.reduce((acc, unit) => {
@@ -157,7 +198,18 @@ const BloodInventory = () => {
     return (
         <Card>
             <CardHeader>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <CardTitle>Báo cáo Tồn kho Máu</CardTitle>
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                        <Input
+                            placeholder="Tìm kiếm theo ID hiến máu..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10 w-full sm:w-80"
+                        />
+                    </div>
+                </div>
             </CardHeader>
             <CardContent>
                 {isErrorInventory ? (
@@ -183,8 +235,8 @@ const BloodInventory = () => {
                     <TableBody>
                         {isLoadingInventory ? (
                             <TableRow><TableCell colSpan={8} className="text-center">Đang tải...</TableCell></TableRow>
-                        ) : groupedInventory.length > 0 ? (
-                            groupedInventory.map((group) => (
+                        ) : filteredGroups.length > 0 ? (
+                            filteredGroups.map((group) => (
                                 <>
                                     {/* Parent Row - Chỉ hiển thị Máu toàn phần */}
                                     <TableRow key={`parent-${group.donation_id}`} className="bg-gray-50">
@@ -208,7 +260,7 @@ const BloodInventory = () => {
                                             </div>
                                         </TableCell>
                                         <TableCell>{getBloodTypeName(group.parent_unit.blood_type)}</TableCell>
-                                        <TableCell>
+                                    <TableCell>
                                             <div className="flex items-center space-x-2">
                                                 <Package className="h-4 w-4 text-blue-600" />
                                                 <span>Máu toàn phần</span>
@@ -218,7 +270,7 @@ const BloodInventory = () => {
                                                     </Badge>
                                                 )}
                                             </div>
-                                        </TableCell>
+                                    </TableCell>
                                         <TableCell>{group.parent_unit.quantity}</TableCell>
                                         <TableCell>
                                             <Badge variant="default">{statusTranslations[group.parent_unit.status] || group.parent_unit.status}</Badge>
@@ -267,22 +319,19 @@ const BloodInventory = () => {
                                             <TableCell className="text-gray-600">{formatDate(childUnit.expiration_date)}</TableCell>
                                             {(userRole === 'Admin' || userRole === 'Staff') && (
                                                 <TableCell>
-                                                    {childUnit.status === 'Available' && (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => handleMarkAsUsed(childUnit.unit_id)}
-                                                            disabled={updateStatusMutation.isPending}
-                                                        >
-                                                            Đánh dấu đã sử dụng
-                                                        </Button>
-                                                    )}
+                                                    {/* Bỏ nút "Đánh dấu đã sử dụng" cho các thành phần con */}
                                                 </TableCell>
                                             )}
-                                        </TableRow>
+                                </TableRow>
                                     ))}
                                 </>
                             ))
+                        ) : searchTerm ? (
+                            <TableRow>
+                                <TableCell colSpan={8} className="text-center">
+                                    Không tìm thấy kết quả nào cho "{searchTerm}".
+                                </TableCell>
+                            </TableRow>
                         ) : (
                             <TableRow>
                                 <TableCell colSpan={8} className="text-center">Không có dữ liệu trong kho.</TableCell>

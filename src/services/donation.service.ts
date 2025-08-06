@@ -2,6 +2,7 @@ import api from './api.service';
 import { API_ENDPOINTS } from './api.config';
 import axios from 'axios';
 import { Donation } from '@/types/api';
+import { NotificationService } from './notification.service';
 
 // CreateDonationPayload is a subset of the full Donation object
 export type CreateDonationPayload = {
@@ -73,9 +74,13 @@ export class DonationService {
     }
   }
 
-  static async getMemberDonations(): Promise<Donation[]> {
+  static async getMemberDonations(status?: string): Promise<Donation[]> {
     try {
-      const response = await api.get<{ $values: Donation[] }>(API_ENDPOINTS.DONATION.GET_MEMBER_DONATIONS);
+      const endpoint = status 
+        ? API_ENDPOINTS.DONATION.GET_MY_DONATIONS(status)
+        : API_ENDPOINTS.DONATION.GET_MY_DONATIONS();
+      
+      const response = await api.get<{ $values: Donation[] }>(endpoint);
       return response.data?.$values || response.data || [];
     } catch (error) {
       console.error('Error fetching member donations:', error);
@@ -120,6 +125,19 @@ export class DonationService {
       const response = await api.put<Donation>(API_ENDPOINTS.DONATION.UPDATE, updatePayload);
       
       console.log(`Successfully updated donation status:`, response.data);
+      
+      // Create donation history entry for CheckedIn and Completed status
+      // Rejected donations are not saved to history
+      if (status === 'CheckedIn' || status === 'Completed') {
+        try {
+          await this.createDonationHistoryEntry(donationId, status);
+          console.log(`Successfully created donation history entry for ${donationId} with status ${status}`);
+        } catch (historyError) {
+          console.error(`Error creating donation history for ${donationId}:`, historyError);
+          // Don't throw error as the main operation (status update) succeeded
+        }
+      }
+      
       return response.data;
     } catch (error) {
       console.error(`Error updating donation status ${donationId}:`, error);
@@ -147,6 +165,24 @@ export class DonationService {
       
       console.log(`Successfully approved donation ${donationId}:`, updatedDonation);
       
+      // Send notification to donor
+      try {
+        const allDonations = await this.getAllDonations();
+        const donation = allDonations.find(d => d.donation_id === donationId);
+        
+        if (donation) {
+          await NotificationService.sendDonationApprovalNotification({
+            userId: Number(donation.user_id),
+            donorName: 'Người hiến máu', // Will be replaced with actual name from backend
+            donationDate: donation.donation_date,
+            bloodType: donation.blood_type || 'Không xác định'
+          });
+        }
+      } catch (notificationError) {
+        console.error('Error sending approval notification:', notificationError);
+        // Don't throw error as the main operation succeeded
+      }
+      
       // Note: History creation is disabled due to missing backend endpoint
       // await this.createDonationHistoryEntry(donationId, 'Approved');
       
@@ -172,8 +208,27 @@ export class DonationService {
       // Update the donation status to Rejected
       const updatedDonation = await this.updateDonationStatus(donationId, 'Rejected');
       
-      // Note: History creation is disabled due to missing backend endpoint
-      // await this.createDonationHistoryEntry(donationId, 'Rejected');
+      // Send notification to donor with rejection reason
+      try {
+        const allDonations = await this.getAllDonations();
+        const donation = allDonations.find(d => d.donation_id === donationId);
+        
+        if (donation) {
+          await NotificationService.sendDonationRejectionNotification({
+            userId: Number(donation.user_id),
+            donorName: 'Người hiến máu', // Will be replaced with actual name from backend
+            donationDate: donation.donation_date,
+            bloodType: donation.blood_type || 'Không xác định',
+            rejectionReason: reason || 'Không có lý do cụ thể'
+          });
+        }
+      } catch (notificationError) {
+        console.error('Error sending rejection notification:', notificationError);
+        // Don't throw error as the main operation succeeded
+      }
+      
+      // Không tạo donation history khi từ chối
+      // Rejected donations không được lưu vào history
       
       return updatedDonation;
     } catch (error) {
@@ -219,9 +274,21 @@ export class DonationService {
   // New method to create donation history entries
   static async createDonationHistoryEntry(donationId: number, status: string): Promise<void> {
     try {
+      // Get donation details to include user_id and blood_type
+      const allDonations = await this.getAllDonations();
+      const donation = allDonations.find(d => d.donation_id === donationId);
+      
+      if (!donation) {
+        console.error(`Donation ${donationId} not found for history creation`);
+        return;
+      }
+      
       await api.post(API_ENDPOINTS.DONATION.CREATE_HISTORY, {
         donation_id: donationId,
-        status: status
+        user_id: donation.user_id,
+        status: status,
+        blood_type: donation.blood_type || null,
+        donation_date: donation.donation_date
       });
     } catch (error) {
       console.error(`Error creating donation history entry for ${donationId}:`, error);

@@ -1,31 +1,33 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { useToast } from '@/hooks/use-toast';
 import { BloodRequestService, BloodRequest, CreateBloodRequestData, UpdateBloodRequestData } from '@/services/blood-request.service';
 import { DonationService } from '@/services/donation.service';
 import { BloodInventoryService } from '@/services/blood-inventory.service';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { format } from 'date-fns';
-import { vi } from 'date-fns/locale';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Edit, Trash2, Eye, AlertCircle } from 'lucide-react';
-import { getBloodTypeName } from '@/utils/bloodTypes';
-import { Switch } from '@/components/ui/switch';
+import { BloodInventoryUnit } from '@/types/api';
+import { PlusCircle, Edit, Trash2, Eye } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useAuth } from '@/contexts/AuthContext';
 import BloodTypeSelect from '@/components/BloodTypeSelect';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Badge } from '@/components/ui/badge';
+
+const bloodTypeMap: Record<string, number> = {
+    "A+": 1, "A-": 2, "B+": 3, "B-": 4, 
+    "AB+": 5, "AB-": 6, "O+": 7, "O-": 8
+};
 
 // Blood type compatibility map - reused from MemberBloodRequests
 const compatibilityMap: Record<string, string[]> = {
@@ -38,6 +40,15 @@ const compatibilityMap: Record<string, string[]> = {
     'O+': ['O+', 'A+', 'B+', 'AB+'],
     'O-': ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-','O+', 'O-'], // Universal donor
 };
+
+const getBloodTypeName = (id: string | number | null): string => {
+    if (id === null) return 'N/A';
+    if (typeof id === 'string' && isNaN(parseInt(id, 10))) {
+        return id;
+    }
+    const numId = typeof id === 'string' ? parseInt(id, 10) : id;
+    return Object.keys(bloodTypeMap).find(key => bloodTypeMap[key] === numId) || 'Không xác định';
+}
 
 type BloodRequestServerResponse = BloodRequest[] | { $values: BloodRequest[] };
 
@@ -61,8 +72,8 @@ const CompatibilityDialog = ({ isOpen, onClose, bloodRequest }: CompatibilityDia
     const compatibleDonations = useMemo(() => {
         if (!donations || !bloodInventory) return [];
 
-        const requestedBloodTypeName = getBloodTypeName(bloodRequest.blood_id || null);
-        if (requestedBloodTypeName === 'Không xác định' || !compatibilityMap[requestedBloodTypeName]) {
+        const requestedBloodTypeName = getBloodTypeName(bloodRequest.blood_id);
+        if (requestedBloodTypeName === 'N/A' || !compatibilityMap[requestedBloodTypeName]) {
             return [];
         }
 
@@ -80,7 +91,7 @@ const CompatibilityDialog = ({ isOpen, onClose, bloodRequest }: CompatibilityDia
         });
     }, [donations, bloodInventory, bloodRequest.blood_id]);
 
-    const requestedBloodType = getBloodTypeName(bloodRequest.blood_id || null);
+    const requestedBloodType = getBloodTypeName(bloodRequest.blood_id);
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -280,7 +291,7 @@ const BloodRequestManagement = () => {
                                 requests?.map((request) => (
                                 <TableRow key={request.request_id}>
                                     <TableCell>{request.user_id}</TableCell>
-                                    <TableCell>{getBloodTypeName(request.blood_id || null)}</TableCell>
+                                    <TableCell>{getBloodTypeName(request.blood_id)}</TableCell>
                                     <TableCell>{request.emergency_status ? 'Có' : 'Không'}</TableCell>
                                     <TableCell>{new Date(request.request_date).toLocaleDateString()}</TableCell>
                                     <TableCell>{new Date(request.end_date).toLocaleDateString()}</TableCell>

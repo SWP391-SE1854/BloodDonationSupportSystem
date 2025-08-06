@@ -70,4 +70,14 @@ export class BloodInventoryService {
     static async delete(id: number): Promise<void> {
         await api.delete(API_ENDPOINTS.BLOOD_INVENTORY.DELETE(id));
     }
+
+    static async getUsernameByUnitId(unitId: number): Promise<string> {
+        try {
+            const response = await api.get<{ Username: string }>(API_ENDPOINTS.BLOOD_INVENTORY.GET_USERNAME_BY_UNIT_ID(unitId));
+            return response.data.Username;
+        } catch (error) {
+            console.error(`Error fetching username for unit ${unitId}:`, error);
+            throw new Error('Không thể lấy thông tin người hiến máu');
+        }
+    }
 } 

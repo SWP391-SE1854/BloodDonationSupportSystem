@@ -22,6 +22,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import MemberDonationRequest from './MemberDonationRequest';
+import CurrentDonationRequests from '@/components/CurrentDonationRequests';
 import { getBloodTypeName } from '@/utils/bloodTypes';
 
 
@@ -300,6 +301,9 @@ const MemberDashboard = ({ onNavigate }: MemberDashboardProps) => {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Current Donation Requests */}
+      <CurrentDonationRequests />
 
       {/* Emergency Blood Requests Section */}
       <Card>

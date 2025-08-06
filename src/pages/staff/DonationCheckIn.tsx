@@ -13,6 +13,7 @@ import { StaffService } from '@/services/staff.service';
 import { UserProfile } from '@/services/user.service';
 import CheckInStats from '@/components/CheckInStats';
 import EmptyState from '@/components/EmptyState';
+import { DonationHistoryService } from '@/services/donation-history.service';
 
 interface DonationWithUser extends Donation {
   userName?: string;
@@ -101,7 +102,7 @@ const DonationCheckIn = () => {
 
   const handleCheckIn = async (donationId: number) => {
     try {
-      // Gọi API để cập nhật trạng thái check-in
+      // Gọi API để cập nhật trạng thái check-in và tạo donation history
       await DonationService.updateDonationStatus(donationId, 'CheckedIn');
       
       // Cập nhật trạng thái check-in trong local state
@@ -115,7 +116,7 @@ const DonationCheckIn = () => {
 
       toast({
         title: 'Thành công',
-        description: 'Đã check-in thành công!',
+        description: 'Đã check-in thành công và tạo lịch sử hiến máu!',
       });
     } catch (error) {
       console.error("Failed to check-in:", error);

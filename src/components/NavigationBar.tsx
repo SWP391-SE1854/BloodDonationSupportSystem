@@ -5,6 +5,7 @@ import { UserProfileDropdown } from "@/components/UserProfileDropdown";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import NotificationBell from "@/components/NotificationBell";
+import NotificationForm from "@/components/NotificationForm";
 
 interface NavigationBarProps {
   fixed?: boolean;
@@ -66,7 +67,7 @@ const NavigationBar = ({ fixed = false }: NavigationBarProps) => {
               </>
             ) : (
               <div className="flex items-center space-x-4">
-                <NotificationBell />
+                <NotificationForm />
               <UserProfileDropdown />
               </div>
             )}

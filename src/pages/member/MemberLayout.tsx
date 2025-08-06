@@ -29,7 +29,7 @@ const MemberLayout = ({ children, currentPage, onNavigate, onLogout, userName }:
               <Heart className="h-6 w-6 text-red-600" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-800">Hiến Máu</h1>
+              <h1 className="text-xl font-bold text-gray-800">BloodCare</h1>
               <p className="text-sm text-gray-500">Cổng Thành Viên</p>
             </div>
           </div>

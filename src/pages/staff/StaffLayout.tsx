@@ -32,7 +32,7 @@ const StaffLayout = ({ children, currentPage, onNavigate, onLogout, userName }: 
               <HeartPulse className="h-6 w-6 text-purple-600" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-800">Blood Donation</h1>
+              <h1 className="text-xl font-bold text-gray-800">BloodCare</h1>
               <p className="text-sm text-gray-500">Staff Portal</p>
             </div>
           </div>

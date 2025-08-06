@@ -47,6 +47,7 @@ export const API_ENDPOINTS = {
     GET_BY_STATUS: '/donation/status',
     UPDATE: '/donation/staff',
     GET_MEMBER_DONATIONS: '/donation/users',
+    GET_MY_DONATIONS: (status?: string) => `/donation/my-donations${status ? `?status=${status}` : ''}`,
     CANCEL_MEMBER_DONATION: (id: number) => `/donation/member/cancel/${id}`,
     CREATE_HISTORY: '/donation/history',
   },
@@ -58,6 +59,7 @@ export const API_ENDPOINTS = {
     GET_HISTORY_BY_ID: (id: number) => `/donation-history/admin/${id}`,
     GET_USER_HISTORY: (userId: number) => `/donation-history/staff/user/${userId}`,
     DELETE_HISTORY: (id: number) => `/donation-history/admin/${id}`,
+    GET_MEMBER_HISTORY_WITH_STATUS: (status?: string) => `/donation-history/member${status ? `?status=${status}` : ''}`,
   },
   
   // Blood Request endpoints
@@ -95,6 +97,7 @@ export const API_ENDPOINTS = {
     UPDATE: '/blood-inventory/update-blood',
     DELETE: (id: number) => `/blood-inventory/delete-blood?id=${id}`,
     ADD_BLOOD: '/blood-inventory/add-blood',
+    GET_USERNAME_BY_UNIT_ID: (unitId: number) => `/blood-inventory/username/${unitId}`,
   },
 
   NOTIFICATIONS: {
